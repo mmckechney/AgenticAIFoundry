@@ -24,6 +24,9 @@ from azure.ai.evaluation import IntentResolutionEvaluator, TaskAdherenceEvaluato
 # other quality as well as risk and safety metrics
 from azure.ai.evaluation import RelevanceEvaluator, CoherenceEvaluator, CodeVulnerabilityEvaluator, ContentSafetyEvaluator, IndirectAttackEvaluator, FluencyEvaluator
 from azure.ai.projects.models import ConnectionType
+from pathlib import Path
+from opentelemetry import trace
+# from config import get_logger
 
 from dotenv import load_dotenv
 
@@ -88,11 +91,11 @@ def eval()-> str:
     returntxt = ""
 
     # Upload a local jsonl file (skip if you already have a Dataset registered)
-    data_id = project_client.datasets.upload_file(
-        name="evaluate_test_data",
-        version=1,
-        file_path="datarfp.jsonl",
-    ).id
+    # data_id = project_client.datasets.upload_file(
+    #     name="evaluate_test_data",
+    #     version=1,
+    #     file_path="datarfp.jsonl",
+    # ).id
     # Built-in evaluator configurations
     evaluators = {
         "relevance": EvaluatorConfiguration(
@@ -115,7 +118,8 @@ def eval()-> str:
     evaluation = Evaluation(
         display_name="Cloud evaluation",
         description="Evaluation of dataset",
-        data=InputDataset(id=data_id),
+        #data=InputDataset(id=data_id),
+        data="datarfp.jsonl",
         evaluators=evaluators,
     )
 
@@ -288,10 +292,10 @@ def main():
     # code_interpreter()
     
     print("Running evaluation example...")
-    #eval()
+    eval()
     
     print("Running red teaming example...")
-    redteam()
+    # redteam()
     
     print("Running agent evaluation example...")
     # agent_eval()

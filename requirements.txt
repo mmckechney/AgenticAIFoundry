@@ -3,9 +3,12 @@ azure-ai-agents
 azure-ai-evaluation
 azure-ai-evaluation[redteam]
 azure-ai-inference
-azure-ai-inference[opentelemetry]
 streamlit
 openai
 uv
 python-dotenv
 opentelemetry-sdk
+opentelemetry-api
+azure-identity
+azure-search-documents
+azure-ai-inference[prompts]
