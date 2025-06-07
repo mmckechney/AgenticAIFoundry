@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 endpoint = os.environ["PROJECT_ENDPOINT"] # Sample : https://<account_name>.services.ai.azure.com/api/projects/<project_name>
 model_endpoint = os.environ["MODEL_ENDPOINT"] # Sample : https://<account_name>.services.ai.azure.com
@@ -303,13 +303,13 @@ def agent_eval() -> str:
 def main():
     with tracer.start_as_current_span("azureaifoundryagent-tracing"):
         print("Running code interpreter example...")
-        code_interpreter()
+        #code_interpreter()
         
         print("Running evaluation example...")
         # eval()
         
         print("Running red teaming example...")
-        # redteam()
+        redteam()
         
         print("Running agent evaluation example...")
         # agent_eval()
