@@ -292,10 +292,10 @@ def main():
     # code_interpreter()
     
     print("Running evaluation example...")
-    eval()
+    # eval()
     
     print("Running red teaming example...")
-    # redteam()
+    redteam()
     
     print("Running agent evaluation example...")
     # agent_eval()
