@@ -6,3 +6,4 @@ local.settings.json
 coding/
 output/
 .cache/
+.scan*/
