@@ -55,7 +55,7 @@ from openai import AzureOpenAI
 from azure.ai.evaluation import evaluate
 from azure.ai.evaluation import GroundednessEvaluator, AzureOpenAIModelConfiguration
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
-from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder
+from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition
 
 from dotenv import load_dotenv
 
@@ -540,6 +540,7 @@ def ai_search_agent(query: str) -> str:
 
     # Retrieve the endpoint from environment variables
     project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
 
     # Initialize the AIProjectClient
     project_client = AIProjectClient(
@@ -600,7 +601,7 @@ def ai_search_agent(query: str) -> str:
     for page in messages.by_page():
         for item in page:
             # print(item)
-            # returntxt += f"Role: {item.role}, Content: {item.content[0]['text']['value']}\n"
+            #returntxt += f"Role: {item.role}, Content: {item.content[0]['text']['value']}\n"
             returntxt += f"Source: {item.content[0]['text']['value']}\n"
 
     # Delete the agent
@@ -610,8 +611,9 @@ def ai_search_agent(query: str) -> str:
 
     return returntxt
 
-def connected_agent() -> str:
+def connected_agent(query: str) -> str:
     returntxt = ""
+    #https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/connected-agents?pivots=python
 
     project_client = AIProjectClient(
         endpoint=os.environ["PROJECT_ENDPOINT"],
@@ -628,11 +630,51 @@ def connected_agent() -> str:
     connected_agent = ConnectedAgentTool(
         id=stock_price_agent.id, name=connected_agent_name, description="Gets the stock price of a company"
     )
+
+    #create AI Search tool
+    # Define the Azure AI Search connection ID and index name
+    azure_ai_conn_id = "vecdb"
+    index_name = "constructionrfpdocs1"
+
+    # Initialize the Azure AI Search tool
+    ai_search = AzureAISearchTool(
+        index_connection_id=azure_ai_conn_id,
+        index_name=index_name,
+        query_type=AzureAISearchQueryType.SIMPLE,  # Use SIMPLE query type
+        top_k=5,  # Retrieve the top 3 results
+        filter="",  # Optional filter for search results
+    )
+    # Define the model deployment name
+    model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"]
+
+    # Create an agent with the Azure AI Search tool
+    rfp_agent = project_client.agents.create_agent(
+        model=model_deployment_name,
+        name="AISearchagent",
+        instructions="You are a helpful agent",
+        tools=ai_search.definitions,
+        tool_resources=ai_search.resources,
+    )
+    search_connected_agent_name = "AISearchagent"
+    search_connected_agent = ConnectedAgentTool(
+        id=rfp_agent.id, name=search_connected_agent_name, description="Gets the construction proposals from the RFP documents"
+    )
+    # toolset = ToolSet()
+    # toolset.add(connected_agent.definitions)
+    # toolset.add(search_connected_agent.definitions)
+    toolset = ToolDefinition()
+    # toolset.items[0] = connected_agent.definitions
+    # toolset.items[1] = search_connected_agent.definitions
+    # toolset.append(connected_agent)
+    # toolset.append(search_connected_agent)
+
+
+    # Orchestrate the connected agent with the main agent
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
-        instructions="You are a helpful agent, and use the available tools to get stock prices.",
-        tools=connected_agent.definitions,
+        instructions="You are a helpful agent, and use the available tools to get stock prices, Construction proposals.",
+        tools=search_connected_agent.definitions,  # Attach the connected agents
     )
 
     print(f"Created agent, ID: {agent.id}")
@@ -643,7 +685,8 @@ def connected_agent() -> str:
     message = project_client.agents.messages.create(
         thread_id=thread.id,
         role=MessageRole.USER,
-        content="What is the stock price of Microsoft?",
+        # content="What is the stock price of Microsoft?",
+        content=query,
     )
     print(f"Created message, ID: {message.id}")
     # Create and process Agent run in thread with tools
@@ -681,19 +724,19 @@ def main():
         # print(evalrs)
         
         print("Running red teaming example...")
-        # redteamrs = asyncio.run(redteam())
-        # print(redteamrs)
+        redteamrs = asyncio.run(redteam())
+        print(redteamrs)
         
         print("Running agent evaluation example...")
         # agent_eval()
 
         print("Running connected agent example...")
-        # connected_agent_result = connected_agent()
+        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # print(connected_agent_result)
 
         print("Running AI Search agent example...")
-        ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
-        print(ai_search_result)
+        # ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
+        # print(ai_search_result)
 
 if __name__ == "__main__":
     main()
