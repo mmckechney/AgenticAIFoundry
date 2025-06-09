@@ -12,7 +12,7 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 
 ### 🤖 AI Agents
 - **Code Interpreter Agent**: Execute Python code and data analysis tasks
-- **Connected Agent**: Integration with external services and APIs
+- **Connected Agent**: Integration with external services and APIs, including email functionality
 - **AI Search Agent**: Azure AI Search integration for knowledge retrieval
 - **Weather Agent**: Custom function tool integration example
 
@@ -30,9 +30,10 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 - **Comprehensive reporting**: Detailed security assessment results
 
 ### 📊 Reasoning Models
-- **Azure OpenAI O1 series integration**: Advanced reasoning capabilities
-- **High-effort reasoning**: Complex problem-solving scenarios
+- **Azure OpenAI O1 series integration**: Advanced reasoning capabilities with o4-mini and o3 models
+- **High-effort reasoning**: Complex problem-solving scenarios with configurable reasoning effort
 - **Professional output formatting**: Enterprise-ready response formatting
+- **Latest API support**: Compatible with 2024-12-01-preview API version
 
 ## Prerequisites
 
@@ -70,6 +71,8 @@ AZURE_OPENAI_DEPLOYMENT=<your_deployment_name>
 
 # API Configuration
 AZURE_API_VERSION=2024-10-21
+# For O1 models, use the preview API version
+# AZURE_API_VERSION=2024-12-01-preview
 ```
 
 ### Azure Resource Configuration
@@ -86,6 +89,13 @@ AZURE_PROJECT_NAME=<your_project_name>
 AZURE_SEARCH_ENDPOINT=https://<search_service>.search.windows.net
 AZURE_SEARCH_KEY=<your_search_key>
 AZURE_SEARCH_INDEX=<your_index_name>
+```
+
+### Optional: Email Configuration (for connected agent email functionality)
+```bash
+# Google SMTP configuration for email sending
+GOOGLE_EMAIL=<your_gmail_address>
+GOOGLE_APP_PASSWORD=<your_gmail_app_password>
 ```
 
 ## Installation
@@ -167,7 +177,12 @@ agent_eval()
 #### 5. Connected Agent
 ```python
 # Uncomment in main() function
-connected_agent_result = connected_agent()
+# Basic usage
+connected_agent_result = connected_agent("What is the stock price of Microsoft")
+print(connected_agent_result)
+
+# With email functionality
+connected_agent_result = connected_agent("Show me details on Construction management services and email the summary to user@example.com")
 print(connected_agent_result)
 ```
 
@@ -185,9 +200,11 @@ print(result)
 AgenticAIFoundry/
 │
 ├── agenticai.py              # Main application with all agent examples
+├── utils.py                  # Utility functions (email sending, etc.)
 ├── requirements.txt          # Python dependencies
 ├── README.md                # This documentation
 ├── .env                     # Environment variables (create from template)
+├── .env.example             # Environment variables template
 │
 ├── Data Files/
 ├── datarfp.jsonl            # Evaluation dataset
@@ -209,8 +226,9 @@ AgenticAIFoundry/
 | `redteam()` | Red team security testing | Security vulnerability assessment |
 | `agent_eval()` | Agent-specific evaluation metrics | Agentic workflow evaluation |
 | `ai_search_agent()` | Azure AI Search integration | Knowledge retrieval and search |
-| `connected_agent()` | External service integration | API integration and external data |
+| `connected_agent()` | External service integration with email capabilities | API integration, external data, and email notifications |
 | `process_message_reasoning()` | O1 model reasoning | Complex reasoning tasks |
+| `send_email()` (utils.py) | Email sending functionality | Automated email notifications and communications |
 
 ## Telemetry and Monitoring
 
@@ -220,6 +238,24 @@ The application includes Azure Monitor OpenTelemetry integration for comprehensi
 - Performance monitoring
 - Error tracking
 - Custom span creation for detailed analysis
+
+## Utility Functions
+
+The `utils.py` file provides additional functionality:
+
+### Email Integration
+- **Gmail SMTP support**: Send emails through Gmail's SMTP server
+- **Multiple recipients**: Support for comma-separated email addresses
+- **Secure authentication**: Uses Gmail App Password for secure authentication
+- **Error handling**: Comprehensive error handling for email delivery
+
+```python
+from utils import send_email
+
+# Send an email
+result = send_email("recipient@example.com", "Subject", "Email body content")
+print(result)  # Returns confirmation message
+```
 
 ## Security Features
 
@@ -253,6 +289,12 @@ The application includes Azure Monitor OpenTelemetry integration for comprehensi
 4. **Import Errors**:
    - Reinstall dependencies: `pip install -r requirements.txt`
    - Check Python version compatibility
+
+5. **Email Functionality Issues**:
+   - Verify `GOOGLE_EMAIL` and `GOOGLE_APP_PASSWORD` environment variables are set
+   - Use Gmail App Password, not your regular Gmail password
+   - Enable 2-factor authentication and generate an App Password in your Google Account settings
+   - Ensure less secure app access is enabled (if not using App Password)
 
 ### Environment Validation
 
@@ -295,3 +337,4 @@ For issues and questions:
 | Python | 3.12.x | Required - 3.13 not supported |
 | Azure AI Projects SDK | Latest | Auto-installed via requirements |
 | Azure OpenAI API | 2024-10-21+ | Configurable via environment |
+| Azure OpenAI API (O1 Models) | 2024-12-01-preview | Required for O1 series models |
