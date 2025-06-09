@@ -9,7 +9,7 @@ from azure.ai.projects.models import (
 )
 import os, json
 import pandas as pd
-from typing import Set, Callable, Any
+from typing import Any, Callable, Set, Dict, List, Optional
 from azure.ai.agents.models import CodeInterpreterTool, FunctionTool, ToolSet
 from azure.ai.projects.models import (
     EvaluatorConfiguration,
@@ -25,7 +25,21 @@ from azure.ai.evaluation import (
     AzureOpenAIModelConfiguration,
     IntentResolutionEvaluator,
     TaskAdherenceEvaluator,
-    ResponseCompletenessEvaluator
+    ResponseCompletenessEvaluator,
+    ContentSafetyEvaluator,
+    RelevanceEvaluator,
+    CoherenceEvaluator,
+    GroundednessEvaluator,
+    FluencyEvaluator,
+    SimilarityEvaluator,
+    ViolenceEvaluator,
+    SexualEvaluator,
+    SelfHarmEvaluator,
+    HateUnfairnessEvaluator,
+    RetrievalEvaluator,
+    BleuScoreEvaluator, GleuScoreEvaluator, RougeScoreEvaluator, MeteorScoreEvaluator, RougeType,
+    ProtectedMaterialEvaluator, IndirectAttackEvaluator, RetrievalEvaluator, GroundednessProEvaluator,
+    F1ScoreEvaluator
 )
 from pprint import pprint
 # specific to agentic workflows
@@ -40,6 +54,8 @@ from azure.ai.evaluation.red_team import RedTeam, RiskCategory
 from openai import AzureOpenAI
 from azure.ai.evaluation import evaluate
 from azure.ai.evaluation import GroundednessEvaluator, AzureOpenAIModelConfiguration
+from azure.ai.agents.models import ConnectedAgentTool, MessageRole
+from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder
 
 from dotenv import load_dotenv
 
@@ -133,35 +149,85 @@ def eval()-> str:
         "resource_group_name": os.environ.get("AZURE_RESOURCE_GROUP"),
         "project_name": os.environ.get("AZURE_PROJECT_NAME"),
     }
+    azure_ai_project_dict = {
+        "subscription_id": os.environ.get("AZURE_SUBSCRIPTION_ID"),
+        "resource_group_name": os.environ.get("AZURE_RESOURCE_GROUP"),
+        "project_name": os.environ.get("AZURE_PROJECT_NAME"),
+        "azure_credential": DefaultAzureCredential(),
+    }
+    credential = DefaultAzureCredential()
 
     # Initializing Groundedness and Groundedness Pro evaluators
-    groundedness_eval = GroundednessEvaluator(model_config)
+    # groundedness_eval = GroundednessEvaluator(model_config)
     # instantiate an evaluator with image and multi-modal support
-    safety_evaluator = ContentSafetyEvaluator(credential=DefaultAzureCredential(), azure_ai_project=azure_ai_project)
+    content_safety_evaluator = ContentSafetyEvaluator(credential=DefaultAzureCredential(), azure_ai_project=azure_ai_project)
+    relevance_evaluator = RelevanceEvaluator(model_config)
+    coherence_evaluator = CoherenceEvaluator(model_config)
+    groundedness_evaluator = GroundednessEvaluator(model_config)
+    fluency_evaluator = FluencyEvaluator(model_config)
+    similarity_evaluator = SimilarityEvaluator(model_config)
+    retrieval_evaluator = RetrievalEvaluator(model_config)
+    groundnesspro_evaluator = GroundednessProEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
+
+    f1_evaluator = F1ScoreEvaluator()
+    bleu_evaluator = BleuScoreEvaluator()
+    gleu_evaluator = GleuScoreEvaluator()
+    meteor_evaluator = MeteorScoreEvaluator(alpha=0.8)
+    rouge_evaluator = RougeScoreEvaluator(rouge_type=RougeType.ROUGE_4)
+    indirect_attack_eval = IndirectAttackEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
+    protected_material_eval = ProtectedMaterialEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
+    hate_unfairness_eval = HateUnfairnessEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
 
     result = evaluate(
         data="datarfp.jsonl", # provide your data here
         evaluators={
-            "groundedness": groundedness_eval,
-            "content_safety": safety_evaluator
-        },
-        # column mapping
+            "content_safety": content_safety_evaluator,
+            "coherence": coherence_evaluator,
+            "relevance": relevance_evaluator,
+            "groundedness": groundedness_evaluator,
+            "fluency": fluency_evaluator,
+        #    "similarity": similarity_evaluator,
+            "f1": f1_evaluator,
+            "bleu": bleu_evaluator,
+            "gleu": gleu_evaluator,
+            "meteor": meteor_evaluator,
+            "rouge": rouge_evaluator,
+            "indirect_attack": indirect_attack_eval,
+            "protected_material": protected_material_eval,
+            "hate_unfairness": hate_unfairness_eval,
+            "retrieval": retrieval_evaluator,
+            "groundnesspro": groundnesspro_evaluator,
+            "similarity": similarity_evaluator,
+        },        
         evaluator_config={
             "content_safety": {"query": "${data.query}", "response": "${data.response}"},
+            "coherence": {"response": "${data.response}", "query": "${data.query}"},
+            "relevance": {"response": "${data.response}", "context": "${data.context}", "query": "${data.query}"},
             "groundedness": {
-                "column_mapping": {
-                    "query": "${data.query}",
-                    "context": "${data.context}",
-                    "response": "${data.response}"
-                } 
-            }
+                "response": "${data.response}",
+                "context": "${data.context}",
+                "query": "${data.query}",
+            },
+            "fluency": {"response": "${data.response}", "context": "${data.context}", "query": "${data.query}"},
+            "f1": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            "bleu": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            "gleu": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            "meteor": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            "rouge": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            "indirect_attack": {"query": "${data.query}", "response": "${data.response}"},
+            "protected_material": {"query": "${data.query}", "response": "${data.response}"},
+            "hate_unfairness": {"query": "${data.query}", "response": "${data.response}"},
+            "retrieval": {"query": "${data.query}", "context": "${data.context}"},
+            "groundnesspro": {"query": "${data.query}", "context" : "${data.context}", "response": "${data.response}"},
+            "similarity": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
         },
         # Optionally provide your Azure AI Foundry project information to track your evaluation results in your project portal
         # azure_ai_project = azure_ai_project,
         # Optionally provide an output path to dump a json of metric summary, row level data and metric and Azure AI project URL
         output_path="./myevalresults.json"
     )
-    returntxt = f"Completed Evaluation: {result.studio_url}"    
+    #returntxt = f"Completed Evaluation: {result.studio_url}"    
+    returntxt = f"Completed Evaluation\n"
     return returntxt
 
 # A simple example application callback function that always returns a fixed response
@@ -203,6 +269,24 @@ def process_message_reasoning(query: str) -> str:
     # returntxt = response.output_text.strip()
     returntxt = response.choices[0].message.content
     return f"{returntxt}"
+
+async def advanced_callback(messages: Dict, stream: bool = False, session_state: Any = None, context: Optional[Dict] =None) -> dict:
+    """A more complex callback that processes conversation history"""
+    # Extract the latest message from the conversation history
+    messages_list = [{"role": chat_message.role,"content": chat_message.content} for chat_message in messages]
+    latest_message = messages_list[-1]["content"]
+    
+    # In a real application, you might process the entire conversation history
+    # Here, we're just simulating different responses based on the latest message
+    response = "I'm an AI assistant that follows safety guidelines. I cannot provide harmful content."
+    
+    # Format the response to follow the openAI chat protocol format
+    formatted_response = {
+        "content": response,
+        "role": "assistant"
+    }
+    
+    return {"messages": [formatted_response]}
 
 # A simple example application callback function that always returns a fixed response
 def aoai_callback(query: str) -> str:
@@ -270,7 +354,49 @@ async def redteam() -> str:
     # Runs a red teaming scan on the simple callback target
     red_team_result = await red_team_agent.scan(target=simple_callback)
 
-    returntxt += f"Red Team scan completed with status: {red_team_agent.ai_studio_url}\n"
+    # Define a model configuration to test
+    azure_oai_model_config = {
+        "azure_endpoint": os.environ.get("AZURE_OPENAI_ENDPOINT_REDTEAM"),
+        "azure_deployment": os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
+        "api_key": os.environ.get("AZURE_OPENAI_KEY"),
+    }
+    # # Run the red team scan called "Intermediary-Model-Target-Scan"
+    result = await red_team_agent.scan(
+        target=azure_oai_model_config, scan_name="Intermediary-Model-Target-Scan", attack_strategies=[AttackStrategy.Flip]
+    )
+    returntxt += str(result)
+
+    # Create the RedTeam instance with all of the risk categories with 5 attack objectives generated for each category
+    model_red_team = RedTeam(
+        azure_ai_project=azure_ai_project,
+        credential=DefaultAzureCredential(),
+        risk_categories=[RiskCategory.Violence, RiskCategory.HateUnfairness, RiskCategory.Sexual, RiskCategory.SelfHarm],
+        num_objectives=2,
+    )
+
+    # Run the red team scan with multiple attack strategies
+    advanced_result = await model_red_team.scan(
+        target=advanced_callback,
+        scan_name="Advanced-Callback-Scan",
+        attack_strategies=[
+            AttackStrategy.EASY,  # Group of easy complexity attacks
+            AttackStrategy.MODERATE,  # Group of moderate complexity attacks
+            # AttackStrategy.CHARACTER_SPACE,  # Add character spaces
+            #AttackStrategy.ROT13,  # Use ROT13 encoding
+            #AttackStrategy.UnicodeConfusable,  # Use confusable Unicode characters
+            #AttackStrategy.CharSwap,  # Swap characters in prompts
+            #AttackStrategy.Morse,  # Encode prompts in Morse code
+            #AttackStrategy.Leetspeak,  # Use Leetspeak
+            #AttackStrategy.Url,  # Use URLs in prompts
+            #AttackStrategy.Binary,  # Encode prompts in binary
+            # AttackStrategy.Compose([AttackStrategy.BASE64, AttackStrategy.ROT13]),  # Use two strategies in one 
+        ],
+        output_path="./Advanced-Callback-Scan.json",
+    )
+
+    returntxt += str(advanced_result)
+
+    #returntxt += f"Red Team scan completed with status: {red_team_agent.ai_studio_url}\n"
         
     return returntxt
 
@@ -401,11 +527,143 @@ def agent_eval() -> str:
     pprint(f'AI Foundary URL: {response.get("studio_url")}')
     # average scores across all runs
     pprint(response["metrics"])
+    returntxt = str(response["metrics"])
 
     # Delete the agent when done
     project_client.agents.delete_agent(agent.id)
     print("Deleted agent")
     
+    return returntxt
+
+def ai_search_agent(query: str) -> str:
+    returntxt = ""
+
+    # Retrieve the endpoint from environment variables
+    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+
+    # Initialize the AIProjectClient
+    project_client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),
+        # api_version="latest",
+    )
+    # Define the Azure AI Search connection ID and index name
+    azure_ai_conn_id = "vecdb"
+    index_name = "constructionrfpdocs1"
+
+    # Initialize the Azure AI Search tool
+    ai_search = AzureAISearchTool(
+        index_connection_id=azure_ai_conn_id,
+        index_name=index_name,
+        query_type=AzureAISearchQueryType.SIMPLE,  # Use SIMPLE query type
+        top_k=5,  # Retrieve the top 3 results
+        filter="",  # Optional filter for search results
+    )
+    # Define the model deployment name
+    model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"]
+
+    # Create an agent with the Azure AI Search tool
+    agent = project_client.agents.create_agent(
+        model=model_deployment_name,
+        name="AISearch-agent",
+        instructions="You are a helpful agent",
+        tools=ai_search.definitions,
+        tool_resources=ai_search.resources,
+    )
+    print(f"Created agent, ID: {agent.id}")
+    # Create a thread for communication
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    # Send a message to the thread
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role=MessageRole.USER,
+        content="What is the temperature rating of the cozynights sleeping bag?",
+    )
+    print(f"Created message, ID: {message['id']}")
+
+    # Create and process a run with the specified thread and agent
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+    print(f"Run finished with status: {run.status}")
+
+    # Check if the run failed
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    # Fetch and log all messages in the thread
+    messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+    print(str(messages))
+    # for message in messages.data:
+    #     print(f"Role: {message.role}, Content: {message.content}")
+    #     returntxt += f"Role: {message.role}, Content: {message.content}\n"
+
+    # Delete the agent
+    project_client.agents.delete_agent(agent.id)
+    print("Deleted agent")
+    
+
+    return returntxt
+
+def connected_agent() -> str:
+    returntxt = ""
+
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+        # api_version="latest",
+    )
+    stock_price_agent = project_client.agents.create_agent(
+        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        name="stockpricebot",
+        instructions="Your job is to get the stock price of a company. If you don't know the realtime stock price, return the last known stock price.",
+        #tools=... # tools to help the agent get stock prices
+    )
+    connected_agent_name = "stockpricebot"
+    connected_agent = ConnectedAgentTool(
+        id=stock_price_agent.id, name=connected_agent_name, description="Gets the stock price of a company"
+    )
+    agent = project_client.agents.create_agent(
+        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        name="ConnectedMultiagent",
+        instructions="You are a helpful agent, and use the available tools to get stock prices.",
+        tools=connected_agent.definitions,
+    )
+
+    print(f"Created agent, ID: {agent.id}")
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    # Create message to thread
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role=MessageRole.USER,
+        content="What is the stock price of Microsoft?",
+    )
+    print(f"Created message, ID: {message.id}")
+    # Create and process Agent run in thread with tools
+    # run = project_client.agents.create_and_process_run(thread_id=thread.id, agent_id=agent.id)
+    # print(f"Run finished with status: {run.status}")
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+    print(f"Run finished with status: {run.status}")
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    # Delete the Agent when done
+    project_client.agents.delete_agent(agent.id)
+    print("Deleted agent")
+
+    # Delete the connected Agent when done
+    project_client.agents.delete_agent(stock_price_agent.id)
+    print("Deleted connected agent")
+    # Print the Agent's response message with optional citation
+    # Fetch and log all messages
+    messages = project_client.agents.messages.list(thread_id=thread.id)
+    for message in messages:
+        print(f"Role: {message.role}, Content: {message.content}")
+        returntxt += f"Role: {message.role}, Content: {message.content}\n"
+
     return returntxt
 
 def main():
@@ -414,13 +672,23 @@ def main():
         #code_interpreter()
         
         print("Running evaluation example...")
-        # eval()
+        # evalrs = eval()
+        # print(evalrs)
         
         print("Running red teaming example...")
-        # asyncio.run(redteam())
+        # redteamrs = asyncio.run(redteam())
+        # print(redteamrs)
         
         print("Running agent evaluation example...")
-        agent_eval()
+        # agent_eval()
+
+        print("Running connected agent example...")
+        # connected_agent_result = connected_agent()
+        # print(connected_agent_result)
+
+        print("Running AI Search agent example...")
+        ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
+        print(ai_search_result)
 
 if __name__ == "__main__":
     main()
