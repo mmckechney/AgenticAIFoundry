@@ -56,6 +56,7 @@ from azure.ai.evaluation import evaluate
 from azure.ai.evaluation import GroundednessEvaluator, AzureOpenAIModelConfiguration
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition
+from utils import send_email
 
 from dotenv import load_dotenv
 
@@ -144,18 +145,21 @@ def eval()-> str:
         api_version=os.environ.get("AZURE_API_VERSION"),
     )
     ## Using Azure AI Foundry Hub project
-    azure_ai_project = {
-        "subscription_id": os.environ.get("AZURE_SUBSCRIPTION_ID"),
-        "resource_group_name": os.environ.get("AZURE_RESOURCE_GROUP"),
-        "project_name": os.environ.get("AZURE_PROJECT_NAME"),
-    }
-    azure_ai_project_dict = {
-        "subscription_id": os.environ.get("AZURE_SUBSCRIPTION_ID"),
-        "resource_group_name": os.environ.get("AZURE_RESOURCE_GROUP"),
-        "project_name": os.environ.get("AZURE_PROJECT_NAME"),
-        "azure_credential": DefaultAzureCredential(),
-    }
+    # azure_ai_project = {
+    #     "subscription_id": os.environ.get("AZURE_SUBSCRIPTION_ID"),
+    #     "resource_group_name": os.environ.get("AZURE_RESOURCE_GROUP"),
+    #     "project_name": os.environ.get("AZURE_PROJECT_NAME"),
+    # }
+    # azure_ai_project_dict = {
+    #     "subscription_id": os.environ.get("AZURE_SUBSCRIPTION_ID"),
+    #     "resource_group_name": os.environ.get("AZURE_RESOURCE_GROUP"),
+    #     "project_name": os.environ.get("AZURE_PROJECT_NAME"),
+    #     "azure_credential": DefaultAzureCredential(),
+    # }
     credential = DefaultAzureCredential()
+
+    azure_ai_project = os.environ.get("PROJECT_ENDPOINT")
+    azure_ai_project_dict = os.environ.get("PROJECT_ENDPOINT")
 
     # Initializing Groundedness and Groundedness Pro evaluators
     # groundedness_eval = GroundednessEvaluator(model_config)
@@ -222,7 +226,7 @@ def eval()-> str:
             "similarity": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
         },
         # Optionally provide your Azure AI Foundry project information to track your evaluation results in your project portal
-        # azure_ai_project = azure_ai_project,
+        azure_ai_project = os.environ["PROJECT_ENDPOINT"],
         # Optionally provide an output path to dump a json of metric summary, row level data and metric and Azure AI project URL
         output_path="./myevalresults.json"
     )
@@ -518,11 +522,7 @@ def agent_eval() -> str:
             "task_adherence": task_adherence,
             "response_completeness": response_completeness_evaluator,
         },
-        # azure_ai_project={
-        #     "subscription_id": os.environ["AZURE_SUBSCRIPTION_ID"],
-        #     "project_name": os.environ["AZURE_PROJECT_NAME"],
-        #     "resource_group_name": os.environ["AZURE_RESOURCE_GROUP"],
-        # },
+        azure_ai_project=os.environ["PROJECT_ENDPOINT"],
     )
     pprint(f'AI Foundary URL: {response.get("studio_url")}')
     # average scores across all runs
@@ -659,14 +659,30 @@ def connected_agent(query: str) -> str:
     search_connected_agent = ConnectedAgentTool(
         id=rfp_agent.id, name=search_connected_agent_name, description="Gets the construction proposals from the RFP documents"
     )
-    # toolset = ToolSet()
-    # toolset.add(connected_agent.definitions)
-    # toolset.add(search_connected_agent.definitions)
-    toolset = ToolDefinition()
-    # toolset.items[0] = connected_agent.definitions
-    # toolset.items[1] = search_connected_agent.definitions
-    # toolset.append(connected_agent)
-    # toolset.append(search_connected_agent)
+
+    # create a custom skill to send emails
+
+    # Define user functions
+    user_functions = {send_email}
+    # Initialize the FunctionTool with user-defined functions
+    functions = FunctionTool(functions=user_functions)
+    Emailagent = project_client.agents.create_agent(
+        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        name="SendEmailagent",
+        instructions="You are a helpful agent",
+        tools=functions.definitions,
+    )
+    sendemail_connected_agent_name = "SendEmailagent"
+    sendemail_connected_agent = ConnectedAgentTool(
+        id=Emailagent.id, name=sendemail_connected_agent_name, description="Get the content from other agents and send an email"
+    )
+
+    all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
+
+    # Deduplicate by tool name (or another unique property) to avoid ValueError
+    unique_tools = {}
+    for tool in all_tools:
+        unique_tools[getattr(tool, "name", id(tool))] = tool
 
 
     # Orchestrate the connected agent with the main agent
@@ -674,7 +690,7 @@ def connected_agent(query: str) -> str:
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
         instructions="You are a helpful agent, and use the available tools to get stock prices, Construction proposals.",
-        tools=search_connected_agent.definitions,  # Attach the connected agents
+        tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
     )
 
     print(f"Created agent, ID: {agent.id}")
@@ -724,14 +740,16 @@ def main():
         # print(evalrs)
         
         print("Running red teaming example...")
-        redteamrs = asyncio.run(redteam())
-        print(redteamrs)
+        # redteamrs = asyncio.run(redteam())
+        # print(redteamrs)
         
         print("Running agent evaluation example...")
-        # agent_eval()
+        agent_eval()
 
         print("Running connected agent example...")
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
+        # connected_agent_result = connected_agent("What is the stock price of Microsoft")
+        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com?")
         # print(connected_agent_result)
 
         print("Running AI Search agent example...")
