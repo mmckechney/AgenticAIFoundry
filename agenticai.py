@@ -680,7 +680,8 @@ def connected_agent(query: str) -> str:
         id=Emailagent.id, name=sendemail_connected_agent_name, description="Get the content from other agents and send an email"
     )
 
-    all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
+    # all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
+    all_tools = connected_agent.definitions + search_connected_agent.definitions
 
     # Deduplicate by tool name (or another unique property) to avoid ValueError
     unique_tools = {}
@@ -692,7 +693,7 @@ def connected_agent(query: str) -> str:
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
-        instructions="You are a helpful agent, and use the available tools to get stock prices, Construction proposals, based on request send emails.",
+        instructions="Summarize content, and use the available tools to get stock prices, Construction proposals, Send email as per request.",
         tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
     )
 
@@ -717,21 +718,60 @@ def connected_agent(query: str) -> str:
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
 
-    # Delete the Agent when done
-    project_client.agents.delete_agent(agent.id)
-    print("Deleted agent")
-
-    # Delete the connected Agent when done
-    project_client.agents.delete_agent(stock_price_agent.id)
+    # # Delete the Agent when done
+    # project_client.agents.delete_agent(agent.id)    
+    # print("Deleted agent")
+    # # Delete the connected Agent when done
+    # project_client.agents.delete_agent(stock_price_agent.id)
+    # project_client.agents.delete_agent(rfp_agent.id)
+    # project_client.agents.delete_agent(Emailagent.id)
     print("Deleted connected agent")
     # Print the Agent's response message with optional citation
     # Fetch and log all messages
     messages = project_client.agents.messages.list(thread_id=thread.id)
     for message in messages:
-        print(f"Role: {message.role}, Content: {message.content}")
-        returntxt += f"Role: {message.role}, Content: {message.content}\n"
+        if message.role == MessageRole.AGENT:
+            # print(f"Role: {message.role}, Content: {message.content}")
+            # returntxt += f"Role: {message.role}, Content: {message.content}\n"
+            returntxt += f"Source: {message.content[0]['text']['value']}\n"
 
     return returntxt
+
+def delete_agent():
+    # Authenticate and create the project client
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+        # api_version="latest",
+    )
+
+    # List all agents
+    agents = list(project_client.agents.list_agents())
+
+    for agent in agents:
+        print(f"Processing agent: {agent.id} ({agent.name})")
+
+        # List all threads for this agent
+        try:
+            threads = list(project_client.agents.threads.list(agent_id=agent.id))
+        except Exception as e:
+            print(f"Error listing threads for agent {agent.id}: {e}")
+            threads = []
+
+        for thread in threads:
+            print(f"  Deleting thread: {thread.id}")
+            try:
+                project_client.agents.threads.delete(thread.id)
+                print(f"  Deleted thread {thread.id}")
+            except Exception as e:
+                print(f"  Error deleting thread {thread.id}: {e}")
+
+        # Delete the agent
+        try:
+            project_client.agents.delete_agent(agent.id)
+            print(f"Deleted agent {agent.id}")
+        except Exception as e:
+            print(f"Error deleting agent {agent.id}: {e}")
 
 def main():
     with tracer.start_as_current_span("azureaifoundryagent-tracing"):
@@ -752,12 +792,15 @@ def main():
         print("Running connected agent example...")
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # connected_agent_result = connected_agent("What is the stock price of Microsoft")
-        connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com?")
-        print(connected_agent_result)
+        connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
+        print('Final Output Answer: ', connected_agent_result)
 
         print("Running AI Search agent example...")
         # ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
         # print(ai_search_result)
+
+        # print("Deleteing agents...")
+        # delete_agent()
 
 if __name__ == "__main__":
     main()
