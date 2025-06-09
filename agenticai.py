@@ -579,7 +579,7 @@ def ai_search_agent(query: str) -> str:
     message = project_client.agents.messages.create(
         thread_id=thread.id,
         role=MessageRole.USER,
-        content="What is the temperature rating of the cozynights sleeping bag?",
+        content=query,
     )
     print(f"Created message, ID: {message['id']}")
 
@@ -597,6 +597,11 @@ def ai_search_agent(query: str) -> str:
     # for message in messages.data:
     #     print(f"Role: {message.role}, Content: {message.content}")
     #     returntxt += f"Role: {message.role}, Content: {message.content}\n"
+    for page in messages.by_page():
+        for item in page:
+            # print(item)
+            # returntxt += f"Role: {item.role}, Content: {item.content[0]['text']['value']}\n"
+            returntxt += f"Source: {item.content[0]['text']['value']}\n"
 
     # Delete the agent
     project_client.agents.delete_agent(agent.id)
