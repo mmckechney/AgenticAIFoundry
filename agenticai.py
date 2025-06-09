@@ -779,6 +779,7 @@ def main():
         #code_interpreter()
         
         print("Running evaluation example...")
+        # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/evaluation/azure-ai-evaluation/samples/evaluation_samples_evaluate_fdp.py
         # evalrs = eval()
         # print(evalrs)
         
