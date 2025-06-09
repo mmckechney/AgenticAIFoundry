@@ -504,23 +504,26 @@ def agent_eval() -> str:
         azure_deployment=os.environ["MODEL_DEPLOYMENT_NAME"],
     )
     # Needed to use content safety evaluators
-    azure_ai_project = {
-        "subscription_id": os.environ["AZURE_SUBSCRIPTION_ID"],
-        "project_name": os.environ["AZURE_PROJECT_NAME"],
-        "resource_group_name": os.environ["AZURE_RESOURCE_GROUP"],
-    }
+    # azure_ai_project = {
+    #     "subscription_id": os.environ["AZURE_SUBSCRIPTION_ID"],
+    #     "project_name": os.environ["AZURE_PROJECT_NAME"],
+    #     "resource_group_name": os.environ["AZURE_RESOURCE_GROUP"],
+    # }
+
+    azure_ai_project = os.environ["PROJECT_ENDPOINT"]
 
     intent_resolution = IntentResolutionEvaluator(model_config=model_config)
     tool_call_accuracy = ToolCallAccuracyEvaluator(model_config=model_config)
     task_adherence = TaskAdherenceEvaluator(model_config=model_config)
-    response_completeness_evaluator = ResponseCompletenessEvaluator(model_config=model_config)
+    #response_completeness_evaluator = CompletenessEvaluator(model_config=model_config, azure_ai_project=azure_ai_project)
+    
     response = evaluate(
         data=file_name,
         evaluators={
             "tool_call_accuracy": tool_call_accuracy,
             "intent_resolution": intent_resolution,
             "task_adherence": task_adherence,
-            "response_completeness": response_completeness_evaluator,
+            #"response_completeness": response_completeness_evaluator,
         },
         azure_ai_project=os.environ["PROJECT_ENDPOINT"],
     )
@@ -689,7 +692,7 @@ def connected_agent(query: str) -> str:
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
-        instructions="You are a helpful agent, and use the available tools to get stock prices, Construction proposals.",
+        instructions="You are a helpful agent, and use the available tools to get stock prices, Construction proposals, based on request send emails.",
         tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
     )
 
@@ -744,13 +747,13 @@ def main():
         # print(redteamrs)
         
         print("Running agent evaluation example...")
-        agent_eval()
+        # agent_eval()
 
         print("Running connected agent example...")
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # connected_agent_result = connected_agent("What is the stock price of Microsoft")
-        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com?")
-        # print(connected_agent_result)
+        connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com?")
+        print(connected_agent_result)
 
         print("Running AI Search agent example...")
         # ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
