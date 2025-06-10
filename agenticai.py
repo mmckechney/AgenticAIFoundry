@@ -669,12 +669,17 @@ def connected_agent(query: str) -> str:
     # Define user functions
     user_functions = {send_email}
     # Initialize the FunctionTool with user-defined functions
+    # functions = FunctionTool(functions=user_functions)
+    # Create an agent
     functions = FunctionTool(functions=user_functions)
+    toolset = ToolSet()
+    toolset.add(functions)
     Emailagent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="SendEmailagent",
-        instructions="You are a helpful agent, Send an email to the recipient with the content provided by other agents using tools provided.",
-        tools=functions.definitions,
+        instructions="You are a specialized agent for sending emails.",
+        # tools=functions.definitions,
+        toolset=toolset,  # Attach the FunctionTool to the agent
     )
     sendemail_connected_agent_name = "SendEmailagent"
     sendemail_connected_agent = ConnectedAgentTool(
@@ -682,8 +687,8 @@ def connected_agent(query: str) -> str:
     )
 
     # all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
-    all_tools = connected_agent.definitions + search_connected_agent.definitions
-    # all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
+    # all_tools = connected_agent.definitions + search_connected_agent.definitions
+    all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
 
     # Deduplicate by tool name (or another unique property) to avoid ValueError
     unique_tools = {}
@@ -823,7 +828,8 @@ def main():
         # print(redteamrs)
         
         print("Running agent evaluation example...")
-        # agent_eval()
+        # agentevalrs = agent_eval()
+        # print(agentevalrs)
 
         print("Running connected agent example...")
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
