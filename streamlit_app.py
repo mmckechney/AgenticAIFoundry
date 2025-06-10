@@ -411,7 +411,7 @@ def show_code_interpreter(enable_speech: bool, show_debug: bool):
                 st.warning("Please enter a message first.")
     
     with col2:
-        if st.button("📋 Clear Output"):
+        if st.button("📋 Clear Output", key=5):
             st.session_state['code_interpreter_output'] = ""
             if 'code_interpreter_input' in st.session_state:
                 del st.session_state['code_interpreter_input']
@@ -527,7 +527,7 @@ def show_ai_evaluation(enable_speech: bool, show_debug: bool):
                     st.error(f"❌ {error_msg}")
     
     with col2:
-        if st.button("📋 Clear Results"):
+        if st.button("📋 Clear Results", key=1):
             st.session_state['ai_eval_output'] = ""
             st.rerun()
     
@@ -741,7 +741,7 @@ def show_agent_evaluation(enable_speech: bool, show_debug: bool):
                     st.error(f"❌ {error_msg}")
     
     with col2:
-        if st.button("📋 Clear Results"):
+        if st.button("📋 Clear Results", key=2):
             st.session_state['agent_eval_output'] = ""
             st.rerun()
     
@@ -804,7 +804,7 @@ def show_connected_agents(enable_speech: bool, show_debug: bool):
                 st.warning("Please enter a query first.")
     
     with col2:
-        if st.button("📋 Clear Output"):
+        if st.button("📋 Clear Output", key=4):
             st.session_state['connected_agent_output'] = ""
             if 'connected_agent_input' in st.session_state:
                 del st.session_state['connected_agent_input']
@@ -849,7 +849,7 @@ def show_ai_search(enable_speech: bool, show_debug: bool):
                 st.warning("Please enter a search query first.")
     
     with col2:
-        if st.button("📋 Clear Results"):
+        if st.button("📋 Clear Results", key=3):
             st.session_state['ai_search_output'] = ""
             st.rerun()
     

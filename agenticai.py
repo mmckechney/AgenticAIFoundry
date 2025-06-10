@@ -1,4 +1,5 @@
 import asyncio
+import time
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import (
@@ -672,7 +673,7 @@ def connected_agent(query: str) -> str:
     Emailagent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="SendEmailagent",
-        instructions="You are a helpful agent",
+        instructions="You are a helpful agent, Send an email to the recipient with the content provided by other agents using tools provided.",
         tools=functions.definitions,
     )
     sendemail_connected_agent_name = "SendEmailagent"
@@ -681,7 +682,8 @@ def connected_agent(query: str) -> str:
     )
 
     # all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
-    all_tools = connected_agent.definitions + search_connected_agent.definitions
+    # all_tools = connected_agent.definitions + search_connected_agent.definitions
+    all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
 
     # Deduplicate by tool name (or another unique property) to avoid ValueError
     unique_tools = {}
@@ -693,7 +695,11 @@ def connected_agent(query: str) -> str:
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
-        instructions="Summarize content, and use the available tools to get stock prices, Construction proposals, Send email as per request.",
+        instructions="""Create a strategy with tasks based on agents available in sequence.
+        Pick the right agent based on the strategy and task.
+        Summarize the content, and use the available tools to get stock prices, Construction proposals, 
+        Send email as per request.
+        """,
         tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
     )
 
@@ -713,7 +719,34 @@ def connected_agent(query: str) -> str:
     # run = project_client.agents.create_and_process_run(thread_id=thread.id, agent_id=agent.id)
     # print(f"Run finished with status: {run.status}")
     run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
-    print(f"Run finished with status: {run.status}")
+    # Poll the run status until it is completed or requires action
+    while run.status in ["queued", "in_progress", "requires_action"]:
+        time.sleep(1)
+        run = project_client.agents.runs.get(thread_id=thread.id, run_id=run.id)
+
+        if run.status == "requires_action":
+            tool_calls = run.required_action.submit_tool_outputs.tool_calls
+            tool_outputs = []
+            for tool_call in tool_calls:
+                print(f"Tool call: {tool_call.name}, ID: {tool_call.id}")
+            #     if tool_call.name == "fetch_weather":
+            #         output = fetch_weather("New York")
+            #         tool_outputs.append({"tool_call_id": tool_call.id, "output": output})
+            # project_client.agents.runs.submit_tool_outputs(thread_id=thread.id, run_id=run.id, tool_outputs=tool_outputs)
+
+    print(f"Run completed with status: {run.status}")
+    # print(f"Run finished with status: {run.status}")
+
+    # Fetch the steps or trace for the run
+    # steps = project_client.agents.runs.get_steps(run_id=run.id)
+    # for step in steps:
+    #     # Assuming each step has an 'agent_name' or 'tool_name' attribute
+    #     print(f"Step {step.id}: Used agent/tool: {step.agent_name or step.tool_name}")
+
+    # trace = project_client.agents.runs.get_trace(run_id=run.id)
+    # for event in trace.events:
+    #     print(f"Agent/tool invoked: {event.agent_name or event.tool_name}")
+
 
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
@@ -731,9 +764,11 @@ def connected_agent(query: str) -> str:
     messages = project_client.agents.messages.list(thread_id=thread.id)
     for message in messages:
         if message.role == MessageRole.AGENT:
-            # print(f"Role: {message.role}, Content: {message.content}")
+            print(f"Role: {message.role}, Content: {message.content}")
             # returntxt += f"Role: {message.role}, Content: {message.content}\n"
-            returntxt += f"Source: {message.content[0]['text']['value']}\n"
+            # returntxt += f"Source: {message.content[0]['text']['value']}\n"
+            returntxt += f"Source: {message.content[0].text.value}\n"
+    # returntxt = f"{message.content[-1].text.value}"
 
     return returntxt
 
@@ -753,7 +788,7 @@ def delete_agent():
 
         # List all threads for this agent
         try:
-            threads = list(project_client.agents.threads.list(agent_id=agent.id))
+            threads = list(project_client.agents.threads.list(agent=agent.id))
         except Exception as e:
             print(f"Error listing threads for agent {agent.id}: {e}")
             threads = []
