@@ -136,6 +136,33 @@ GOOGLE_APP_PASSWORD=<your_gmail_app_password>
 
 ## Usage
 
+### 🌐 Web Application (Recommended)
+
+Launch the comprehensive Streamlit web interface to interact with all features:
+
+```bash
+# Quick start with launch script
+chmod +x run_app.sh
+./run_app.sh
+
+# Or run directly
+streamlit run streamlit_app.py
+```
+
+**Web Interface Features:**
+- 🏠 **Interactive Dashboard**: Visual overview of all capabilities
+- 🎯 **Easy Navigation**: Tab-based interface for all agents and tools
+- 📊 **Real-time Progress**: Visual feedback during execution
+- 🎤 **Multiple Input Types**: Text, file uploads, speech-to-text
+- ⚙️ **Configuration Management**: Environment status and settings
+- 📱 **Responsive Design**: Optimized for various screen sizes
+
+Access the application at: **http://localhost:8501**
+
+See [WEB_APP_README.md](WEB_APP_README.md) for detailed web interface documentation.
+
+### 📋 Command Line Usage
+
 ### Running the Main Application
 
 The main script demonstrates various AI agent capabilities:
@@ -200,9 +227,12 @@ print(result)
 AgenticAIFoundry/
 │
 ├── agenticai.py              # Main application with all agent examples
+├── streamlit_app.py          # Web interface for all functionality
 ├── utils.py                  # Utility functions (email sending, etc.)
 ├── requirements.txt          # Python dependencies
 ├── README.md                # This documentation
+├── WEB_APP_README.md        # Web application documentation
+├── run_app.sh               # Web application launcher script
 ├── .env                     # Environment variables (create from template)
 ├── .env.example             # Environment variables template
 │
