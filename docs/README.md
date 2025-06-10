@@ -27,7 +27,25 @@ This comprehensive documentation suite provides complete guidance for understand
 - Technical documentation for stakeholders
 - System design discussions
 
-### 2. [Technical Component Diagrams](./technical-diagrams.md)
+### 2. [Mermaid Architecture Diagrams](./mermaid-architecture-diagram.md)
+**Primary Purpose**: Interactive visual diagrams showing complete system architecture and agent connections
+
+**Target Audience**: System architects, developers, and technical stakeholders who prefer interactive visual documentation
+
+**Key Contents**:
+- **Complete System Architecture**: Comprehensive mermaid diagram showing all agents, evaluation frameworks, and security testing
+- **Agent Interaction Flow**: Sequence diagram showing how agents communicate and collaborate  
+- **Evaluation Pipeline Flow**: Flowchart of the complete evaluation process with all metrics
+- **Red Team Security Testing Flow**: Security testing workflow and attack strategies
+- **Component Dependencies**: Dependency relationships and external integrations
+
+**When to Use**:
+- Visual understanding of system architecture
+- Interactive exploration of component relationships
+- Presentations and documentation that support mermaid rendering
+- Quick reference for system overview
+
+### 3. [Technical Component Diagrams](./technical-diagrams.md)
 **Primary Purpose**: Detailed visual representations of system internals and data flows
 
 **Target Audience**: Software architects, senior developers, and system integrators
@@ -46,7 +64,7 @@ This comprehensive documentation suite provides complete guidance for understand
 - Debugging complex issues
 - System integration planning
 
-### 3. [Implementation Guide](./implementation-guide.md)
+### 4. [Implementation Guide](./implementation-guide.md)
 **Primary Purpose**: Step-by-step implementation instructions with complete code examples
 
 **Target Audience**: Developers, DevOps engineers, and implementation teams
@@ -67,7 +85,7 @@ This comprehensive documentation suite provides complete guidance for understand
 - Learning specific implementation patterns
 - Troubleshooting implementation issues
 
-### 4. [Quick Reference Guide](./quick-reference.md)
+### 5. [Quick Reference Guide](./quick-reference.md)
 **Primary Purpose**: Concise reference for daily development work
 
 **Target Audience**: Developers actively working with the platform
@@ -93,15 +111,17 @@ This comprehensive documentation suite provides complete guidance for understand
 
 ### For New Team Members
 1. **Start with**: [Architecture Blueprint](./architecture-blueprint.md) - Executive Summary & System Overview
-2. **Then read**: [Quick Reference Guide](./quick-reference.md) - Quick Start & Component Overview
-3. **Follow with**: [Implementation Guide](./implementation-guide.md) - Getting Started section
-4. **Reference**: [Technical Diagrams](./technical-diagrams.md) as needed for specific components
+2. **Visualize**: [Mermaid Architecture Diagrams](./mermaid-architecture-diagram.md) - Complete System Architecture  
+3. **Then read**: [Quick Reference Guide](./quick-reference.md) - Quick Start & Component Overview
+4. **Follow with**: [Implementation Guide](./implementation-guide.md) - Getting Started section
+5. **Reference**: [Technical Diagrams](./technical-diagrams.md) as needed for specific components
 
 ### For System Design & Planning
 1. **Primary**: [Architecture Blueprint](./architecture-blueprint.md) - Complete document
-2. **Supporting**: [Technical Diagrams](./technical-diagrams.md) - All component diagrams
-3. **Implementation**: [Implementation Guide](./implementation-guide.md) - Best practices sections
-4. **Reference**: [Quick Reference Guide](./quick-reference.md) - Performance benchmarks
+2. **Visual Overview**: [Mermaid Architecture Diagrams](./mermaid-architecture-diagram.md) - All interactive diagrams
+3. **Supporting**: [Technical Diagrams](./technical-diagrams.md) - All component diagrams
+4. **Implementation**: [Implementation Guide](./implementation-guide.md) - Best practices sections
+5. **Reference**: [Quick Reference Guide](./quick-reference.md) - Performance benchmarks
 
 ### For Active Development
 1. **Primary**: [Implementation Guide](./implementation-guide.md) - Relevant implementation sections
@@ -127,18 +147,21 @@ This comprehensive documentation suite provides complete guidance for understand
 
 #### Agent Development
 - **Architecture Overview**: [Architecture Blueprint](./architecture-blueprint.md) → Agent Ecosystem
+- **Visual Architecture**: [Mermaid Architecture Diagrams](./mermaid-architecture-diagram.md) → Complete System Architecture
 - **Technical Details**: [Technical Diagrams](./technical-diagrams.md) → Agent Architecture Diagrams  
 - **Implementation**: [Implementation Guide](./implementation-guide.md) → Agent Implementation Patterns
 - **Quick Reference**: [Quick Reference Guide](./quick-reference.md) → Core Functions Reference
 
 #### Evaluation Framework
 - **Design & Architecture**: [Architecture Blueprint](./architecture-blueprint.md) → Evaluation Framework
+- **Pipeline Visualization**: [Mermaid Architecture Diagrams](./mermaid-architecture-diagram.md) → Evaluation Pipeline Flow
 - **Data Flow**: [Technical Diagrams](./technical-diagrams.md) → Evaluation Framework Diagrams
 - **Full Implementation**: [Implementation Guide](./implementation-guide.md) → Evaluation Implementation
 - **Metrics Reference**: [Quick Reference Guide](./quick-reference.md) → Evaluation Metrics
 
 #### Security Testing
 - **Security Model**: [Architecture Blueprint](./architecture-blueprint.md) → Security Architecture
+- **Testing Flow**: [Mermaid Architecture Diagrams](./mermaid-architecture-diagram.md) → Red Team Security Testing Flow
 - **Framework Details**: [Technical Diagrams](./technical-diagrams.md) → Security Testing Diagrams
 - **Implementation**: [Implementation Guide](./implementation-guide.md) → Security Testing Implementation
 - **Quick Setup**: [Quick Reference Guide](./quick-reference.md) → Security Testing
@@ -193,9 +216,10 @@ All documentation follows the same versioning as the main codebase and should be
 ### For Architects & Technical Leads
 ```
 1. Study: Architecture Blueprint → Complete document (45 min)
-2. Review: Technical Diagrams → All diagrams (30 min)
-3. Validate: Implementation Guide → Best practices (20 min)
-4. Plan: Use all documents for project planning and review
+2. Visualize: Mermaid Architecture Diagrams → All interactive diagrams (15 min)
+3. Review: Technical Diagrams → All diagrams (30 min)
+4. Validate: Implementation Guide → Best practices (20 min)
+5. Plan: Use all documents for project planning and review
 ```
 
 ---

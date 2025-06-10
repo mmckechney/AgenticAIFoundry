@@ -1,6 +1,17 @@
 # AgenticAIFoundry - Mermaid Architecture Diagram
 
-This document contains a comprehensive mermaid diagram showing the complete architecture of the AgenticAIFoundry platform, including all connected agents, evaluation frameworks, red team testing, and external integrations.
+This document contains comprehensive mermaid diagrams showing the complete architecture of the AgenticAIFoundry platform, including all connected agents, evaluation frameworks, red team testing, and external integrations.
+
+## Viewing the Diagrams
+
+These mermaid diagrams can be viewed in several ways:
+
+1. **GitHub**: The diagrams should render automatically when viewing this file on GitHub
+2. **VS Code**: Install the "Mermaid Markdown Syntax Highlighting" extension
+3. **Online Viewers**: Copy the mermaid code to [mermaid.live](https://mermaid.live) or [mermaid-js.github.io](https://mermaid-js.github.io/mermaid-live-editor)
+4. **Local Tools**: Use mermaid CLI tools or browser extensions that support mermaid rendering
+
+> **Note**: If the diagrams don't render properly in your environment, you can copy the mermaid code blocks to any online mermaid viewer for proper visualization.
 
 ## Complete System Architecture
 
