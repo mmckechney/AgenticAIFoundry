@@ -22,17 +22,17 @@ graph TB
     
     %% Core Agent Ecosystem
     Main --> AgentManager[Agent Manager]
-    AgentManager --> CodeAgent[Code Interpreter Agent<br/>code_interpreter()]
-    AgentManager --> SearchAgent[AI Search Agent<br/>ai_search_agent()]
-    AgentManager --> ConnectedAgent[Connected Agent<br/>connected_agent()]
-    AgentManager --> ReasoningAgent[Reasoning Agent<br/>process_message_reasoning()]
-    AgentManager --> WeatherAgent[Weather Agent<br/>fetch_weather()]
+    AgentManager --> CodeAgent[Code Interpreter Agent<br/>code_interpreter]
+    AgentManager --> SearchAgent[AI Search Agent<br/>ai_search_agent]
+    AgentManager --> ConnectedAgent[Connected Agent<br/>connected_agent]
+    AgentManager --> ReasoningAgent[Reasoning Agent<br/>process_message_reasoning]
+    AgentManager --> WeatherAgent[Weather Agent<br/>fetch_weather]
     
     %% Evaluation Framework
-    Main --> EvalFramework[Evaluation Framework<br/>eval()]
+    Main --> EvalFramework[Evaluation Framework<br/>eval]
     EvalFramework --> QualityEval[Quality Evaluators]
     EvalFramework --> SafetyEval[Safety Evaluators]
-    EvalFramework --> AgenticEval[Agentic Evaluators<br/>agent_eval()]
+    EvalFramework --> AgenticEval[Agentic Evaluators<br/>agent_eval]
     EvalFramework --> AdvancedEval[Advanced Metrics]
     
     %% Quality Evaluators Details
@@ -66,7 +66,7 @@ graph TB
     AdvancedEval --> GroundnessPro[Groundedness Pro Evaluator]
     
     %% Red Team Security Testing
-    Main --> RedTeam[Red Team Framework<br/>redteam()]
+    Main --> RedTeam[Red Team Framework<br/>redteam]
     RedTeam --> RiskCategories[Risk Categories]
     RedTeam --> AttackStrategies[Attack Strategies]
     RedTeam --> TargetSystems[Target Systems]
@@ -92,7 +92,7 @@ graph TB
     
     %% Connected Agent Sub-components
     ConnectedAgent --> StockAgent[Stock Price Agent]
-    ConnectedAgent --> EmailAgent[Email Agent<br/>send_email()]
+    ConnectedAgent --> EmailAgent[Email Agent<br/>send_email]
     ConnectedAgent --> RFPAgent[RFP Search Agent]
     ConnectedAgent --> MainOrchestrator[Main Orchestrator Agent]
     
