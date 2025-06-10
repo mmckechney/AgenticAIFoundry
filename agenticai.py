@@ -788,7 +788,7 @@ def delete_agent():
 
         # List all threads for this agent
         try:
-            threads = list(project_client.agents.threads.list(agent=agent.id))
+            threads = list(project_client.agents.threads.list())
         except Exception as e:
             print(f"Error listing threads for agent {agent.id}: {e}")
             threads = []
