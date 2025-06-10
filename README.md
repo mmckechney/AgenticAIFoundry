@@ -35,6 +35,16 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 - **Professional output formatting**: Enterprise-ready response formatting
 - **Latest API support**: Compatible with 2024-12-01-preview API version
 
+## 📚 Documentation
+
+For detailed architecture and implementation information, see the comprehensive documentation in the `docs/` directory:
+
+- **[Architecture Blueprint](docs/architecture-blueprint.md)** - Complete system design and architecture overview
+- **[Mermaid Architecture Diagrams](docs/mermaid-architecture-diagram.md)** - Interactive visual diagrams showing agent connections and data flows
+- **[Technical Diagrams](docs/technical-diagrams.md)** - Detailed ASCII component diagrams
+- **[Implementation Guide](docs/implementation-guide.md)** - Agent implementation patterns and examples
+- **[Quick Reference](docs/quick-reference.md)** - Quick reference for common tasks
+
 ## Prerequisites
 
 - **Python 3.12** (Required - Python 3.13 not supported)
@@ -251,6 +261,13 @@ AgenticAIFoundry/
 ├── run_app.sh               # Web application launcher script
 ├── .env                     # Environment variables (create from template)
 ├── .env.example             # Environment variables template
+│
+├── docs/                    # Documentation directory
+├──── architecture-blueprint.md     # Architecture design document
+├──── technical-diagrams.md         # Technical component diagrams (ASCII)
+├──── mermaid-architecture-diagram.md # Interactive mermaid diagrams
+├──── implementation-guide.md       # Implementation patterns and examples
+├──── quick-reference.md           # Quick reference guide
 │
 ├── Data Files/
 ├── datarfp.jsonl            # Evaluation dataset
