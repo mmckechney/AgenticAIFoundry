@@ -221,6 +221,22 @@ result = process_message_reasoning(query)
 print(result)
 ```
 
+## 🌐 Deployment
+
+### Azure Web App Deployment
+
+Deploy the application to Azure Web App using the provided GitHub Actions workflow:
+
+1. **Setup**: Follow the [Deployment Guide](DEPLOYMENT.md) for complete instructions
+2. **Configuration**: Configure Azure Web App with Python 3.12 runtime
+3. **Secrets**: Add `AZUREAPPSERVICE_PUBLISHPROFILE` secret to GitHub repository
+4. **Environment Variables**: Set required Azure AI service credentials in Azure Web App configuration
+5. **Deploy**: Push to main branch or manually trigger the workflow
+
+The application includes automatic environment detection and will run in demo mode if Azure AI dependencies are not fully configured.
+
+For detailed setup instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Project Structure
 
 ```
