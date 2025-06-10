@@ -682,8 +682,8 @@ def connected_agent(query: str) -> str:
     )
 
     # all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
-    # all_tools = connected_agent.definitions + search_connected_agent.definitions
-    all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
+    all_tools = connected_agent.definitions + search_connected_agent.definitions
+    # all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
 
     # Deduplicate by tool name (or another unique property) to avoid ValueError
     unique_tools = {}
