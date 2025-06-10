@@ -13,3 +13,5 @@ azure-identity
 azure-search-documents
 azure-ai-inference[prompts]
 azure-monitor-opentelemetry
+speech-recognition
+pydub
