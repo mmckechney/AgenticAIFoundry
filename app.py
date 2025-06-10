@@ -37,6 +37,7 @@ st.set_page_config(
 def main():
     st.title("AgenticAI Foundry 🤖")
     st.header("Code interpreter -> AI Evaluation -> RedTeam Agent -> Agent Evaluation -> Connected Agents -> Delete Agent")
+    # https://github.com/Azure-Samples/azure-ai-agent-service-enterprise-demo/blob/main/enterprise-streaming-agent.ipynb
 
     if st.button("Code Interpreter"):
         with st.spinner("Executing code interpreter..."):
