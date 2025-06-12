@@ -774,13 +774,14 @@ def connected_agent(query: str) -> str:
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
         instructions="""
-        You are a helpful assistant, and use the connected agents to get stock prices, construction RFP Data, Send Email and Sustainability Paper.
+        You are a helpful assistant, and use the connected agents to get stock prices, construction RFP Data, 
+        Send Email and Sustainability Paper.
         """,
         # tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
         tools=[
             connected_agent.definitions[0],
-            search_connected_agent.definitions[0],
-            sendemail_connected_agent.definitions[0],
+            # search_connected_agent.definitions[0],
+            # sendemail_connected_agent.definitions[0],
             sustainability_connected_agent.definitions[0],
         ]
     )
@@ -822,6 +823,26 @@ def connected_agent(query: str) -> str:
 
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
+
+    # Fetch run steps to get the details of the agent run
+    run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+    for step in run_steps:
+        print(f"Step {step['id']} status: {step['status']}")
+        step_details = step.get("step_details", {})
+        tool_calls = step_details.get("tool_calls", [])
+
+        if tool_calls:
+            print("  Tool calls:")
+            for call in tool_calls:
+                print(f"    Tool Call ID: {call.get('id')}")
+                print(f"    Type: {call.get('type')}")
+
+                connected_agent = call.get("connected_agent", {})
+                if connected_agent:
+                    print(f"    Connected Input(Name of Agent): {connected_agent.get('name')}")
+                    print(f"    Connected Output: {connected_agent.get('output')}")
+
+        print()  # add an extra newline between steps
 
     messages = project_client.agents.messages.list(thread_id=thread.id)
     for message in messages:
@@ -928,6 +949,8 @@ def load_existing_agent(query: str) -> str:
     run = project.agents.runs.create_and_process(
         thread_id=thread.id,
         agent_id=agent.id)
+    
+    
 
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
@@ -938,6 +961,26 @@ def load_existing_agent(query: str) -> str:
                 # print(f"{message.role}: {message.text_messages[-1].text.value}")
                 returntxt += f"Source: {message.content[0].text.value}\n"
             print(f"Messages inside thread {message}\n\n")
+
+        # Fetch run steps to get the details of the agent run
+        run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+        for step in run_steps:
+            print(f"Step {step['id']} status: {step['status']}")
+            step_details = step.get("step_details", {})
+            tool_calls = step_details.get("tool_calls", [])
+
+            if tool_calls:
+                print("  Tool calls:")
+                for call in tool_calls:
+                    print(f"    Tool Call ID: {call.get('id')}")
+                    print(f"    Type: {call.get('type')}")
+
+                    connected_agent = call.get("connected_agent", {})
+                    if connected_agent:
+                        print(f"    Connected Input(Name of Agent): {connected_agent.get('name')}")
+                        print(f"    Connected Output: {connected_agent.get('output')}")
+
+            print()  # add an extra newline between steps
     # Delete the agent when done
     project.agents.threads.delete(thread.id)
 
@@ -980,7 +1023,7 @@ def main():
         print("Calling existing agent example...")
         starttime = datetime.now()
         # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
-        exsitingagentrs = load_existing_agent("Summarize sustainability framework for learning factory from file uploaded?")
+        exsitingagentrs = load_existing_agent("Summarize sustainability framework for learning factory from file uploaded and get me microsoft stock price")
         print(exsitingagentrs)
         endtime = datetime.now()
         print(f"Delete agent example completed in {endtime - starttime} seconds")
@@ -990,6 +1033,10 @@ def main():
         # delete_agent()
         # endtime = datetime.now()
         # print(f"Delete agent example completed in {endtime - starttime} seconds")
+
+
+        # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_multiagent/sample_agents_multi_agent_team.py
+        # multiagent
 
 if __name__ == "__main__":
     main()
