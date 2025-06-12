@@ -773,12 +773,8 @@ def connected_agent(query: str) -> str:
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
-        instructions="""You are main orchestrator assistant agent. 
-        Create a strategy with tasks based on agents available in sequence.
-        Pick the right agent based on the strategy and task.
-        Summarize the content, and use the available tools to get stock prices, Construction proposals, 
-        Send email as per request.
-        Based on the user query, route accordingly.
+        instructions="""
+        You are a helpful assistant, and use the connected agents to get stock prices, construction RFP Data, Send Email and Sustainability Paper.
         """,
         # tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
         tools=[
@@ -837,33 +833,35 @@ def connected_agent(query: str) -> str:
     # returntxt = f"{message.content[-1].text.value}"
 
     # Delete the Agent when done
-    project_client.agents.delete_agent(agent.id)    
-    print("Deleted agent")
-    # Delete the connected Agent when done
-    project_client.agents.delete_agent(stock_price_agent.id)
-    project_client.agents.delete_agent(rfp_agent.id)
-    project_client.agents.delete_agent(Emailagent.id)
-    project_client.agents.delete_agent(Sustainablityagent.id)
-    print("Deleted connected agent")
-    # Cleanup resources
-    project_client.agents.vector_stores.delete(vector_store.id)
-    print("Deleted vector store")
-    print(" # start to delete threads for this agent")
-    # List all threads for this agent
-    try:
-        threads = list(project_client.agents.threads.list())
-    except Exception as e:
-        print(f"Error listing threads for agent {agent.id}: {e}")
-        threads = []
+    # project_client.agents.delete_agent(agent.id)    
+    # print("Deleted agent")
+    # # Delete the connected Agent when done
+    # project_client.agents.delete_agent(stock_price_agent.id)
+    # project_client.agents.delete_agent(rfp_agent.id)
+    # project_client.agents.delete_agent(Emailagent.id)
+    # project_client.agents.delete_agent(Sustainablityagent.id)
+    # print("Deleted connected agent")
+    # # Cleanup resources
+    # project_client.agents.files.delete(file_id=file.id)
+    # print("Deleted file")
+    # project_client.agents.vector_stores.delete(vector_store.id)
+    # print("Deleted vector store")
+    # print(" # start to delete threads for this agent")
+    # # List all threads for this agent
+    # try:
+    #     threads = list(project_client.agents.threads.list())
+    # except Exception as e:
+    #     print(f"Error listing threads for agent {agent.id}: {e}")
+    #     threads = []
 
-    for thread in threads:
-        print(f"  Deleting thread: {thread.id}")
-        try:
-            project_client.agents.threads.delete(thread.id)
-            print(f"  Deleted thread {thread.id}")
-        except Exception as e:
-            print(f"  Error deleting thread {thread.id}: {e}")
-    print("# deleted all threads for this agent")
+    # for thread in threads:
+    #     print(f"  Deleting thread: {thread.id}")
+    #     try:
+    #         project_client.agents.threads.delete(thread.id)
+    #         print(f"  Deleted thread {thread.id}")
+    #     except Exception as e:
+    #         print(f"  Error deleting thread {thread.id}: {e}")
+    # print("# deleted all threads for this agent")
     # Print the Agent's response message with optional citation
     # Fetch and log all messages
     
@@ -914,9 +912,12 @@ def load_existing_agent(query: str) -> str:
         endpoint=os.environ["PROJECT_ENDPOINT"]
     )
 
-    agent = project.agents.get_agent("asst_exdtoSMGNqTDp7eByS6sRE5J")
+    agent = project.agents.get_agent("asst_GipO6VepHiB41MJdGvlAIXay")
 
-    thread = project.agents.threads.get("thread_NDsLPhDy55d826inFC0xq5hw")
+    # thread = project.agents.threads.get("thread_ndWUUGkSrgC0eMME7yNaVwfR")
+    print(f"Created agent, ID: {agent.id}")
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
 
     message = project.agents.messages.create(
         thread_id=thread.id,
@@ -936,6 +937,9 @@ def load_existing_agent(query: str) -> str:
             if message.role == MessageRole.AGENT:
                 # print(f"{message.role}: {message.text_messages[-1].text.value}")
                 returntxt += f"Source: {message.content[0].text.value}\n"
+            print(f"Messages inside thread {message}\n\n")
+    # Delete the agent when done
+    project.agents.threads.delete(thread.id)
 
     return returntxt
 
@@ -947,6 +951,7 @@ def main():
         
         print("Running evaluation example...")
         # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/evaluation/azure-ai-evaluation/samples/evaluation_samples_evaluate_fdp.py
+        # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_logic_apps.py
         # evalrs = eval()
         # print(evalrs)
         
@@ -962,22 +967,29 @@ def main():
         starttime = datetime.now()
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # connected_agent_result = connected_agent("What is the stock price of Microsoft")
-        connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
-        # connected_agent_result = connected_agent("Sumamarize sustainability framework for learning factory")
-        print('Final Output Answer: ', connected_agent_result)
-        endtime = datetime.now()
-        print(f"Connected agent example completed in {endtime - starttime} seconds")
+        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
+        # connected_agent_result = connected_agent("Summarize sustainability framework for learning factory from file uploaded?")
+        # print('Final Output Answer: ', connected_agent_result)
+        # endtime = datetime.now()
+        # print(f"Connected agent example completed in {endtime - starttime} seconds")
 
         print("Running AI Search agent example...")
         # ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
         # print(ai_search_result)
 
         print("Calling existing agent example...")
+        starttime = datetime.now()
         # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
-        # print(exsitingagentrs)
+        exsitingagentrs = load_existing_agent("Summarize sustainability framework for learning factory from file uploaded?")
+        print(exsitingagentrs)
+        endtime = datetime.now()
+        print(f"Delete agent example completed in {endtime - starttime} seconds")
 
         print("Deleteing agents...")
+        # starttime = datetime.now()
         # delete_agent()
+        # endtime = datetime.now()
+        # print(f"Delete agent example completed in {endtime - starttime} seconds")
 
 if __name__ == "__main__":
     main()
