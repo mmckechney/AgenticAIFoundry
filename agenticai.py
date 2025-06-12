@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import time
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
@@ -56,7 +57,7 @@ from openai import AzureOpenAI
 from azure.ai.evaluation import evaluate
 from azure.ai.evaluation import GroundednessEvaluator, AzureOpenAIModelConfiguration
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
-from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition
+from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from utils import send_email
 from user_logic_apps import AzureLogicAppTool, create_send_email_function
 from azure.ai.agents.models import ListSortOrder
@@ -727,14 +728,44 @@ def connected_agent(query: str) -> str:
         id=Emailagent.id, name=sendemail_connected_agent_name, description="Get the content from other agents and send an email"
     )
 
+    # File search agent
+    # Define the path to the file to be uploaded
+    file_path = "./papers/ssrn-4072178.pdf"
+
+    # Upload the file
+    file = project_client.agents.files.upload_and_poll(file_path=file_path, purpose=FilePurpose.AGENTS)
+    print(f"Uploaded file, file ID: {file.id}")
+
+    # Create a vector store with the uploaded file
+    # vector_store = project_client.agents.create_vector_store_and_poll(file_ids=[file.id], name="suspaperstore")
+    vector_store = project_client.agents.vector_stores.create_and_poll(file_ids=[file.id], name="suspaperstore")
+    print(f"Created vector store, vector store ID: {vector_store.id}")
+    # Create a file search tool
+    file_search = FileSearchTool(vector_store_ids=[vector_store.id])
+
+    # Create an agent with the file search tool
+    Sustainablityagent = project_client.agents.create_agent(
+        model=os.environ["MODEL_DEPLOYMENT_NAME"],  # Model deployment name
+        name="Sustainabilitypaperagent",  # Name of the agent
+        instructions="You are a helpful agent and can search information from uploaded files",  # Instructions for the agent
+        tools=file_search.definitions,  # Tools available to the agent
+        tool_resources=file_search.resources,  # Resources for the tools
+    )
+    # print(f"Created agent, ID: {agent.id}")
+    sustaibilityconnectedagentname = "Sustainabilitypaperagent"
+    sustainability_connected_agent = ConnectedAgentTool(
+        id=Sustainablityagent.id, name=sustaibilityconnectedagentname, description="Summarize the content of the uploaded files and answer questions about it"
+    )
+
+
     # all_tools = connected_agent.definitions + search_connected_agent.definitions + sendemail_connected_agent.definitions
     # all_tools = connected_agent.definitions + search_connected_agent.definitions
-    all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
+    # all_tools = search_connected_agent.definitions + sendemail_connected_agent.definitions
 
-    # Deduplicate by tool name (or another unique property) to avoid ValueError
-    unique_tools = {}
-    for tool in all_tools:
-        unique_tools[getattr(tool, "name", id(tool))] = tool
+    # # Deduplicate by tool name (or another unique property) to avoid ValueError
+    # unique_tools = {}
+    # for tool in all_tools:
+    #     unique_tools[getattr(tool, "name", id(tool))] = tool
         
 
 
@@ -749,7 +780,13 @@ def connected_agent(query: str) -> str:
         Send email as per request.
         Based on the user query, route accordingly.
         """,
-        tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
+        # tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
+        tools=[
+            connected_agent.definitions[0],
+            search_connected_agent.definitions[0],
+            sendemail_connected_agent.definitions[0],
+            sustainability_connected_agent.definitions[0],
+        ]
     )
 
     print(f"Created agent, ID: {agent.id}")
@@ -800,29 +837,33 @@ def connected_agent(query: str) -> str:
     # returntxt = f"{message.content[-1].text.value}"
 
     # Delete the Agent when done
-    # project_client.agents.delete_agent(agent.id)    
-    # print("Deleted agent")
-    # # Delete the connected Agent when done
-    # project_client.agents.delete_agent(stock_price_agent.id)
-    # project_client.agents.delete_agent(rfp_agent.id)
-    # project_client.agents.delete_agent(Emailagent.id)
-    # print("Deleted connected agent")
-    # print(" # start to delete threads for this agent")
-    # # List all threads for this agent
-    # try:
-    #     threads = list(project_client.agents.threads.list())
-    # except Exception as e:
-    #     print(f"Error listing threads for agent {agent.id}: {e}")
-    #     threads = []
+    project_client.agents.delete_agent(agent.id)    
+    print("Deleted agent")
+    # Delete the connected Agent when done
+    project_client.agents.delete_agent(stock_price_agent.id)
+    project_client.agents.delete_agent(rfp_agent.id)
+    project_client.agents.delete_agent(Emailagent.id)
+    project_client.agents.delete_agent(Sustainablityagent.id)
+    print("Deleted connected agent")
+    # Cleanup resources
+    project_client.agents.vector_stores.delete(vector_store.id)
+    print("Deleted vector store")
+    print(" # start to delete threads for this agent")
+    # List all threads for this agent
+    try:
+        threads = list(project_client.agents.threads.list())
+    except Exception as e:
+        print(f"Error listing threads for agent {agent.id}: {e}")
+        threads = []
 
-    # for thread in threads:
-    #     print(f"  Deleting thread: {thread.id}")
-    #     try:
-    #         project_client.agents.threads.delete(thread.id)
-    #         print(f"  Deleted thread {thread.id}")
-    #     except Exception as e:
-    #         print(f"  Error deleting thread {thread.id}: {e}")
-    # print("# deleted all threads for this agent")
+    for thread in threads:
+        print(f"  Deleting thread: {thread.id}")
+        try:
+            project_client.agents.threads.delete(thread.id)
+            print(f"  Deleted thread {thread.id}")
+        except Exception as e:
+            print(f"  Error deleting thread {thread.id}: {e}")
+    print("# deleted all threads for this agent")
     # Print the Agent's response message with optional citation
     # Fetch and log all messages
     
@@ -918,18 +959,22 @@ def main():
         # print(agentevalrs)
 
         print("Running connected agent example...")
+        starttime = datetime.now()
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # connected_agent_result = connected_agent("What is the stock price of Microsoft")
-        #  connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
-        # print('Final Output Answer: ', connected_agent_result)
+        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
+        connected_agent_result = connected_agent("Sumamarize sustainability framework for learning factory")
+        print('Final Output Answer: ', connected_agent_result)
+        endtime = datetime.now()
+        print(f"Connected agent example completed in {endtime - starttime} seconds")
 
         print("Running AI Search agent example...")
         # ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
         # print(ai_search_result)
 
         print("Calling existing agent example...")
-        exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
-        print(exsitingagentrs)
+        # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
+        # print(exsitingagentrs)
 
         print("Deleteing agents...")
         # delete_agent()
