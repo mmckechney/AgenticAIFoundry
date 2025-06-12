@@ -31,12 +31,14 @@ python -c "import azure.ai.projects; print('✓ Ready to go!')"
 
 | Component | Purpose | Key Features |
 |-----------|---------|--------------|
-| **Code Interpreter Agent** | Execute Python code and data analysis | Pandas, NumPy, Matplotlib support |
-| **Connected Agent** | External service integration | Stock APIs, Email, Search |
-| **AI Search Agent** | Knowledge retrieval | Azure AI Search integration |
-| **Reasoning Agent** | Complex problem solving | O1 series models, high-effort reasoning |
-| **Evaluation Framework** | AI model assessment | 15+ metrics, quality & safety |
-| **Red Team Testing** | Security vulnerability testing | Multiple attack strategies |
+| **Code Interpreter Agent** | Execute Python code and data analysis | Pandas, NumPy, Matplotlib, file upload support |
+| **Connected Agent** | Multi-agent system coordination | Stock APIs, Email (SMTP), AI Search, workflow orchestration |
+| **AI Search Agent** | Knowledge retrieval and document search | Azure AI Search, construction RFP docs, intelligent ranking |
+| **Reasoning Agent** | Complex problem solving with O1 models | o4-mini, o3 models, high-effort reasoning, professional formatting |
+| **Agent Management** | Lifecycle management and cleanup | Create, monitor, delete agents, thread management |
+| **Evaluation Framework** | Comprehensive AI model assessment | 20+ metrics, quality, safety, agentic capabilities |
+| **Red Team Testing** | Advanced security vulnerability testing | Callback attacks, encoding bypasses, compliance reporting |
+| **Web Application** | Full-featured Streamlit interface | Multi-tab navigation, file uploads, speech input, real-time progress |
 
 ## 🔧 Core Functions Reference
 
@@ -88,6 +90,43 @@ response = client.chat.completions.create(
     messages=[{"role": "user", "content": "Complex problem to solve"}],
     max_completion_tokens=4000
 )
+```
+
+#### Agent Management
+
+```python
+# Load existing agent
+def load_existing_agent(query: str) -> str:
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential()
+    )
+    
+    # Use existing agent for query processing
+    thread = project_client.agents.create_thread()
+    message = project_client.agents.create_message(
+        thread_id=thread.id,
+        role="user",
+        content=query
+    )
+    
+    run = project_client.agents.create_run(
+        thread_id=thread.id,
+        agent_id="existing_agent_id"
+    )
+    return run.output
+
+# Agent cleanup
+def delete_agent():
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential()
+    )
+    
+    # List and delete agents
+    agents = project_client.agents.list_agents()
+    for agent in agents:
+        project_client.agents.delete_agent(agent.id)
 ```
 
 ### Evaluation Quick Setup
@@ -189,6 +228,15 @@ AZURE_SEARCH_INDEX=your_index_name
 | **Coherence** | Response logical flow | 0.0 - 1.0 |
 | **Groundedness** | Factual accuracy | 0.0 - 1.0 |
 | **Fluency** | Language quality | 0.0 - 1.0 |
+| **Similarity** | Semantic similarity | 0.0 - 1.0 |
+
+### Advanced Metrics
+| Metric | Purpose | Range |
+|--------|---------|-------|
+| **BLEU Score** | Translation/generation quality | 0.0 - 1.0 |
+| **ROUGE Score** | Summarization quality | 0.0 - 1.0 |
+| **METEOR** | Machine translation evaluation | 0.0 - 1.0 |
+| **F1 Score** | Classification performance | 0.0 - 1.0 |
 
 ### Safety Metrics
 | Metric | Purpose | Output |
@@ -197,6 +245,8 @@ AZURE_SEARCH_INDEX=your_index_name
 | **Hate/Unfairness** | Bias detection | Safe/Unsafe |
 | **Sexual** | Sexual content detection | Safe/Unsafe |
 | **Self-Harm** | Self-harm content detection | Safe/Unsafe |
+| **Protected Material** | Copyright detection | Safe/Unsafe |
+| **Indirect Attack** | Jailbreak detection | Safe/Unsafe |
 
 ### Agentic Metrics
 | Metric | Purpose | Range |
@@ -204,6 +254,7 @@ AZURE_SEARCH_INDEX=your_index_name
 | **Intent Resolution** | Understanding accuracy | 0.0 - 1.0 |
 | **Task Adherence** | Task completion quality | 0.0 - 1.0 |
 | **Tool Call Accuracy** | Function calling precision | 0.0 - 1.0 |
+| **Response Completeness** | Answer completeness | 0.0 - 1.0 |
 
 ## 🛡️ Security Testing
 
@@ -214,11 +265,15 @@ AZURE_SEARCH_INDEX=your_index_name
 - **Self-Harm**: Suicide and self-injury content
 
 ### Attack Strategies
-- **Easy**: Basic attack patterns
-- **Moderate**: Intermediate complexity attacks
-- **Character Manipulation**: Space insertion, swapping
-- **Encoding**: ROT13, Base64, Binary, Morse
-- **Unicode Confusables**: Character substitution
+- **Easy**: Basic attack patterns and direct prompts
+- **Moderate**: Intermediate complexity attacks with encoding
+- **Advanced**: Sophisticated callback-based attacks
+- **Character Manipulation**: Space insertion, character swapping, Unicode tricks
+- **Encoding Techniques**: ROT13, Base64, Binary, Morse code, hexadecimal
+- **Unicode Confusables**: Character substitution and visual similarity
+- **Prompt Injection**: Instruction override attempts
+- **Conversation Steering**: Gradual topic redirection
+- **Callback Attacks**: Advanced multi-stage attack patterns
 
 ## 📊 Performance Benchmarks
 
@@ -276,7 +331,26 @@ response = messages[0].content[0]['text']['value']
 {"query": "Send email summary", "context": "Business", "expected": "Email sent..."}
 ```
 
-### 3. Error Handling Pattern
+### 3. Web Application Quick Usage
+```bash
+# Launch web interface
+streamlit run streamlit_app.py
+
+# Access features via tabs:
+# - Overview: Platform capabilities summary
+# - Code Interpreter: Upload files, execute Python code
+# - AI Evaluation: Configure metrics, run evaluations
+# - Red Team Testing: Security scans with progress tracking
+# - Connected Agents: Multi-agent workflows with email
+# - AI Search: Knowledge retrieval and document search
+# - Agent Management: Lifecycle management and cleanup
+
+# Enable debug mode for detailed logs
+# Configure speech input in sidebar settings
+# Monitor environment status for missing dependencies
+```
+
+### 4. Error Handling Pattern
 ```python
 try:
     result = agent_function()
@@ -299,6 +373,9 @@ except Exception as e:
 | **Rate Limited** | Too many requests | Implement exponential backoff |
 | **Import Errors** | Missing dependencies | Run `pip install -r requirements.txt` |
 | **Python 3.13 Error** | Unsupported version | Use Python 3.12 only |
+| **Web App Won't Start** | Streamlit issues | Check port 8501, restart with `streamlit run streamlit_app.py` |
+| **Speech Input Not Working** | Missing audio dependencies | Install optional audio packages, check microphone permissions |
+| **File Upload Fails** | File size/type limits | Check file size (<200MB), supported formats in web interface |
 
 ### Debug Commands
 ```bash
