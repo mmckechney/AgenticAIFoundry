@@ -58,6 +58,8 @@ from azure.ai.evaluation import GroundednessEvaluator, AzureOpenAIModelConfigura
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition
 from utils import send_email
+from user_logic_apps import AzureLogicAppTool, create_send_email_function
+from azure.ai.agents.models import ListSortOrder
 
 from dotenv import load_dotenv
 
@@ -674,12 +676,51 @@ def connected_agent(query: str) -> str:
     functions = FunctionTool(functions=user_functions)
     toolset = ToolSet()
     toolset.add(functions)
+    # Emailagent = project_client.agents.create_agent(
+    #     model=os.environ["MODEL_DEPLOYMENT_NAME"],
+    #     name="SendEmailagent",
+    #     instructions="You are a specialized agent for sending emails.",
+    #     # tools=functions.definitions,
+    #     toolset=toolset,  # Attach the FunctionTool to the agent
+    # )
+    # sendemail_connected_agent_name = "SendEmailagent"
+    # sendemail_connected_agent = ConnectedAgentTool(
+    #     id=Emailagent.id, name=sendemail_connected_agent_name, description="Get the content from other agents and send an email"
+    # )
+
+    # Extract subscription and resource group from the project scope
+    subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
+    resource_group = os.environ["AZURE_RESOURCE_GROUP"]
+
+    # Logic App details
+    logic_app_name = "agenttoolemail"
+    trigger_name = "When_a_HTTP_request_is_received"
+
+    # Create and initialize AzureLogicAppTool utility
+    logic_app_tool = AzureLogicAppTool(subscription_id, resource_group)
+    logic_app_tool.register_logic_app(logic_app_name, trigger_name)
+    print(f"Registered logic app '{logic_app_name}' with trigger '{trigger_name}'.")
+
+    # Create the specialized "send_email_via_logic_app" function for your agent tools
+    send_email_func = create_send_email_function(logic_app_tool, logic_app_name)
+
+    # Prepare the function tools for the agent
+    functions_to_use: Set = {
+        # fetch_current_datetime,
+        send_email_func,  # This references the AzureLogicAppTool instance via closure
+    }
+    # [END register_logic_app]
+
+    # Create an agent
+    functions = FunctionTool(functions=functions_to_use)
+    toolset = ToolSet()
+    toolset.add(functions)
+
     Emailagent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
-        name="SendEmailagent",
+        name="SendEmailAgent",
         instructions="You are a specialized agent for sending emails.",
-        # tools=functions.definitions,
-        toolset=toolset,  # Attach the FunctionTool to the agent
+        toolset=toolset,
     )
     sendemail_connected_agent_name = "SendEmailagent"
     sendemail_connected_agent = ConnectedAgentTool(
@@ -694,16 +735,19 @@ def connected_agent(query: str) -> str:
     unique_tools = {}
     for tool in all_tools:
         unique_tools[getattr(tool, "name", id(tool))] = tool
+        
 
 
     # Orchestrate the connected agent with the main agent
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ConnectedMultiagent",
-        instructions="""Create a strategy with tasks based on agents available in sequence.
+        instructions="""You are main orchestrator assistant agent. 
+        Create a strategy with tasks based on agents available in sequence.
         Pick the right agent based on the strategy and task.
         Summarize the content, and use the available tools to get stock prices, Construction proposals, 
         Send email as per request.
+        Based on the user query, route accordingly.
         """,
         tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
     )
@@ -728,6 +772,7 @@ def connected_agent(query: str) -> str:
     while run.status in ["queued", "in_progress", "requires_action"]:
         time.sleep(1)
         run = project_client.agents.runs.get(thread_id=thread.id, run_id=run.id)
+        print(f"Run status: {run.status}")
 
         if run.status == "requires_action":
             tool_calls = run.required_action.submit_tool_outputs.tool_calls
@@ -742,30 +787,9 @@ def connected_agent(query: str) -> str:
     print(f"Run completed with status: {run.status}")
     # print(f"Run finished with status: {run.status}")
 
-    # Fetch the steps or trace for the run
-    # steps = project_client.agents.runs.get_steps(run_id=run.id)
-    # for step in steps:
-    #     # Assuming each step has an 'agent_name' or 'tool_name' attribute
-    #     print(f"Step {step.id}: Used agent/tool: {step.agent_name or step.tool_name}")
-
-    # trace = project_client.agents.runs.get_trace(run_id=run.id)
-    # for event in trace.events:
-    #     print(f"Agent/tool invoked: {event.agent_name or event.tool_name}")
-
-
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
 
-    # # Delete the Agent when done
-    # project_client.agents.delete_agent(agent.id)    
-    # print("Deleted agent")
-    # # Delete the connected Agent when done
-    # project_client.agents.delete_agent(stock_price_agent.id)
-    # project_client.agents.delete_agent(rfp_agent.id)
-    # project_client.agents.delete_agent(Emailagent.id)
-    print("Deleted connected agent")
-    # Print the Agent's response message with optional citation
-    # Fetch and log all messages
     messages = project_client.agents.messages.list(thread_id=thread.id)
     for message in messages:
         if message.role == MessageRole.AGENT:
@@ -774,6 +798,34 @@ def connected_agent(query: str) -> str:
             # returntxt += f"Source: {message.content[0]['text']['value']}\n"
             returntxt += f"Source: {message.content[0].text.value}\n"
     # returntxt = f"{message.content[-1].text.value}"
+
+    # Delete the Agent when done
+    # project_client.agents.delete_agent(agent.id)    
+    # print("Deleted agent")
+    # # Delete the connected Agent when done
+    # project_client.agents.delete_agent(stock_price_agent.id)
+    # project_client.agents.delete_agent(rfp_agent.id)
+    # project_client.agents.delete_agent(Emailagent.id)
+    # print("Deleted connected agent")
+    # print(" # start to delete threads for this agent")
+    # # List all threads for this agent
+    # try:
+    #     threads = list(project_client.agents.threads.list())
+    # except Exception as e:
+    #     print(f"Error listing threads for agent {agent.id}: {e}")
+    #     threads = []
+
+    # for thread in threads:
+    #     print(f"  Deleting thread: {thread.id}")
+    #     try:
+    #         project_client.agents.threads.delete(thread.id)
+    #         print(f"  Deleted thread {thread.id}")
+    #     except Exception as e:
+    #         print(f"  Error deleting thread {thread.id}: {e}")
+    # print("# deleted all threads for this agent")
+    # Print the Agent's response message with optional citation
+    # Fetch and log all messages
+    
 
     return returntxt
 
@@ -813,6 +865,40 @@ def delete_agent():
         except Exception as e:
             print(f"Error deleting agent {agent.id}: {e}")
 
+def load_existing_agent(query: str) -> str:
+    returntxt = ""
+
+    project = AIProjectClient(
+        credential=DefaultAzureCredential(),
+        endpoint=os.environ["PROJECT_ENDPOINT"]
+    )
+
+    agent = project.agents.get_agent("asst_exdtoSMGNqTDp7eByS6sRE5J")
+
+    thread = project.agents.threads.get("thread_NDsLPhDy55d826inFC0xq5hw")
+
+    message = project.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=query
+    )
+
+    run = project.agents.runs.create_and_process(
+        thread_id=thread.id,
+        agent_id=agent.id)
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+    else:
+        messages = project_client.agents.messages.list(thread_id=thread.id)
+        for message in messages:
+            if message.role == MessageRole.AGENT:
+                # print(f"{message.role}: {message.text_messages[-1].text.value}")
+                returntxt += f"Source: {message.content[0].text.value}\n"
+
+    return returntxt
+
+
 def main():
     with tracer.start_as_current_span("azureaifoundryagent-tracing"):
         print("Running code interpreter example...")
@@ -834,14 +920,18 @@ def main():
         print("Running connected agent example...")
         # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # connected_agent_result = connected_agent("What is the stock price of Microsoft")
-        connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
-        print('Final Output Answer: ', connected_agent_result)
+        #  connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
+        # print('Final Output Answer: ', connected_agent_result)
 
         print("Running AI Search agent example...")
         # ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
         # print(ai_search_result)
 
-        # print("Deleteing agents...")
+        print("Calling existing agent example...")
+        exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
+        print(exsitingagentrs)
+
+        print("Deleteing agents...")
         # delete_agent()
 
 if __name__ == "__main__":
