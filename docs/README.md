@@ -107,6 +107,25 @@ This comprehensive documentation suite provides complete guidance for understand
 - Immediate problem resolution
 - Code pattern lookup
 
+### 6. [Web Application Documentation](../WEB_APP_README.md)
+**Primary Purpose**: Comprehensive guide for the Streamlit web interface
+
+**Target Audience**: End users, developers, and administrators using the web interface
+
+**Key Contents**:
+- **Feature Overview**: Complete web interface capabilities
+- **User Interface Guide**: Navigation, input options, and configuration
+- **Usage Instructions**: Step-by-step guides for all features
+- **Advanced Configuration**: Custom settings and optimization
+- **Troubleshooting**: Web-specific issues and solutions
+- **Security & Privacy**: Web application security considerations
+
+**When to Use**:
+- Web interface setup and configuration
+- User training and onboarding
+- Web-specific troubleshooting
+- Feature discovery and usage guidance
+
 ## 🎯 Usage Scenarios
 
 ### For New Team Members
@@ -129,11 +148,18 @@ This comprehensive documentation suite provides complete guidance for understand
 3. **Deep Dive**: [Technical Diagrams](./technical-diagrams.md) - Specific component diagrams
 4. **Context**: [Architecture Blueprint](./architecture-blueprint.md) - Relevant architecture sections
 
+### For Web Application Users
+1. **Start with**: [Web Application Documentation](../WEB_APP_README.md) - Complete web interface guide
+2. **Configuration**: [Quick Reference Guide](./quick-reference.md) - Environment Variables section
+3. **Feature Understanding**: [Architecture Blueprint](./architecture-blueprint.md) - Component capabilities
+4. **Troubleshooting**: [Web Application Documentation](../WEB_APP_README.md) - Troubleshooting section
+
 ### For Troubleshooting & Debugging
 1. **First Stop**: [Quick Reference Guide](./quick-reference.md) - Troubleshooting section
-2. **Detailed Help**: [Implementation Guide](./implementation-guide.md) - Troubleshooting Guide
-3. **System Understanding**: [Technical Diagrams](./technical-diagrams.md) - Error Handling & Recovery
-4. **Architecture Context**: [Architecture Blueprint](./architecture-blueprint.md) - Component descriptions
+2. **Web Issues**: [Web Application Documentation](../WEB_APP_README.md) - Troubleshooting & Debug mode
+3. **Detailed Help**: [Implementation Guide](./implementation-guide.md) - Troubleshooting Guide
+4. **System Understanding**: [Technical Diagrams](./technical-diagrams.md) - Error Handling & Recovery
+5. **Architecture Context**: [Architecture Blueprint](./architecture-blueprint.md) - Component descriptions
 
 ### For Security & Compliance Review
 1. **Overview**: [Architecture Blueprint](./architecture-blueprint.md) - Security Architecture
@@ -171,6 +197,13 @@ This comprehensive documentation suite provides complete guidance for understand
 - **Integration Patterns**: [Technical Diagrams](./technical-diagrams.md) → Integration Patterns
 - **Step-by-Step Setup**: [Implementation Guide](./implementation-guide.md) → Getting Started
 - **Environment Variables**: [Quick Reference Guide](./quick-reference.md) → Environment Variables
+- **Web Application Setup**: [Web Application Documentation](../WEB_APP_README.md) → Quick Start & Configuration
+
+#### Web Interface & User Experience
+- **Web Features Overview**: [Web Application Documentation](../WEB_APP_README.md) → Features & User Interface
+- **Navigation Guide**: [Web Application Documentation](../WEB_APP_README.md) → Usage Tips & Best Practices
+- **File Upload & Speech**: [Web Application Documentation](../WEB_APP_README.md) → Input Options & Configuration
+- **Debug & Monitoring**: [Web Application Documentation](../WEB_APP_README.md) → Advanced Usage & Analytics
 
 #### Performance & Scalability
 - **Architecture Considerations**: [Architecture Blueprint](./architecture-blueprint.md) → Performance & Scalability
@@ -185,6 +218,7 @@ This comprehensive documentation suite provides complete guidance for understand
 - **Technical Diagrams**: Update when component interactions change
 - **Implementation Guide**: Update with new examples and troubleshooting items
 - **Quick Reference**: Update with new configuration options and common patterns
+- **Web Application Documentation**: Update when web interface features or functionality change
 
 ### Version Control
 All documentation follows the same versioning as the main codebase and should be updated together with code changes.
