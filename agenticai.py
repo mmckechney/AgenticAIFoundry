@@ -1034,6 +1034,9 @@ def main():
         # endtime = datetime.now()
         # print(f"Delete agent example completed in {endtime - starttime} seconds")
 
+        # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_azure_ai_search.py
+        # above is the github for details.
+
 
         # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_multiagent/sample_agents_multi_agent_team.py
         # multiagent
