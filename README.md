@@ -11,29 +11,49 @@ A comprehensive collection of Azure AI Foundry samples demonstrating advanced ag
 This repository demonstrates the following Azure AI Foundry capabilities:
 
 ### 🤖 AI Agents
-- **Code Interpreter Agent**: Execute Python code and data analysis tasks
-- **Connected Agent**: Integration with external services and APIs, including email functionality
-- **AI Search Agent**: Azure AI Search integration for knowledge retrieval
-- **Weather Agent**: Custom function tool integration example
+- **Code Interpreter Agent**: Execute Python code and data analysis tasks with file upload support
+- **Connected Agent**: Multi-agent system coordination with:
+  - Stock price lookup capabilities
+  - Azure AI Search integration for knowledge retrieval
+  - Email functionality with custom SMTP configuration
+  - Multi-step workflow orchestration
+- **AI Search Agent**: Dedicated Azure AI Search integration for construction RFP document search
+- **Weather Agent**: Custom function tool integration example with external API calls
+- **Agent Management**: Complete agent lifecycle management with creation, monitoring, and cleanup
 
 ### 🔍 Evaluation Framework
 - **Agent-specific evaluators**: Intent resolution, task adherence, tool call accuracy
-- **Quality metrics**: Relevance, coherence, groundedness, fluency
+- **Quality metrics**: Relevance, coherence, groundedness, fluency, similarity
 - **Safety evaluators**: Content safety, hate/unfairness, violence, sexual content, self-harm
 - **Advanced metrics**: BLEU, GLEU, ROUGE, METEOR, F1 scores
-- **Protected material and indirect attack detection**
+- **Security evaluators**: Protected material detection, indirect attack detection, code vulnerability assessment
+- **Performance metrics**: Response completeness, retrieval accuracy, groundedness pro evaluation
 
 ### 🛡️ Red Team Testing
-- **Automated red team scanning**: Multi-strategy attack simulation
+- **Automated red team scanning**: Multi-strategy attack simulation with advanced callback mechanisms
 - **Risk category coverage**: Violence, hate/unfairness, sexual content, self-harm
-- **Attack strategies**: Character manipulation, encoding techniques, prompt injection
-- **Comprehensive reporting**: Detailed security assessment results
+- **Attack strategies**: 
+  - Character manipulation and Unicode confusables
+  - Encoding techniques (ROT13, Base64, Morse code, binary)
+  - Prompt injection and conversation steering
+  - Advanced callback-based attacks
+- **Comprehensive reporting**: Detailed security assessment with vulnerability scoring
+- **Compliance monitoring**: Risk level assessment and mitigation recommendations
 
 ### 📊 Reasoning Models
 - **Azure OpenAI O1 series integration**: Advanced reasoning capabilities with o4-mini and o3 models
 - **High-effort reasoning**: Complex problem-solving scenarios with configurable reasoning effort
 - **Professional output formatting**: Enterprise-ready response formatting
 - **Latest API support**: Compatible with 2024-12-01-preview API version
+
+### 🌐 Web Application Interface
+- **Comprehensive Streamlit dashboard**: Full-featured web interface for all capabilities
+- **Multi-tab navigation**: Organized access to agents, evaluation, and testing
+- **Real-time progress tracking**: Live feedback during long-running operations
+- **File upload support**: Images, audio, video, and document processing
+- **Speech input capability**: Voice-to-text integration (configurable)
+- **Interactive configuration**: Environment status checking and settings management
+- **Debug mode**: Detailed execution information for development and troubleshooting
 
 ## 📚 Documentation
 
@@ -44,6 +64,7 @@ For detailed architecture and implementation information, see the comprehensive 
 - **[Technical Diagrams](docs/technical-diagrams.md)** - Detailed ASCII component diagrams
 - **[Implementation Guide](docs/implementation-guide.md)** - Agent implementation patterns and examples
 - **[Quick Reference](docs/quick-reference.md)** - Quick reference for common tasks
+- **[Web Application Guide](WEB_APP_README.md)** - Comprehensive web interface documentation
 
 ## Prerequisites
 
@@ -223,7 +244,24 @@ connected_agent_result = connected_agent("Show me details on Construction manage
 print(connected_agent_result)
 ```
 
-#### 6. Reasoning with O1 Models
+#### 6. AI Search Agent
+```python
+# Uncomment in main() function
+ai_search_result = ai_search_agent("Show me details on Construction management services experience we have done before?")
+print(ai_search_result)
+```
+
+#### 7. Agent Management
+```python
+# Load existing agent
+result = load_existing_agent("Query for existing agent")
+print(result)
+
+# Delete agents (cleanup)
+delete_agent()
+```
+
+#### 8. Reasoning with O1 Models
 ```python
 # Example usage
 query = "Analyze the security implications of this AI system"

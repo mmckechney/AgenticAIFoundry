@@ -95,7 +95,21 @@ AgenticAIFoundry is a comprehensive Azure AI Foundry-based platform that demonst
 - **Encoding Attacks**: ROT13, Base64, Binary, Morse code
 - **Unicode Confusables**: Character substitution attacks
 
-### 4. Integration Layer
+### 4. Agent Management System
+
+#### Lifecycle Management
+- **Agent Creation**: Dynamic agent instantiation with custom configurations
+- **Thread Management**: Conversation thread creation and monitoring
+- **Resource Cleanup**: Automated and manual agent deletion
+- **State Persistence**: Agent state management across sessions
+
+#### Monitoring & Analytics
+- **Performance Tracking**: Agent response times and success rates
+- **Resource Utilization**: Memory and processing metrics
+- **Error Handling**: Comprehensive error tracking and recovery
+- **Usage Analytics**: Agent usage patterns and optimization insights
+
+### 5. Integration Layer
 
 #### Azure Services
 - **Azure AI Foundry**: Core platform for agent orchestration
