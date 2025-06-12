@@ -628,6 +628,303 @@ if __name__ == "__main__":
     demo_reasoning_agent()
 ```
 
+### 4. Agent Management Pattern
+
+```python
+# management/agent_manager.py
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+from typing import List, Dict, Optional
+import time
+import os
+from datetime import datetime
+
+class AgentManager:
+    """Comprehensive agent lifecycle management"""
+    
+    def __init__(self):
+        self.client = AIProjectClient(
+            endpoint=os.environ["PROJECT_ENDPOINT"],
+            credential=DefaultAzureCredential(),
+        )
+        self.active_agents: Dict[str, dict] = {}
+        self.threads: Dict[str, str] = {}
+        self.metrics: Dict[str, dict] = {}
+    
+    def create_agent(self, name: str, model: str, instructions: str, 
+                    tools: Optional[list] = None, **kwargs) -> str:
+        """Create and register new agent"""
+        start_time = time.time()
+        
+        try:
+            agent = self.client.agents.create_agent(
+                model=model,
+                name=name,
+                instructions=instructions,
+                tools=tools or [],
+                **kwargs
+            )
+            
+            # Register agent with metadata
+            self.active_agents[agent.id] = {
+                'name': name,
+                'model': model,
+                'created_at': datetime.now(),
+                'instructions': instructions,
+                'status': 'active',
+                'thread_count': 0,
+                'total_messages': 0,
+                'last_used': None
+            }
+            
+            creation_time = time.time() - start_time
+            print(f"✅ Created agent '{name}' (ID: {agent.id}) in {creation_time:.2f}s")
+            
+            return agent.id
+            
+        except Exception as e:
+            print(f"❌ Failed to create agent '{name}': {e}")
+            raise
+    
+    def create_thread(self, agent_id: str) -> str:
+        """Create conversation thread for agent"""
+        if agent_id not in self.active_agents:
+            raise ValueError(f"Agent {agent_id} not found in registry")
+        
+        try:
+            thread = self.client.agents.create_thread()
+            self.threads[thread.id] = agent_id
+            
+            # Update agent metrics
+            self.active_agents[agent_id]['thread_count'] += 1
+            
+            print(f"🧵 Created thread {thread.id} for agent {agent_id}")
+            return thread.id
+            
+        except Exception as e:
+            print(f"❌ Failed to create thread for agent {agent_id}: {e}")
+            raise
+    
+    def send_message(self, agent_id: str, thread_id: str, content: str) -> str:
+        """Send message and get response"""
+        start_time = time.time()
+        
+        try:
+            # Create message
+            message = self.client.agents.create_message(
+                thread_id=thread_id,
+                role="user",
+                content=content
+            )
+            
+            # Create and process run
+            run = self.client.agents.create_run(
+                thread_id=thread_id,
+                agent_id=agent_id
+            )
+            
+            # Wait for completion
+            while run.status in ["queued", "in_progress", "requires_action"]:
+                time.sleep(1)
+                run = self.client.agents.get_run(thread_id=thread_id, run_id=run.id)
+            
+            # Get response
+            messages = self.client.agents.list_messages(thread_id=thread_id)
+            response = messages.data[0].content[0].text.value
+            
+            # Update metrics
+            response_time = time.time() - start_time
+            self.active_agents[agent_id]['total_messages'] += 1
+            self.active_agents[agent_id]['last_used'] = datetime.now()
+            
+            if agent_id not in self.metrics:
+                self.metrics[agent_id] = {
+                    'response_times': [],
+                    'success_count': 0,
+                    'error_count': 0
+                }
+            
+            self.metrics[agent_id]['response_times'].append(response_time)
+            self.metrics[agent_id]['success_count'] += 1
+            
+            print(f"✅ Response generated in {response_time:.2f}s")
+            return response
+            
+        except Exception as e:
+            if agent_id in self.metrics:
+                self.metrics[agent_id]['error_count'] += 1
+            print(f"❌ Error processing message: {e}")
+            raise
+    
+    def get_agent_status(self, agent_id: str) -> Dict:
+        """Get comprehensive agent status"""
+        if agent_id not in self.active_agents:
+            return {"error": "Agent not found"}
+        
+        agent_info = self.active_agents[agent_id].copy()
+        
+        # Add performance metrics
+        if agent_id in self.metrics:
+            metrics = self.metrics[agent_id]
+            if metrics['response_times']:
+                agent_info['avg_response_time'] = sum(metrics['response_times']) / len(metrics['response_times'])
+                agent_info['success_rate'] = metrics['success_count'] / (metrics['success_count'] + metrics['error_count'])
+            else:
+                agent_info['avg_response_time'] = 0
+                agent_info['success_rate'] = 0
+            
+            agent_info['total_requests'] = metrics['success_count'] + metrics['error_count']
+        
+        return agent_info
+    
+    def list_agents(self) -> List[Dict]:
+        """List all managed agents with status"""
+        return [
+            {
+                'id': agent_id,
+                **self.get_agent_status(agent_id)
+            }
+            for agent_id in self.active_agents
+        ]
+    
+    def cleanup_agent(self, agent_id: str) -> bool:
+        """Clean up specific agent and associated resources"""
+        try:
+            # Delete associated threads
+            threads_to_delete = [tid for tid, aid in self.threads.items() if aid == agent_id]
+            for thread_id in threads_to_delete:
+                try:
+                    self.client.agents.delete_thread(thread_id)
+                    del self.threads[thread_id]
+                    print(f"🗑️ Deleted thread {thread_id}")
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not delete thread {thread_id}: {e}")
+            
+            # Delete agent
+            self.client.agents.delete_agent(agent_id)
+            
+            # Remove from registry
+            agent_name = self.active_agents[agent_id]['name']
+            del self.active_agents[agent_id]
+            if agent_id in self.metrics:
+                del self.metrics[agent_id]
+            
+            print(f"✅ Successfully cleaned up agent '{agent_name}' ({agent_id})")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error cleaning up agent {agent_id}: {e}")
+            return False
+    
+    def cleanup_all(self) -> Dict[str, int]:
+        """Clean up all managed agents and resources"""
+        results = {'success': 0, 'failed': 0}
+        
+        agent_ids = list(self.active_agents.keys())
+        
+        for agent_id in agent_ids:
+            if self.cleanup_agent(agent_id):
+                results['success'] += 1
+            else:
+                results['failed'] += 1
+        
+        print(f"🧹 Cleanup complete: {results['success']} successful, {results['failed']} failed")
+        return results
+    
+    def get_performance_report(self) -> Dict:
+        """Generate comprehensive performance report"""
+        report = {
+            'total_agents': len(self.active_agents),
+            'total_threads': len(self.threads),
+            'agent_details': [],
+            'system_metrics': {
+                'avg_response_time': 0,
+                'total_requests': 0,
+                'overall_success_rate': 0
+            }
+        }
+        
+        all_response_times = []
+        total_requests = 0
+        total_successes = 0
+        
+        for agent_id in self.active_agents:
+            agent_status = self.get_agent_status(agent_id)
+            report['agent_details'].append(agent_status)
+            
+            if agent_id in self.metrics:
+                metrics = self.metrics[agent_id]
+                all_response_times.extend(metrics['response_times'])
+                requests = metrics['success_count'] + metrics['error_count']
+                total_requests += requests
+                total_successes += metrics['success_count']
+        
+        # Calculate system-wide metrics
+        if all_response_times:
+            report['system_metrics']['avg_response_time'] = sum(all_response_times) / len(all_response_times)
+        
+        report['system_metrics']['total_requests'] = total_requests
+        
+        if total_requests > 0:
+            report['system_metrics']['overall_success_rate'] = total_successes / total_requests
+        
+        return report
+
+# Usage example
+def demo_agent_management():
+    """Demonstrate comprehensive agent management"""
+    manager = AgentManager()
+    
+    try:
+        # Create multiple agents
+        code_agent = manager.create_agent(
+            name="demo_code_agent",
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            instructions="You are a Python code execution assistant.",
+            tools=[{"type": "code_interpreter"}]
+        )
+        
+        search_agent = manager.create_agent(
+            name="demo_search_agent", 
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            instructions="You are a search and information retrieval assistant."
+        )
+        
+        # Create threads and test interactions
+        code_thread = manager.create_thread(code_agent)
+        search_thread = manager.create_thread(search_agent)
+        
+        # Send test messages
+        response1 = manager.send_message(code_agent, code_thread, "Calculate 2+2")
+        print(f"Code Agent Response: {response1[:100]}...")
+        
+        response2 = manager.send_message(search_agent, search_thread, "What is AI?")
+        print(f"Search Agent Response: {response2[:100]}...")
+        
+        # Display management information
+        print("\n📊 Agent Status Report:")
+        agents = manager.list_agents()
+        for agent in agents:
+            print(f"  • {agent['name']}: {agent['total_messages']} messages, "
+                  f"{agent.get('avg_response_time', 0):.2f}s avg response")
+        
+        # Generate performance report
+        print("\n📈 Performance Report:")
+        report = manager.get_performance_report()
+        print(f"  • Total Agents: {report['total_agents']}")
+        print(f"  • Total Requests: {report['system_metrics']['total_requests']}")
+        print(f"  • Overall Success Rate: {report['system_metrics']['overall_success_rate']:.2%}")
+        print(f"  • Average Response Time: {report['system_metrics']['avg_response_time']:.2f}s")
+        
+    finally:
+        # Clean up all resources
+        print("\n🧹 Cleaning up resources...")
+        manager.cleanup_all()
+
+if __name__ == "__main__":
+    demo_agent_management()
+```
+
 ## Evaluation Implementation
 
 ### Comprehensive Evaluation Framework
