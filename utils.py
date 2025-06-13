@@ -7,7 +7,7 @@ import os
 import smtplib
 
 
-def send_email(to_emails: str, subject: str, body: str) -> str:
+def send_email(to: str, subject: str, body: str) -> str:
     # Email configuration (replace with your SMTP server details)
     print("Sending email...")
     smtp_server = "smtp.gmail.com"
@@ -16,7 +16,7 @@ def send_email(to_emails: str, subject: str, body: str) -> str:
     sender_password = os.getenv("GOOGLE_APP_PASSWORD")
 
     # Split the CSV string into a list of email addresses
-    recipients = [email.strip() for email in to_emails.split(",")]
+    recipients = [email.strip() for email in to.split(",")]
 
     # Create the email message
     message = MIMEMultipart()
@@ -34,5 +34,5 @@ def send_email(to_emails: str, subject: str, body: str) -> str:
             server.send_message(message)
             print(f"Email sent to {recipient} with subject: {subject}")
     
-    print(f"Email sent to {to_emails} with subject: {subject}")
-    return f"Email sent to {to_emails} with subject: {subject}"
+    print(f"Email sent to {to} with subject: {subject}")
+    return f"Email sent to {to} with subject: {subject}"
