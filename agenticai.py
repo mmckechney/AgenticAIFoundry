@@ -981,6 +981,22 @@ def load_existing_agent(query: str) -> str:
                         print(f"    Connected Output: {connected_agent.get('output')}")
 
             print()  # add an extra newline between steps
+        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+        for message in messages:
+            if message.role == MessageRole.AGENT and message.url_citation_annotations:
+                placeholder_annotations = {
+                    annotation.text: f" [see {annotation.url_citation.title}] ({annotation.url_citation.url})"
+                    for annotation in message.url_citation_annotations
+                }
+                for message_text in message.text_messages:
+                    message_str = message_text.text.value
+                    for k, v in placeholder_annotations.items():
+                        message_str = message_str.replace(k, v)
+                    print(f"{message.role}: {message_str}")
+            else:
+                for message_text in message.text_messages:
+                    print(f"{message.role}: {message_text.text.value}")
+        print()  # add an extra newline between steps
     # Delete the agent when done
     project.agents.threads.delete(thread.id)
 
