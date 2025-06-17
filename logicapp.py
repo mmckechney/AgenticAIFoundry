@@ -161,6 +161,7 @@ def loginappagent(query: str) -> str:
             for call in tool_calls:
                 print(f"    Tool Call ID: {call.get('id')}")
                 print(f"    Type: {call.get('type')}")
+                print(f"    Function Name: {call.get('function', {}).get('name')}")
     
     messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
     for message in messages:
@@ -187,6 +188,6 @@ def loginappagent(query: str) -> str:
 
 if __name__ == "__main__":
     with tracer.start_as_current_span("Logicapp-tracing"):
-        query = "Send Hello email to Bala at babal@microsoft.com "
+        query = "Create a Strategy to build Quantum in space and email to Bala at babal@microsoft.com "
         emailrs = loginappagent(query)
         print(f"Email response: {emailrs}")
