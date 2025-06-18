@@ -27,6 +27,7 @@ graph TB
     AgentManager --> ConnectedAgent[Connected Agent<br/>connected_agent]
     AgentManager --> ReasoningAgent[Reasoning Agent<br/>process_message_reasoning]
     AgentManager --> WeatherAgent[Weather Agent<br/>fetch_weather]
+    AgentManager --> MultiAgentTeam[Multi-Agent Team<br/>sample_agents_multi_agent_team]
     
     %% Evaluation Framework
     Main --> EvalFramework[Evaluation Framework<br/>eval]
@@ -188,6 +189,131 @@ graph TB
     class AzureFoundry,AzureOpenAI,AzureSearch,AzureIdentity azureClass
     class ExternalServices,GmailSMTP,StockAPIs externalClass
     class DataStorage,JSONLFiles,JSONResults dataClass
+```
+
+## Multi-Agent Team Coordination Architecture
+
+```mermaid
+graph TB
+    %% User Request Entry
+    UserReq[User Request] --> TeamEntry[AgentTeam Entry Point]
+    
+    %% AgentTeam Framework
+    TeamEntry --> AgentTeam[AgentTeam Controller<br/>agent_team.py]
+    AgentTeam --> TeamLeader[Team Leader Agent<br/>Auto-generated]
+    
+    %% Team Assembly Process
+    AgentTeam --> TeamAssembly[Team Assembly Process]
+    TeamAssembly --> CreateMembers[Create Team Members]
+    TeamAssembly --> ConfigureTools[Configure Agent Tools]
+    TeamAssembly --> SetupDelegation[Setup Delegation Rules]
+    
+    %% Specialized Agents
+    CreateMembers --> TimeWeatherAgent[TimeWeatherAgent<br/>Time & Weather]
+    CreateMembers --> EmailAgent[SendEmailAgent<br/>Email Services]
+    CreateMembers --> TempAgent[TemperatureAgent<br/>Unit Conversion]
+    
+    %% Tool Integration
+    TimeWeatherAgent --> TimeTool[fetch_current_datetime]
+    TimeWeatherAgent --> WeatherTool[fetch_weather]
+    EmailAgent --> EmailTool[send_email_using_recipient_name]
+    TempAgent --> TempTool[convert_temperature]
+    
+    %% Task Delegation Flow
+    TeamLeader --> TaskAnalysis[Analyze Request]
+    TaskAnalysis --> CreateTask[Create Task]
+    CreateTask --> SelectAgent[Select Best Agent]
+    SelectAgent --> ExecuteTask[Execute Task]
+    
+    %% Task Queue Management
+    CreateTask --> TaskQueue[Task Queue]
+    TaskQueue --> TaskProcessor[Task Processor]
+    TaskProcessor --> AgentAssignment[Agent Assignment]
+    
+    %% Inter-Agent Communication
+    AgentAssignment --> TimeWeatherAgent
+    AgentAssignment --> EmailAgent
+    AgentAssignment --> TempAgent
+    
+    %% Result Flow
+    TimeWeatherAgent --> Results[Task Results]
+    EmailAgent --> Results
+    TempAgent --> Results
+    Results --> TeamLeader
+    TeamLeader --> CompletionCheck[Check Completion]
+    CompletionCheck --> MoreTasks{More Tasks Needed?}
+    MoreTasks -->|Yes| CreateTask
+    MoreTasks -->|No| FinalResponse[Final Response]
+    
+    %% Tracing and Monitoring
+    AgentTeam --> TracingConfig[AgentTraceConfigurator]
+    TracingConfig --> AzureMonitor[Azure Monitor]
+    TracingConfig --> ConsoleTrace[Console Tracing]
+    TracingConfig --> AgentTrace[Agent Instrumentation]
+    
+    %% Cleanup
+    FinalResponse --> Cleanup[Team Dismantlement]
+    Cleanup --> DeleteAgents[Delete All Agents]
+    
+    %% Styling
+    classDef teamClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef agentClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef toolClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef flowClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    
+    class AgentTeam,TeamLeader,TeamAssembly teamClass
+    class TimeWeatherAgent,EmailAgent,TempAgent agentClass
+    class TimeTool,WeatherTool,EmailTool,TempTool toolClass
+    class TaskAnalysis,CreateTask,ExecuteTask,Results flowClass
+```
+
+## Multi-Agent Team Task Delegation Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TL as Team Leader
+    participant TWA as TimeWeatherAgent
+    participant EA as EmailAgent
+    participant TA as TemperatureAgent
+    participant TQ as Task Queue
+    participant Trace as OpenTelemetry
+    
+    User->>TL: Complex Request
+    Note over TL: "Get current time and weather for NYC,<br/>convert temperature to Fahrenheit,<br/>email summary to user"
+    
+    Trace->>Trace: Start Request Span
+    TL->>TL: Analyze Request
+    TL->>TQ: Create Task 1: Get Time & Weather
+    TQ->>TWA: Assign Task 1
+    
+    Trace->>Trace: Start Task Span
+    TWA->>TWA: fetch_current_datetime()
+    TWA->>TWA: fetch_weather("New York")
+    TWA->>TL: Task 1 Results
+    Trace->>Trace: Complete Task Span
+    
+    TL->>TQ: Create Task 2: Convert Temperature
+    TQ->>TA: Assign Task 2
+    
+    Trace->>Trace: Start Task Span
+    TA->>TA: convert_temperature(25.0)
+    TA->>TL: Task 2 Results
+    Trace->>Trace: Complete Task Span
+    
+    TL->>TQ: Create Task 3: Send Email Summary
+    TQ->>EA: Assign Task 3
+    
+    Trace->>Trace: Start Task Span
+    EA->>EA: send_email_using_recipient_name()
+    EA->>TL: Task 3 Results
+    Trace->>Trace: Complete Task Span
+    
+    TL->>TL: Check Task Completeness
+    TL->>User: Final Comprehensive Response
+    Trace->>Trace: Complete Request Span
+    
+    Note over TL,TA: All interactions traced with<br/>OpenTelemetry spans and events
 ```
 
 ## Agent Interaction Flow Diagram
