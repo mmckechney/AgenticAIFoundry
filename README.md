@@ -19,6 +19,12 @@ This repository demonstrates the following Azure AI Foundry capabilities:
   - Multi-step workflow orchestration
 - **AI Search Agent**: Dedicated Azure AI Search integration for construction RFP document search
 - **Weather Agent**: Custom function tool integration example with external API calls
+- **Multi-Agent Team Framework**: Advanced agent coordination and task delegation with:
+  - **AgentTeam Management**: Create, coordinate, and manage teams of specialized agents
+  - **Task Delegation**: Automatic task distribution based on agent capabilities
+  - **Team Leader Coordination**: Intelligent orchestration of multi-step workflows
+  - **Specialized Agent Roles**: TimeWeather, Email, Temperature conversion agents
+  - **Collaborative Workflows**: Inter-agent communication and result sharing
 - **Agent Management**: Complete agent lifecycle management with creation, monitoring, and cleanup
 
 ### 🔍 Evaluation Framework
@@ -269,6 +275,31 @@ result = process_message_reasoning(query)
 print(result)
 ```
 
+#### 9. Multi-Agent Team Coordination
+```python
+# Run the multi-agent team sample
+python sample_agents_multi_agent_team.py
+
+# Example: Create and coordinate a team of specialized agents
+from agentutils.agent_team import AgentTeam
+from agentutils.user_functions_with_traces import fetch_current_datetime, fetch_weather
+
+# Create agent team
+agent_team = AgentTeam("example_team", agents_client=agents_client)
+
+# Add specialized agents
+agent_team.add_agent(
+    model="gpt-4o-mini",
+    name="TimeWeatherAgent",
+    instructions="You are specialized for time and weather queries.",
+    toolset=time_weather_toolset,
+    can_delegate=True
+)
+
+# Process complex multi-step requests
+agent_team.process_request("Get current time and weather, then email summary")
+```
+
 ## 🌐 Deployment
 
 ### Azure Web App Deployment
@@ -299,6 +330,14 @@ AgenticAIFoundry/
 ├── run_app.sh               # Web application launcher script
 ├── .env                     # Environment variables (create from template)
 ├── .env.example             # Environment variables template
+│
+├── agentutils/              # Multi-agent framework utilities
+│   ├── agent_team.py        # Multi-agent team coordination framework
+│   ├── agent_team_config.yaml # Team configuration settings
+│   ├── agent_trace_configurator.py # OpenTelemetry tracing setup
+│   └── user_functions_with_traces.py # User functions with telemetry
+│
+├── sample_agents_multi_agent_team.py # Multi-agent team demonstration
 │
 ├── docs/                    # Documentation directory
 ├──── architecture-blueprint.md     # Architecture design document
@@ -331,14 +370,38 @@ AgenticAIFoundry/
 | `process_message_reasoning()` | O1 model reasoning | Complex reasoning tasks |
 | `send_email()` (utils.py) | Email sending functionality | Automated email notifications and communications |
 
+### Multi-Agent Team Functions
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `AgentTeam()` | Multi-agent team coordination framework | Complex workflow orchestration |
+| `fetch_current_datetime()` | Get current timestamp with formatting | Time-based agent functions |
+| `fetch_weather()` | Weather information retrieval | Environmental data for agents |
+| `send_email_using_recipient_name()` | Email functionality for agents | Agent-to-user communication |
+| `convert_temperature()` | Temperature conversion utility | Unit conversion tasks |
+| `AgentTraceConfigurator()` | OpenTelemetry tracing setup | Performance monitoring and debugging |
+
 ## Telemetry and Monitoring
 
-The application includes Azure Monitor OpenTelemetry integration for comprehensive observability:
+The application includes comprehensive observability features for tracking agent performance and system behavior:
 
-- Automatic request tracing
-- Performance monitoring
-- Error tracking
-- Custom span creation for detailed analysis
+### Azure Monitor OpenTelemetry Integration
+- Automatic request tracing across all agent operations
+- Performance monitoring with detailed metrics collection
+- Error tracking and diagnostic information
+- Custom span creation for detailed execution analysis
+
+### Agent Team Tracing
+- **Multi-Agent Coordination Tracking**: Trace task delegation and inter-agent communication
+- **Task Lifecycle Monitoring**: Track individual tasks from creation to completion
+- **Team Performance Metrics**: Measure collaboration efficiency and bottlenecks
+- **Custom Function Tracing**: Monitor user-defined functions with OpenTelemetry spans
+
+### Tracing Configuration Options
+- **Azure Monitor**: Production-ready cloud telemetry with Application Insights
+- **Console Tracing**: Development-friendly local trace output
+- **Agent-Specific Traces**: Detailed Azure AI Agents instrumentation
+- **Flexible Setup**: Interactive configuration based on environment needs
 
 ## Utility Functions
 

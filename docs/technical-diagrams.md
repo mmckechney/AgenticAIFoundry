@@ -2,11 +2,12 @@
 
 ## Table of Contents
 1. [Agent Architecture Diagrams](#agent-architecture-diagrams)
-2. [Evaluation Framework Diagrams](#evaluation-framework-diagrams)
-3. [Security Testing Diagrams](#security-testing-diagrams)
-4. [Integration Patterns](#integration-patterns)
-5. [Data Processing Flows](#data-processing-flows)
-6. [Error Handling & Recovery](#error-handling--recovery)
+2. [Multi-Agent Team Framework](#multi-agent-team-framework)
+3. [Evaluation Framework Diagrams](#evaluation-framework-diagrams)
+4. [Security Testing Diagrams](#security-testing-diagrams)
+5. [Integration Patterns](#integration-patterns)
+6. [Data Processing Flows](#data-processing-flows)
+7. [Error Handling & Recovery](#error-handling--recovery)
 
 ## Agent Architecture Diagrams
 
@@ -246,6 +247,219 @@
 ││Automation     ││         ││Cleanup           ││         ││Management       ││
 │└───────────────┘│         │└──────────────────┘│         │└─────────────────┘│
 └─────────────────┘         └────────────────────┘         └───────────────────┘
+```
+
+## Multi-Agent Team Framework
+
+### AgentTeam Architecture Overview
+
+```
+                           ┌─────────────────────────────────────────────────────┐
+                           │                AgentTeam Framework                  │
+                           │              (agent_team.py)                       │
+                           └─────────────────────┬───────────────────────────────┘
+                                                 │
+                           ┌─────────────────────▼───────────────────────────────┐
+                           │             Team Controller                         │
+                           │                                                     │
+                           │  ┌─────────────────────────────────────────────┐   │
+                           │  │         Team Management                     │   │
+                           │  │                                             │   │
+                           │  │  • Team Assembly & Configuration           │   │
+                           │  │  • Agent Registration & Lifecycle          │   │
+                           │  │  • Task Queue & Distribution               │   │
+                           │  │  • Coordination & Communication            │   │
+                           │  └─────────────────────────────────────────────┘   │
+                           └─────────────────────┬───────────────────────────────┘
+                                                 │
+                 ┌───────────────────────────────┼───────────────────────────────┐
+                 │                               │                               │
+                 │                               │                               │
+       ┌─────────▼──────────┐          ┌────────▼────────┐          ┌─────────▼──────────┐
+       │   Team Leader      │          │  Team Members  │          │  Task Management   │
+       │     Agent          │          │    Framework   │          │     System        │
+       │                    │          │                │          │                    │
+       ├────────────────────┤          ├─────────────────┤          ├────────────────────┤
+       │┌──────────────────┐│          │┌───────────────┐│          │┌──────────────────┐│
+       ││Request Analysis  ││          ││TimeWeather    ││          ││Task Queue        ││
+       ││& Orchestration   ││          ││Agent          ││          ││Management        ││
+       │└──────────────────┘│          │└───────────────┘│          │└──────────────────┘│
+       │┌──────────────────┐│          │┌───────────────┐│          │┌──────────────────┐│
+       ││Task Creation     ││          ││SendEmail      ││          ││Agent Selection   ││
+       ││& Delegation      ││          ││Agent          ││          ││& Assignment      ││
+       │└──────────────────┘│          │└───────────────┘│          │└──────────────────┘│
+       │┌──────────────────┐│          │┌───────────────┐│          │┌──────────────────┐│
+       ││Workflow          ││          ││Temperature    ││          ││Result            ││
+       ││Monitoring        ││          ││Agent          ││          ││Aggregation       ││
+       │└──────────────────┘│          │└───────────────┘│          │└──────────────────┘│
+       │┌──────────────────┐│          │┌───────────────┐│          │┌──────────────────┐│
+       ││Quality           ││          ││Custom Agent   ││          ││Status            ││
+       ││Assurance         ││          ││Support        ││          ││Tracking          ││
+       │└──────────────────┘│          │└───────────────┘│          │└──────────────────┘│
+       └────────────────────┘          └─────────────────┘          └────────────────────┘
+```
+
+### Task Delegation Flow Architecture
+
+```
+                           ┌─────────────────────────────────────────────────────┐
+                           │              User Request                           │
+                           │         "Complex Multi-Step Task"                  │
+                           └─────────────────────┬───────────────────────────────┘
+                                                 │
+                           ┌─────────────────────▼───────────────────────────────┐
+                           │              Team Leader Agent                     │
+                           │                                                     │
+                           │  ┌─────────────────────────────────────────────┐   │
+                           │  │            Request Analysis                 │   │
+                           │  │                                             │   │
+                           │  │  1. Parse complex request                   │   │
+                           │  │  2. Identify required capabilities          │   │
+                           │  │  3. Plan task breakdown strategy            │   │
+                           │  │  4. Determine execution sequence            │   │
+                           │  └─────────────────────┬───────────────────────┘   │
+                           └─────────────────────────┼───────────────────────────┘
+                                                     │
+                           ┌─────────────────────────▼───────────────────────────┐
+                           │              Task Creation Engine                   │
+                           │                                                     │
+                           │  ┌─────────────────────────────────────────────┐   │
+                           │  │         _create_task() Function             │   │
+                           │  │                                             │   │
+                           │  │  • Task description formulation            │   │
+                           │  │  • Agent capability matching              │   │
+                           │  │  • Priority and dependency analysis       │   │
+                           │  │  • Queue placement strategy               │   │
+                           │  └─────────────────────┬───────────────────────┘   │
+                           └─────────────────────────┼───────────────────────────┘
+                                                     │
+                           ┌─────────────────────────▼───────────────────────────┐
+                           │                Task Queue                           │
+                           │              (FIFO Processing)                     │
+                           │                                                     │
+                           │  ┌─────────────────┐  ┌─────────────────┐  ┌────── │
+                           │  │   Task 1:       │  │   Task 2:       │  │ Task  │
+                           │  │ Get Time &      │  │ Convert Temp    │  │  3:   │
+                           │  │ Weather         │  │ to Fahrenheit   │  │ Send  │
+                           │  │                 │  │                 │  │ Email │
+                           │  │ → TimeWeather   │  │ → Temperature   │  │ → Em  │
+                           │  │   Agent         │  │   Agent         │  │   Age │
+                           │  └─────────────────┘  └─────────────────┘  └────── │
+                           └─────────────────────────┬───────────────────────────┘
+                                                     │
+        ┌────────────────────────────────────────────┼─────────────────────────────────────┐
+        │                                            │                                     │
+        │                                            │                                     │
+┌───────▼──────────┐                   ┌─────────────▼──────────┐                ┌───────▼──────────┐
+│  TimeWeather     │                   │  Temperature Agent     │                │  SendEmail       │
+│  Agent           │                   │                        │                │  Agent           │
+│                  │                   │                        │                │                  │
+├──────────────────┤                   ├────────────────────────┤                ├──────────────────┤
+│┌────────────────┐│                   │┌──────────────────────┐│                │┌────────────────┐│
+││fetch_current   ││                   ││convert_temperature() ││                ││send_email_     ││
+││_datetime()     ││                   ││                      ││                ││using_recipient ││
+│└────────────────┘│                   │└──────────────────────┘│                ││_name()         ││
+│┌────────────────┐│                   │┌──────────────────────┐│                │└────────────────┘│
+││fetch_weather() ││                   ││Celsius → Fahrenheit  ││                │┌────────────────┐│
+││                ││                   ││Conversion Logic      ││                ││Email Template  ││
+│└────────────────┘│                   │└──────────────────────┘│                ││Processing      ││
+│┌────────────────┐│                   │┌──────────────────────┐│                │└────────────────┘│
+││OpenTelemetry   ││                   ││Result Formatting     ││                │┌────────────────┐│
+││Tracing         ││                   ││                      ││                ││SMTP Integration││
+│└────────────────┘│                   │└──────────────────────┘│                │└────────────────┘│
+└──────────────────┘                   └────────────────────────┘                └──────────────────┘
+        │                                            │                                     │
+        │                                            │                                     │
+        └─────────────────┬──────────────────────────┼─────────────────────────────────────┘
+                          │                          │
+                          ▼                          ▼
+                    ┌─────────────────────────────────────────────────────┐
+                    │              Result Aggregation                     │
+                    │                                                     │
+                    │  ┌─────────────────────────────────────────────┐   │
+                    │  │         Team Leader Coordination           │   │
+                    │  │                                             │   │
+                    │  │  • Collect individual task results         │   │
+                    │  │  • Validate task completion                │   │
+                    │  │  • Check workflow completeness             │   │
+                    │  │  • Generate comprehensive response         │   │
+                    │  └─────────────────────┬───────────────────────┘   │
+                    └─────────────────────────┼───────────────────────────┘
+                                              │
+                    ┌─────────────────────────▼───────────────────────────┐
+                    │                Final Response                       │
+                    │            to User Request                          │
+                    └─────────────────────────────────────────────────────┘
+```
+
+### OpenTelemetry Tracing Architecture
+
+```
+                           ┌─────────────────────────────────────────────────────┐
+                           │           AgentTraceConfigurator                   │
+                           │          (agent_trace_configurator.py)             │
+                           └─────────────────────┬───────────────────────────────┘
+                                                 │
+                           ┌─────────────────────▼───────────────────────────────┐
+                           │           Tracing Configuration                     │
+                           │               Selection                             │
+                           │                                                     │
+                           │  ┌─────────────────────────────────────────────┐   │
+                           │  │          Configuration Menu                 │   │
+                           │  │                                             │   │
+                           │  │  1. Azure Monitor (Production)              │   │
+                           │  │  2. Console Tracing (Development)          │   │
+                           │  │  3. Console + Agent Instrumentation        │   │
+                           │  │  4. No Tracing (Disabled)                  │   │
+                           │  └─────────────────────┬───────────────────────┘   │
+                           └─────────────────────────┼───────────────────────────┘
+                                                     │
+        ┌────────────────────────────────────────────┼─────────────────────────────────────┐
+        │                                            │                                     │
+        │                                            │                                     │
+┌───────▼─────────┐                    ┌─────────────▼──────────┐                ┌───────▼──────────┐
+│  Azure Monitor  │                    │   Console Tracing      │                │  Agent Traces    │
+│  Integration    │                    │                        │                │                  │
+│                 │                    │                        │                │                  │
+├─────────────────┤                    ├────────────────────────┤                ├──────────────────┤
+│┌───────────────┐│                    │┌──────────────────────┐│                │┌────────────────┐│
+││Application    ││                    ││ConsoleSpanExporter   ││                ││AIAgents        ││
+││Insights       ││                    ││                      ││                ││Instrumentor   ││
+│└───────────────┘│                    │└──────────────────────┘│                │└────────────────┘│
+│┌───────────────┐│                    │┌──────────────────────┐│                │┌────────────────┐│
+││Cloud Telemetry││                    ││TracerProvider        ││                ││Span Processing ││
+││Dashboard      ││                    ││Configuration         ││                ││Enhancement     ││
+│└───────────────┘│                    │└──────────────────────┘│                │└────────────────┘│
+│┌───────────────┐│                    │┌──────────────────────┐│                │┌────────────────┐│
+││Production     ││                    ││SimpleSpanProcessor   ││                ││Custom Span     ││
+││Analytics      ││                    ││                      ││                ││Creation        ││
+│└───────────────┘│                    │└──────────────────────┘│                │└────────────────┘│
+└─────────────────┘                    └────────────────────────┘                └──────────────────┘
+        │                                            │                                     │
+        └─────────────────┬──────────────────────────┼─────────────────────────────────────┘
+                          │                          │
+                          ▼                          ▼
+                    ┌─────────────────────────────────────────────────────┐
+                    │              Trace Collection                       │
+                    │                                                     │
+                    │  ┌─────────────────────────────────────────────┐   │
+                    │  │         User Function Tracing              │   │
+                    │  │                                             │   │
+                    │  │  @tracer.start_as_current_span("func")     │   │
+                    │  │  • fetch_current_datetime                  │   │
+                    │  │  • fetch_weather                           │   │
+                    │  │  • send_email_using_recipient_name         │   │
+                    │  │  • convert_temperature                     │   │
+                    │  └─────────────────────┬───────────────────────┘   │
+                    └─────────────────────────┼───────────────────────────┘
+                                              │
+                    ┌─────────────────────────▼───────────────────────────┐
+                    │            Comprehensive Observability             │
+                    │          • Request-level tracing                   │
+                    │          • Task-level span creation                │
+                    │          • Agent interaction monitoring            │
+                    │          • Performance metrics collection          │
+                    └─────────────────────────────────────────────────────┘
 ```
 
 ## Evaluation Framework Diagrams

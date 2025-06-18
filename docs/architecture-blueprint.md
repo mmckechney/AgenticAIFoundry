@@ -63,6 +63,16 @@ AgenticAIFoundry is a comprehensive Azure AI Foundry-based platform that demonst
 - **Evaluation Agent**: Conducts comprehensive AI model evaluation
 - **Reasoning Agent**: Utilizes Azure OpenAI O1 series for complex reasoning
 
+#### Multi-Agent Team Framework
+- **AgentTeam Class**: Centralized team coordination and management
+- **Team Leader Agent**: Automatic orchestration and task delegation
+- **Specialized Team Members**: Role-based agents with specific capabilities
+  - **TimeWeatherAgent**: Time and weather information services
+  - **SendEmailAgent**: Email communication functionality
+  - **TemperatureAgent**: Unit conversion and calculation services
+- **Task Delegation System**: Intelligent work distribution based on agent expertise
+- **Collaborative Workflows**: Inter-agent communication and result sharing
+
 ### 2. Evaluation Framework
 
 #### Quality Metrics
@@ -109,7 +119,67 @@ AgenticAIFoundry is a comprehensive Azure AI Foundry-based platform that demonst
 - **Error Handling**: Comprehensive error tracking and recovery
 - **Usage Analytics**: Agent usage patterns and optimization insights
 
-### 5. Integration Layer
+### 5. Multi-Agent Team Architecture
+
+#### Team Management Framework
+```python
+# AgentTeam Structure
+class AgentTeam:
+    - team_name: str
+    - agents_client: AgentsClient
+    - team_leader: AgentTeamMember
+    - members: List[AgentTeamMember]
+    - tasks: List[AgentTask]
+```
+
+#### Core Components
+
+**AgentTeam Class**
+- **Team Coordination**: Central hub for managing agent interactions
+- **Dynamic Team Assembly**: Runtime team configuration and deployment
+- **Task Queue Management**: FIFO task distribution and tracking
+- **Resource Management**: Team lifecycle and cleanup operations
+
+**Team Leader Agent**
+- **Intelligent Orchestration**: Evaluates incoming requests and delegates tasks
+- **Workflow Coordination**: Manages multi-step processes across team members
+- **Quality Assurance**: Monitors task completion and ensures request fulfillment
+- **Dynamic Task Creation**: Creates additional tasks based on context and needs
+
+**Specialized Team Members**
+- **Role-Based Expertise**: Each agent focused on specific domain capabilities
+- **Delegation Capability**: Configurable inter-agent task delegation permissions
+- **Tool Integration**: Specialized toolsets for specific agent functions
+- **Collaborative Communication**: Shared context and result communication
+
+#### Task Delegation System
+
+**Task Flow Architecture**
+```
+User Request → Team Leader → Task Analysis → Agent Selection → Task Execution → Result Integration
+```
+
+**Delegation Patterns**
+- **Sequential Processing**: Tasks executed in order with dependency awareness
+- **Capability Matching**: Automatic agent selection based on required skills
+- **Load Balancing**: Task distribution considering agent availability
+- **Error Handling**: Automatic retry and fallback mechanisms
+
+#### Observability and Tracing
+
+**OpenTelemetry Integration**
+- **Request Tracing**: End-to-end tracking of user requests through the team
+- **Task Lifecycle Monitoring**: Individual task creation, assignment, and completion
+- **Inter-Agent Communication**: Traces of delegation and collaboration patterns
+- **Performance Metrics**: Team efficiency and bottleneck identification
+
+**Trace Configuration Options**
+- **Azure Monitor**: Production telemetry with Application Insights
+- **Console Tracing**: Development-friendly local trace output
+- **Agent-Specific Traces**: Detailed Azure AI Agents instrumentation
+- **Custom Span Creation**: User-defined function and operation tracking
+
+### 6. Integration Layer
 
 #### Azure Services
 - **Azure AI Foundry**: Core platform for agent orchestration
@@ -683,6 +753,127 @@ def create_connected_agent_with_tools():
     return agent
 ```
 
+### 5. Multi-Agent Team Coordination
+
+```python
+def create_multi_agent_team():
+    """Example: Creating and coordinating a multi-agent team"""
+    
+    from agentutils.agent_team import AgentTeam
+    from agentutils.user_functions_with_traces import (
+        fetch_current_datetime, fetch_weather,
+        send_email_using_recipient_name, convert_temperature
+    )
+    from azure.ai.agents.models import ToolSet, FunctionTool
+    
+    # Initialize project client
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+    )
+    
+    with project_client:
+        agents_client = project_client.agents
+        
+        # Enable auto function calls for all team functions
+        agents_client.enable_auto_function_calls({
+            fetch_current_datetime, fetch_weather,
+            send_email_using_recipient_name, convert_temperature,
+        })
+        
+        # Create agent team
+        agent_team = AgentTeam("demo_team", agents_client=agents_client)
+        
+        # Add TimeWeatherAgent
+        time_weather_tools = FunctionTool(functions={fetch_current_datetime, fetch_weather})
+        toolset1 = ToolSet()
+        toolset1.add(time_weather_tools)
+        
+        agent_team.add_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="TimeWeatherAgent",
+            instructions="You are specialized for time and weather queries.",
+            toolset=toolset1,
+            can_delegate=True
+        )
+        
+        # Add EmailAgent
+        email_tools = FunctionTool(functions={send_email_using_recipient_name})
+        toolset2 = ToolSet()
+        toolset2.add(email_tools)
+        
+        agent_team.add_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="EmailAgent",
+            instructions="You are specialized for sending emails.",
+            toolset=toolset2,
+            can_delegate=False
+        )
+        
+        # Add TemperatureAgent
+        temp_tools = FunctionTool(functions={convert_temperature})
+        toolset3 = ToolSet()
+        toolset3.add(temp_tools)
+        
+        agent_team.add_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="TemperatureAgent",
+            instructions="You are specialized for temperature conversion.",
+            toolset=toolset3,
+            can_delegate=False
+        )
+        
+        # Assemble the team (creates team leader automatically)
+        agent_team.assemble_team()
+        
+        # Process a complex multi-step request
+        complex_request = (
+            "Please provide current time and weather for New York, "
+            "convert any temperatures to Fahrenheit, and email a summary."
+        )
+        
+        agent_team.process_request(complex_request)
+        
+        # Clean up
+        agent_team.dismantle_team()
+        
+    return "Team coordination completed successfully"
+```
+
+### 6. Agent Tracing and Observability
+
+```python
+def setup_agent_tracing():
+    """Example: Configuring comprehensive agent tracing"""
+    
+    from agentutils.agent_trace_configurator import AgentTraceConfigurator
+    
+    # Initialize project client
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+    )
+    
+    with project_client:
+        agents_client = project_client.agents
+        
+        # Configure tracing
+        trace_configurator = AgentTraceConfigurator(agents_client=agents_client)
+        
+        # Options for tracing setup:
+        # 1. Azure Monitor (production)
+        # 2. Console tracing without agent details
+        # 3. Console tracing with full agent instrumentation
+        # 4. No tracing
+        
+        trace_configurator.setup_tracing()
+        
+        # Now all agent operations will be traced
+        # Including custom functions with @tracer.start_as_current_span decorators
+        
+    return "Tracing configured successfully"
+```
+
 ## Performance & Scalability
 
 ### Performance Characteristics
@@ -693,7 +884,13 @@ Component Performance Metrics:
 │   ├── Code Interpreter: 2-10 seconds
 │   ├── Search Agent: 1-3 seconds
 │   ├── Connected Agent: 3-15 seconds
-│   └── Reasoning Agent: 10-60 seconds
+│   ├── Reasoning Agent: 10-60 seconds
+│   └── Multi-Agent Team: 5-30 seconds (varies by complexity)
+├── Multi-Agent Team Coordination
+│   ├── Task Delegation: 500ms-2 seconds
+│   ├── Inter-Agent Communication: 100-500ms
+│   ├── Team Assembly: 2-5 seconds
+│   └── Workflow Completion: 10-60 seconds
 ├── Evaluation Processing
 │   ├── Quality Metrics: 100-500 records/minute
 │   ├── Safety Evaluators: 50-200 records/minute
