@@ -280,6 +280,77 @@ def bbgithub_generate_chat_response(transcription, context):
         
     return retturntxt, None
 
+def hf_generate_chat_response(transcription, context):
+    """Generate a chat response using Azure OpenAI with tool calls."""
+    returntxt = ""
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "mcp_tool",
+                "description": "Queries the MHugging face.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The query to send to the MCP API."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
+        }
+    ]
+
+    prompt = f"""
+    You are a helpful assistant. Use the following context and tools to answer the user's query.
+    If the context or tools are not relevant, provide a general response based on the query.
+    Only respond with the tool call.
+    Ask for followup until you get the right information. Probe the user for more details if necessary.
+    If the context is not relevant, provide a general response based on the query.
+    Be positive and encouraging in your response. Ignore any negative or irrelevant information.
+    please ignore any questions that are not related to learning. 
+    DOn't get annoyed or frustrated. if user asks probing questions, please politely ignore them.
+    Provide sources and citations for your responses.
+    Can you make the output more conversational so that a text to speech model can read it out loud it more practical way.
+
+    User Query:
+    {transcription}
+    
+    Response:
+    """
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant with access to the MCP API."},
+        {"role": "user", "content": prompt}
+    ]
+
+    mcpclient = AzureOpenAI(  
+        base_url = os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/v1/",  
+        api_key= os.getenv("AZURE_OPENAI_KEY"),
+        api_version="preview"
+        )
+
+    response = mcpclient.responses.create(
+        model=CHAT_DEPLOYMENT_NAME, # replace with your model deployment name 
+        tools=[
+            {
+                "type": "mcp",
+                "server_label": "huggingface",
+                "server_url": "https://hf.co/mcp",
+                "require_approval": "never"
+            },
+        ],
+        input=transcription,
+        max_output_tokens= 1500,
+        instructions="Generate a response using the MCP API tool.",
+    )
+    # returntxt = response.choices[0].message.content.strip()
+    retturntxt = response.output_text
+    print(f"Response: {retturntxt}")
+        
+    return retturntxt, None
+
 def main():
     # st.title("Voice Chat with RAG (Azure OpenAI)")
     st.set_page_config(
@@ -307,7 +378,7 @@ def main():
                 st.markdown(audio_html, unsafe_allow_html=True)
 
     # Create a radio button with 3 options
-    options = ['Microsoft', 'Github']
+    options = ['Microsoft', 'Github', 'HuggingFace']
     selected_option = st.radio("Choose an option:", options, horizontal=True)
     # Audio input
     audio_value = st.audio_input("Record your voice message")
@@ -338,6 +409,8 @@ def main():
                 elif selected_option == 'Microsoft':
                     # response_text, mcp_result = msft_generate_chat_response(transcription, context)
                     response_text, mcp_result = msft_generate_chat_response(transcription, context)
+                elif selected_option == 'HuggingFace':
+                    response_text, mcp_result = hf_generate_chat_response(transcription, context)
                 else:
                     #response_text = generate_chat_response(transcription, context)
                     print("Invalid option selected.")
