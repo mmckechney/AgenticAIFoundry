@@ -251,7 +251,9 @@ def bbgithub_generate_chat_response(transcription, context):
         )
     
     PAT_TOKEN = os.getenv("GITHUB_PAT_TOKEN")
-    print('PAT_TOKEN:', PAT_TOKEN)
+    # print('PAT_TOKEN:', PAT_TOKEN)
+    # https://github.com/github/github-mcp-server
+    # https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md
 
     response = mcpclient.responses.create(
         model=CHAT_DEPLOYMENT_NAME, # replace with your model deployment name 
@@ -259,10 +261,10 @@ def bbgithub_generate_chat_response(transcription, context):
             {
                 "type": "mcp",
                 "server_label": "github",
-                "server_url": "https://api.githubcopilot.com/mcp/",
+                "server_url": "https://api.githubcopilot.com/mcp/x/repos/readonly",
                 "headers": {
-                    "authorization_token": f"Bearer ${PAT_TOKEN}",
-                    "X-MCP-Toolsets" : "repos",
+                    "Authorization": f"Bearer ${PAT_TOKEN}",
+                    # "X-MCP-Toolsets" : "repos",
                     "X-MCP-Readonly" : "true",
                 }
 
