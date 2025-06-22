@@ -16,3 +16,4 @@ azure-monitor-opentelemetry
 speech-recognition
 pydub
 azure-mgmt-logic
+gtts
