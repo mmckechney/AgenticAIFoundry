@@ -186,8 +186,47 @@ def loginappagent(query: str) -> str:
 
     return returntxt
 
+def existinglogicapp(query: str) -> str:
+    returntxt = ""
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+        # api_version="latest",
+    )
+    # Extract subscription and resource group from the project scope
+    subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
+    resource_group = os.environ["AZURE_RESOURCE_GROUP"]
+
+    agent = project_client.agents.get_agent("asst_g3hRNabXnYHg3mzqBxvgDRG6")
+
+    # thread = project_client.agents.threads.get("thread_wsqdVyYbze0HYBjs9oUNxJK7")
+    print(f"Created agent, ID: {agent.id}")
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=f"{query}",
+    )
+
+    run = project_client.agents.runs.create_and_process(
+        thread_id=thread.id,
+        agent_id=agent.id)
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+    else:
+        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+
+        for message in messages:
+            if message.text_messages:
+                print(f"{message.role}: {message.text_messages[-1].text.value}")
+                returntxt += message.text_messages[-1].text.value
+
 if __name__ == "__main__":
     with tracer.start_as_current_span("Logicapp-tracing"):
         query = "Create a Strategy to build Quantum in space and email to Bala at babal@microsoft.com "
-        emailrs = loginappagent(query)
+        # emailrs = loginappagent(query)
+        emailrs = existinglogicapp(query)
         print(f"Email response: {emailrs}")
