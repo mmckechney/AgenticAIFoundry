@@ -202,25 +202,6 @@ def msft_generate_chat_response(transcription, context):
 def bbgithub_generate_chat_response(transcription, context):
     """Generate a chat response using Azure OpenAI with tool calls."""
     returntxt = ""
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "mcp_tool",
-                "description": "Queries the Microsoft Cloud DOcumentation information.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The query to send to the MCP API."
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-        }
-    ]
 
     prompt = f"""
     You are a helpful assistant. Use the following context and tools to answer the user's query.
@@ -251,32 +232,37 @@ def bbgithub_generate_chat_response(transcription, context):
         )
     
     PAT_TOKEN = os.getenv("GITHUB_PAT_TOKEN")
-    # print('PAT_TOKEN:', PAT_TOKEN)
-    # https://github.com/github/github-mcp-server
-    # https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md
+    if not PAT_TOKEN:
+        st.warning("GitHub Personal Access Token (GITHUB_PAT_TOKEN) is not set. Please set it in your environment.")
+        return "GitHub PAT not set.", None
+    try:
 
-    response = mcpclient.responses.create(
-        model=CHAT_DEPLOYMENT_NAME, # replace with your model deployment name 
-        tools=[
-            {
-                "type": "mcp",
-                "server_label": "github",
-                "server_url": "https://api.githubcopilot.com/mcp/x/repos/readonly",
-                "headers": {
-                    "Authorization": f"Bearer ${PAT_TOKEN}",
-                    # "X-MCP-Toolsets" : "repos",
-                    "X-MCP-Readonly" : "true",
-                }
-
-            },
-        ],
-        input=transcription,
-        max_output_tokens= 1500,
-        instructions="Generate a response using the MCP API tool.",
-    )
-    # returntxt = response.choices[0].message.content.strip()
-    retturntxt = response.output_text
-    print(f"Response: {retturntxt}")
+        response = mcpclient.responses.create(
+            model=CHAT_DEPLOYMENT_NAME, # replace with your model deployment name 
+            tools=[
+                {
+                    "type": "mcp",
+                    "server_label": "github",
+                    "server_url": "https://api.githubcopilot.com/mcp/",
+                    "headers": {
+                        "Authorization": f"Bearer {PAT_TOKEN}",
+                    },
+                    "require_approval": "never",
+                },
+            ],
+            input=transcription,
+            max_output_tokens= 2500,
+            instructions=transcription,  # "Generate a response using the MCP API tool.",
+            
+        )
+        retturntxt = response.output_text
+        print(f"Response: {retturntxt}")
+    except OpenAIError as e:
+        st.error(f"OpenAI SDK error: {e}")
+        retturntxt = f"Error generating response: {e}"
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
+        retturntxt = f"Unexpected error: {e}"
         
     return retturntxt, None
 
