@@ -19,6 +19,7 @@ These mermaid diagrams can be viewed in several ways:
 graph TB
     %% Main Controller
     User[User Request] --> Main[Main Controller<br/>agenticai.py]
+    User --> MCPInterface[MCP Voice Interface<br/>bbmcp.py]
     
     %% Core Agent Ecosystem
     Main --> AgentManager[Agent Manager]
@@ -28,6 +29,18 @@ graph TB
     AgentManager --> ReasoningAgent[Reasoning Agent<br/>process_message_reasoning]
     AgentManager --> WeatherAgent[Weather Agent<br/>fetch_weather]
     AgentManager --> MultiAgentTeam[Multi-Agent Team<br/>sample_agents_multi_agent_team]
+    
+    %% MCP Integration Layer
+    MCPInterface --> MCPManager[MCP Protocol Manager]
+    MCPManager --> MSFTLearnMCP[Microsoft Learn MCP<br/>msft_generate_chat_response]
+    MCPManager --> GitHubMCP[GitHub Copilot MCP<br/>bbgithub_generate_chat_response]
+    MCPManager --> HuggingFaceMCP[HuggingFace MCP<br/>hf_generate_chat_response]
+    
+    %% Voice Interface Components
+    MCPInterface --> VoiceInput[Audio Input<br/>save_audio_file]
+    MCPInterface --> Transcription[Speech-to-Text<br/>transcribe_audio]
+    MCPInterface --> TextToSpeech[Text-to-Speech<br/>generate_audio_response_gpt]
+    MCPInterface --> ChatHistory[Chat History Management]
     
     %% Evaluation Framework
     Main --> EvalFramework[Evaluation Framework<br/>eval]
@@ -130,6 +143,17 @@ graph TB
     ExternalServices --> CustomAPIs[Custom APIs]
     ExternalServices --> FileSystem[File System<br/>Data Storage]
     
+    %% MCP External Services
+    MCPManager --> MCPServices[MCP Protocol Services]
+    MCPServices --> MSFTLearnAPI[Microsoft Learn API<br/>learn.microsoft.com/api/mcp]
+    MCPServices --> GitHubCopilotAPI[GitHub Copilot API<br/>api.githubcopilot.com/mcp/]
+    MCPServices --> HuggingFaceAPI[HuggingFace API<br/>hf.co/mcp]
+    
+    %% Voice Processing Services
+    MCPInterface --> VoiceServices[Voice Processing Services]
+    VoiceServices --> WhisperAPI[Azure OpenAI Whisper<br/>Speech-to-Text]
+    VoiceServices --> TTSAPI[Azure OpenAI TTS<br/>Text-to-Speech]
+    
     %% Tool Systems
     CodeAgent --> CodeTool[Code Interpreter Tool]
     SearchAgent --> SearchTool[Azure AI Search Tool]
@@ -189,6 +213,8 @@ graph TB
     class AzureFoundry,AzureOpenAI,AzureSearch,AzureIdentity azureClass
     class ExternalServices,GmailSMTP,StockAPIs externalClass
     class DataStorage,JSONLFiles,JSONResults dataClass
+    class MCPInterface,MCPManager,MSFTLearnMCP,GitHubMCP,HuggingFaceMCP mcpClass
+    class VoiceInput,Transcription,TextToSpeech,ChatHistory voiceClass
 ```
 
 ## Multi-Agent Team Coordination Architecture
@@ -501,13 +527,88 @@ flowchart TB
     class CollectResults,AnalyzeVuln,RiskScoring,GenerateReport resultClass
 ```
 
+## MCP Voice Interface Flow
+
+```mermaid
+flowchart TD
+    %% User Interaction
+    UserVoice[User Voice Input] --> AudioCapture[Audio Capture<br/>st.audio_input]
+    AudioCapture --> SaveAudio[Save Audio File<br/>save_audio_file]
+    
+    %% Transcription Process
+    SaveAudio --> Transcription[Speech-to-Text<br/>transcribe_audio]
+    Transcription --> WhisperAPI[Azure OpenAI Whisper]
+    WhisperAPI --> TextOutput[Transcribed Text]
+    
+    %% MCP Server Selection
+    TextOutput --> ServerSelection[MCP Server Selection]
+    ServerSelection --> MSFTOption[Microsoft Learn]
+    ServerSelection --> GitHubOption[GitHub Copilot]
+    ServerSelection --> HFOption[HuggingFace]
+    
+    %% MCP Processing
+    MSFTOption --> MSFTResponse[msft_generate_chat_response]
+    GitHubOption --> GitHubResponse[bbgithub_generate_chat_response]
+    HFOption --> HFResponse[hf_generate_chat_response]
+    
+    %% MCP Server Communication
+    MSFTResponse --> MSFTServer[Microsoft Learn MCP<br/>learn.microsoft.com/api/mcp]
+    GitHubResponse --> GitHubServer[GitHub Copilot MCP<br/>api.githubcopilot.com/mcp/]
+    HFResponse --> HFServer[HuggingFace MCP<br/>hf.co/mcp]
+    
+    %% Response Processing
+    MSFTServer --> ResponseText[Generated Response Text]
+    GitHubServer --> ResponseText
+    HFServer --> ResponseText
+    
+    %% Text-to-Speech
+    ResponseText --> TTS[Text-to-Speech<br/>generate_audio_response_gpt]
+    TTS --> TTSService[Azure OpenAI TTS<br/>gpt-4o-mini-tts]
+    TTSService --> AudioResponse[Audio Response]
+    
+    %% User Output
+    AudioResponse --> AudioPlayback[Audio Playback<br/>Streamlit Audio Player]
+    ResponseText --> TextDisplay[Text Display<br/>Streamlit Markdown]
+    
+    %% Session Management
+    TextOutput --> SessionHistory[Chat History<br/>st.session_state.messages]
+    ResponseText --> SessionHistory
+    AudioResponse --> SessionHistory
+    
+    %% Cleanup
+    AudioPlayback --> Cleanup[Cleanup Temp Files<br/>os.remove]
+    
+    %% Styling
+    classDef userClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef voiceClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef mcpClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef azureClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef processClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class UserVoice,AudioCapture,SaveAudio userClass
+    class Transcription,WhisperAPI,TTS,TTSService,AudioResponse,AudioPlayback voiceClass
+    class ServerSelection,MSFTResponse,GitHubResponse,HFResponse,MSFTServer,GitHubServer,HFServer mcpClass
+    class MSFTOption,GitHubOption,HFOption,ResponseText,TextDisplay azureClass
+    class SessionHistory,Cleanup,TextOutput processClass
+```
+
 ## Component Dependencies
 
 ```mermaid
 graph LR
     %% Core Dependencies
     Python[Python 3.12+] --> AgenticAI[agenticai.py]
+    Python --> BBMCP[bbmcp.py]
     DotEnv[python-dotenv] --> AgenticAI
+    DotEnv --> BBMCP
+    
+    %% MCP Application Dependencies
+    Streamlit[streamlit] --> BBMCP
+    OpenAIClient --> BBMCP
+    Requests[requests] --> BBMCP
+    GTTS[gtts] --> BBMCP
+    TempFile[tempfile] --> BBMCP
+    Base64[base64] --> BBMCP
     
     %% Azure Dependencies
     AzureIdentity[azure-identity] --> AgenticAI
@@ -544,6 +645,17 @@ graph LR
     AgenticAI --> GmailSMTP[Gmail SMTP]
     AgenticAI --> StockAPIs[Stock Price APIs]
     
+    %% MCP External Services
+    BBMCP --> MCPServices[MCP Protocol Services]
+    MCPServices --> MSFTLearnMCP[Microsoft Learn MCP]
+    MCPServices --> GitHubCopilotMCP[GitHub Copilot MCP]
+    MCPServices --> HuggingFaceMCP[HuggingFace MCP]
+    
+    %% Voice Processing Services
+    BBMCP --> VoiceServices[Voice Processing]
+    VoiceServices --> AzureWhisper[Azure OpenAI Whisper]
+    VoiceServices --> AzureTTS[Azure OpenAI TTS]
+    
     %% Data Files
     AgenticAI --> JSONLData[JSONL Data Files]
     AgenticAI --> JSONResults[JSON Result Files]
@@ -554,13 +666,15 @@ graph LR
     classDef azureClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
     classDef externalClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
     classDef dataClass fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    classDef mcpClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     
-    class Python,DotEnv,OpenAIClient,Pandas,JSON,OpenTelemetry coreClass
+    class Python,DotEnv,OpenAIClient,Pandas,JSON,OpenTelemetry,Streamlit,Requests,GTTS,TempFile,Base64 coreClass
     class AzureIdentity,AzureAIProjects,AzureAIEvaluation,AzureAIAgents,AzureMonitorOTel azureClass
     class GmailSMTP,StockAPIs,EmailSMTP externalClass
     class JSONLData,JSONResults,LogFiles,Environment dataClass
+    class BBMCP,MCPServices,MSFTLearnMCP,GitHubCopilotMCP,HuggingFaceMCP,VoiceServices,AzureWhisper,AzureTTS mcpClass
 ```
 
 ---
 
-*This mermaid diagram provides a comprehensive visual representation of the AgenticAIFoundry architecture, showing all connected agents, evaluation frameworks, security testing components, and their relationships. The diagram is designed to complement the Architecture Blueprint document and provide an interactive visual guide to the system.*
+*This mermaid diagram provides a comprehensive visual representation of the AgenticAIFoundry architecture, showing all connected agents, evaluation frameworks, security testing components, MCP protocol integration, voice interface capabilities, and their relationships. The diagram is designed to complement the Architecture Blueprint document and provide an interactive visual guide to the system.*

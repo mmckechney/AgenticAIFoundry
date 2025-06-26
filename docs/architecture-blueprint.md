@@ -63,6 +63,12 @@ AgenticAIFoundry is a comprehensive Azure AI Foundry-based platform that demonst
 - **Evaluation Agent**: Conducts comprehensive AI model evaluation
 - **Reasoning Agent**: Utilizes Azure OpenAI O1 series for complex reasoning
 
+#### MCP Integration Agents
+- **MCP Voice Interface Agent**: Voice-enabled chat interface with transcription and TTS
+- **Microsoft Learn MCP Agent**: Integrates with Microsoft Learn documentation API
+- **GitHub Copilot MCP Agent**: Connects to GitHub Copilot's MCP server for code assistance
+- **HuggingFace MCP Agent**: Accesses HuggingFace models and datasets via MCP protocol
+
 #### Multi-Agent Team Framework
 - **AgentTeam Class**: Centralized team coordination and management
 - **Team Leader Agent**: Automatic orchestration and task delegation
@@ -192,17 +198,23 @@ User Request → Team Leader → Task Analysis → Agent Selection → Task Exec
 - **Stock API**: Financial data retrieval
 - **Custom APIs**: Extensible integration framework
 
+#### MCP Protocol Integration
+- **Microsoft Learn MCP**: Direct access to Microsoft documentation and learning resources
+- **GitHub Copilot MCP**: Code assistance and repository interaction via GitHub's MCP server
+- **HuggingFace MCP**: Machine learning models and datasets integration
+- **Voice Interface**: Azure OpenAI Whisper for transcription and TTS for audio responses
+
 ## System Architecture
 
 ```
                     ┌─────────────────────────────────────┐
                     │          User Interface             │
-                    │    (CLI / API / Streamlit)          │
+                    │  (CLI / API / Streamlit / MCP Voice)│
                     └─────────────┬───────────────────────┘
                                   │
                     ┌─────────────▼───────────────────────┐
                     │         Main Controller             │
-                    │        (agenticai.py)               │
+                    │    (agenticai.py / bbmcp.py)        │
                     └─────────────┬───────────────────────┘
                                   │
         ┌─────────────────────────┼─────────────────────────┐
@@ -217,6 +229,7 @@ User Request → Team Leader → Task Analysis → Agent Selection → Task Exec
 │  Agent         │    │• Advanced Metrics    │    │• Vulnerability    │
 │• Reasoning     │    │                      │    │  Detection        │
 │  Agent         │    │                      │    │                   │
+│• MCP Agents    │    │                      │    │                   │
 └───────┬────────┘    └───────────┬──────────┘    └────────┬──────────┘
         │                         │                        │
         └─────────────────────────┼────────────────────────┘
@@ -246,6 +259,20 @@ User Request → Team Leader → Task Analysis → Agent Selection → Task Exec
                     │  ┌─────────────┐ ┌─────────────────┐ │
                     │  │Custom APIs  │ │ File Systems    │ │
                     │  │             │ │                 │ │
+                    │  └─────────────┘ └─────────────────┘ │
+                    └─────────────────────────────────────┘
+                                  │
+                    ┌─────────────▼───────────────────────┐
+                    │         MCP Protocol Services       │
+                    │                                     │
+                    ├─────────────────────────────────────┤
+                    │  ┌─────────────┐ ┌─────────────────┐ │
+                    │  │Microsoft    │ │ GitHub Copilot  │ │
+                    │  │Learn MCP    │ │    MCP Server   │ │
+                    │  └─────────────┘ └─────────────────┘ │
+                    │  ┌─────────────┐ ┌─────────────────┐ │
+                    │  │HuggingFace  │ │ Voice Interface │ │
+                    │  │   MCP       │ │ (Whisper/TTS)   │ │
                     │  └─────────────┘ └─────────────────┘ │
                     └─────────────────────────────────────┘
 ```
