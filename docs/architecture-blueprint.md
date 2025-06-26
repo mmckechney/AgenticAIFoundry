@@ -69,6 +69,12 @@ AgenticAIFoundry is a comprehensive Azure AI Foundry-based platform that demonst
 - **GitHub Copilot MCP Agent**: Connects to GitHub Copilot's MCP server for code assistance
 - **HuggingFace MCP Agent**: Accesses HuggingFace models and datasets via MCP protocol
 
+#### Vision Analysis Agents
+- **Technical Drawing Analysis Agent**: Specialized image analysis for engineering drawings
+- **Azure GPT-4.1 Vision Agent**: Advanced image understanding and interpretation
+- **O3 Vision Reasoning Agent**: Complex visual reasoning using O3 models
+- **Data Extraction Agent**: Structured information extraction from technical images
+
 #### Multi-Agent Team Framework
 - **AgentTeam Class**: Centralized team coordination and management
 - **Team Leader Agent**: Automatic orchestration and task delegation
