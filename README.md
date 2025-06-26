@@ -61,6 +61,13 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 - **Interactive configuration**: Environment status checking and settings management
 - **Debug mode**: Detailed execution information for development and troubleshooting
 
+### 🎤 MCP Servers Integration
+- **Voice Chat Interface**: Audio recording and transcription using Azure OpenAI Whisper
+- **Multi-Provider MCP Support**: Integration with Microsoft Learn, GitHub Copilot, and HuggingFace MCP servers
+- **Real-time Audio Response**: Text-to-speech conversion using Azure OpenAI TTS
+- **Interactive MCP Selection**: Dynamic switching between different MCP server providers
+- **Conversational AI**: Optimized responses for voice interaction and accessibility
+
 ## 📚 Documentation
 
 For detailed architecture and implementation information, see the comprehensive documentation in the `docs/` directory:
@@ -135,6 +142,15 @@ GOOGLE_EMAIL=<your_gmail_address>
 GOOGLE_APP_PASSWORD=<your_gmail_app_password>
 ```
 
+### Optional: MCP Servers Configuration
+```bash
+# GitHub Personal Access Token for GitHub MCP server
+GITHUB_PAT_TOKEN=<your_github_personal_access_token>
+
+# Azure OpenAI TTS deployment (for voice responses)
+# Uses gpt-4o-mini-tts model deployment
+```
+
 ## Installation
 
 1. **Clone the repository**:
@@ -197,6 +213,28 @@ streamlit run streamlit_app.py
 Access the application at: **http://localhost:8501**
 
 See [WEB_APP_README.md](WEB_APP_README.md) for detailed web interface documentation.
+
+### 🎤 MCP Servers Application
+
+For voice-enabled MCP (Microsoft Cloud Protocol) server interactions:
+
+```bash
+streamlit run bbmcp.py
+```
+
+**MCP Features:**
+- 🎙️ **Voice Input**: Record questions using your microphone
+- 🔊 **Audio Output**: Text-to-speech responses for accessibility
+- 🌐 **Multi-Provider Support**: Choose between Microsoft Learn, GitHub Copilot, or HuggingFace MCP servers
+- 💬 **Chat History**: Persistent conversation tracking with audio playback
+- 🔄 **Real-time Processing**: Live transcription and response generation
+
+**Supported MCP Servers:**
+- **Microsoft Learn**: Access Microsoft documentation and learning resources
+- **GitHub Copilot**: Leverage GitHub's AI capabilities for code assistance
+- **HuggingFace**: Integrate with HuggingFace models and datasets
+
+Access the MCP interface at: **http://localhost:8501**
 
 ### 📋 Command Line Usage
 
@@ -323,6 +361,7 @@ AgenticAIFoundry/
 │
 ├── agenticai.py              # Main application with all agent examples
 ├── streamlit_app.py          # Web interface for all functionality
+├── bbmcp.py                  # MCP Servers voice chat interface
 ├── utils.py                  # Utility functions (email sending, etc.)
 ├── requirements.txt          # Python dependencies
 ├── README.md                # This documentation
@@ -369,6 +408,17 @@ AgenticAIFoundry/
 | `connected_agent()` | External service integration with email capabilities | API integration, external data, and email notifications |
 | `process_message_reasoning()` | O1 model reasoning | Complex reasoning tasks |
 | `send_email()` (utils.py) | Email sending functionality | Automated email notifications and communications |
+
+### MCP Servers Functions
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `bbmcp.py main()` | Voice-enabled MCP servers interface | Interactive voice chat with multiple MCP providers |
+| `msft_generate_chat_response()` | Microsoft Learn MCP integration | Access Microsoft documentation and learning resources |
+| `bbgithub_generate_chat_response()` | GitHub Copilot MCP integration | Code assistance and GitHub repository interaction |
+| `hf_generate_chat_response()` | HuggingFace MCP integration | Machine learning models and datasets access |
+| `transcribe_audio()` | Azure OpenAI Whisper transcription | Voice-to-text conversion |
+| `generate_audio_response_gpt()` | Azure OpenAI TTS audio generation | Text-to-speech response creation |
 
 ### Multi-Agent Team Functions
 
