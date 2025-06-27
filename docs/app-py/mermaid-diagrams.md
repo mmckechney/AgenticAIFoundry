@@ -77,7 +77,7 @@ graph LR
         end
         
         subgraph "🎮 Control Layer"
-            MainCtrl[Main Controller<br/>main()]
+            MainCtrl[Main Controller<br/>main function]
             SessionState[Session State<br/>Manager]
             ErrorHandler[Error Handler &<br/>Graceful Fallback]
         end
