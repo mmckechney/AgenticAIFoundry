@@ -2,7 +2,7 @@ import json
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAIError
 
 import base64
 import os
@@ -131,25 +131,6 @@ def mcp_tool(query):
 def msft_generate_chat_response(transcription, context):
     """Generate a chat response using Azure OpenAI with tool calls."""
     returntxt = ""
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "mcp_tool",
-                "description": "Queries the Microsoft Cloud DOcumentation information.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The query to send to the MCP API."
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-        }
-    ]
 
     prompt = f"""
     You are a helpful assistant. Use the following context and tools to answer the user's query.
@@ -269,25 +250,6 @@ def bbgithub_generate_chat_response(transcription, context):
 def hf_generate_chat_response(transcription, context):
     """Generate a chat response using Azure OpenAI with tool calls."""
     returntxt = ""
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "mcp_tool",
-                "description": "Queries the MHugging face.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The query to send to the MCP API."
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-        }
-    ]
 
     prompt = f"""
     You are a helpful assistant. Use the following context and tools to answer the user's query.
