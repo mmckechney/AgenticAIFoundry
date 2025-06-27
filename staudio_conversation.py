@@ -920,12 +920,12 @@ def main():
                             with st.spinner("🔄 Generating enhanced context with MCP..."):
                                 # Generate RAG context using MCP based on the user's audio question
                                 rag_context, _ = msft_generate_chat_response(user_audio_content, json_input)
+                                # Original Knowledge Base:
+                                # {json_input}
                                 
                                 # Enhance the original JSON input with MCP-generated context
                                 enhanced_context = f"""
-                                Original Knowledge Base:
-                                {json_input}
-                                
+                                You are AI learning Assistant with access to Microsoft Learn MCP resources.
                                 Enhanced Context from Microsoft Learn MCP:
                                 {rag_context}
                                 
