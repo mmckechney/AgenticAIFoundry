@@ -640,24 +640,6 @@ def main():
     col_left, col_right = st.columns([1, 2])
 
     with col_left:
-        st.markdown('<div class="section-header">👤 User Profile</div>', unsafe_allow_html=True)
-        
-        # User profile display
-        profile = st.session_state["user_profile"]
-        profile_html = '<div class="profile-card">'
-        
-        for field, question in required_profile_fields:
-            value = profile.get(field) or "Not provided"
-            field_name = field.replace('_', ' ').title()
-            profile_html += f'''
-            <div class="profile-field">
-                <span class="profile-label">{field_name}:</span>
-                <span class="profile-value">{value}</span>
-            </div>
-            '''
-        
-        profile_html += '</div>'
-        st.markdown(profile_html, unsafe_allow_html=True)
         
         # Processing status
         st.markdown('<div class="section-header">📊 Status</div>', unsafe_allow_html=True)
