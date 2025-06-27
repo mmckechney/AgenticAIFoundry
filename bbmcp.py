@@ -301,10 +301,10 @@ def hf_generate_chat_response(transcription, context):
 
 def main():
     # st.title("Voice Chat with RAG (Azure OpenAI)")
-    st.set_page_config(
-        page_title="MCP Servers",
-        layout="wide"  # 'centered' is default; use 'wide' for full page width
-    )
+    # st.set_page_config(
+    #     page_title="MCP Servers",
+    #     layout="wide"  # 'centered' is default; use 'wide' for full page width
+    # )
     st.title("MCP Servers")
 
     # Initialize session state for chat history
