@@ -1004,10 +1004,10 @@ def main():
                     else:
                         st.warning("No transcript was received.")
                     # Example: Use user_profile in your model prompt
-                    user_profile = st.session_state["user_profile"]
-                    profile_str = f"First Name: {user_profile['first_name']}, Last Name: {user_profile['last_name']}, Job Title: {user_profile['job_title']}, Duration of Work: {user_profile['duration_of_work']}, Learning Topic: {user_profile['learning_topic']}"
-                    personalized_instructions = f"User profile: {profile_str}\nPlease provide a personalized learning recommendation."
-                    st.session_state["conversation_history"].append({"role": "assistant", "content": personalized_instructions})
+                    # user_profile = st.session_state["user_profile"]
+                    # profile_str = f"First Name: {user_profile['first_name']}, Last Name: {user_profile['last_name']}, Job Title: {user_profile['job_title']}, Duration of Work: {user_profile['duration_of_work']}, Learning Topic: {user_profile['learning_topic']}"
+                    # personalized_instructions = f"User profile: {profile_str}\nPlease provide a personalized learning recommendation."
+                    # st.session_state["conversation_history"].append({"role": "assistant", "content": personalized_instructions})
                     # st.info(f"Assistant: {personalized_instructions}")
                 end_time = _time.time()
                 elapsed = end_time - start_time
