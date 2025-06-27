@@ -275,33 +275,302 @@ class RealtimeWebRtcSession:
 
 def main():
     st.set_page_config(
-        page_title="Realtime Audio WebRTC Conversation",
-        layout="wide"
+        page_title="AI Voice Conversation Hub",
+        page_icon="🎙️",
+        layout="wide",
+        initial_sidebar_state="expanded"
     )
-    st.title("Realtime WebRTC Conversation Example")
+    
+    # Material Design 3 CSS with light theme
+    st.markdown("""
+    <style>
+        /* Material Design 3 Light Color Scheme */
+        :root {
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #EADDFF;
+            --md-sys-color-on-primary-container: #21005D;
+            --md-sys-color-secondary: #625B71;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-secondary-container: #E8DEF8;
+            --md-sys-color-on-secondary-container: #1D192B;
+            --md-sys-color-tertiary: #7D5260;
+            --md-sys-color-on-tertiary: #FFFFFF;
+            --md-sys-color-tertiary-container: #FFD8E4;
+            --md-sys-color-on-tertiary-container: #31111D;
+            --md-sys-color-surface: #FEF7FF;
+            --md-sys-color-on-surface: #1C1B1F;
+            --md-sys-color-surface-variant: #E7E0EC;
+            --md-sys-color-on-surface-variant: #49454F;
+            --md-sys-color-surface-container: #F3EDF7;
+            --md-sys-color-surface-container-high: #ECE6F0;
+            --md-sys-color-outline: #79747E;
+            --md-sys-color-outline-variant: #CAC4D0;
+            --md-sys-color-success: #2E7D32;
+            --md-sys-color-warning: #F57C00;
+            --md-sys-color-error: #D32F2F;
+        }
+
+        /* Global app styling */
+        .stApp {
+            background: linear-gradient(135deg, var(--md-sys-color-surface) 0%, var(--md-sys-color-primary-container) 100%);
+            color: var(--md-sys-color-on-surface);
+        }
+
+        /* Header styling */
+        .main-header {
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-tertiary) 100%);
+            padding: 2rem;
+            border-radius: 24px;
+            margin-bottom: 2rem;
+            box-shadow: 0 6px 20px rgba(103, 80, 164, 0.15);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        }
+
+        .main-header h1 {
+            color: var(--md-sys-color-on-primary);
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-header p {
+            color: var(--md-sys-color-on-primary);
+            font-size: 1.1rem;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Card styling */
+        .feature-card {
+            background: var(--md-sys-color-surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 6px 24px rgba(103, 80, 164, 0.15);
+            transform: translateY(-4px);
+        }
+
+        /* Button styling */
+        .stButton > button {
+            background: var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-on-primary) !important;
+            border: none !important;
+            border-radius: 24px !important;
+            padding: 0.875rem 2rem !important;
+            font-weight: 500 !important;
+            font-size: 1rem !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 3px 12px rgba(103, 80, 164, 0.2) !important;
+            width: 100% !important;
+            margin: 0.5rem 0 !important;
+            letter-spacing: 0.025em !important;
+        }
+
+        .stButton > button:hover {
+            background: #5a4593 !important;
+            box-shadow: 0 6px 20px rgba(103, 80, 164, 0.3) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .stButton > button:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 3px 12px rgba(103, 80, 164, 0.2) !important;
+        }
+
+        /* Audio input styling */
+        .stAudioInput {
+            background: var(--md-sys-color-surface-container) !important;
+            border-radius: 16px !important;
+            padding: 1rem !important;
+            border: 2px solid var(--md-sys-color-outline-variant) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .stAudioInput:focus-within {
+            border-color: var(--md-sys-color-primary) !important;
+            box-shadow: 0 0 0 3px rgba(103, 80, 164, 0.1) !important;
+        }
+
+        /* Sidebar styling */
+        .css-1d391kg {
+            background: var(--md-sys-color-surface) !important;
+            border-right: 1px solid var(--md-sys-color-outline-variant) !important;
+        }
+
+        /* Selectbox and radio styling */
+        .stSelectbox > div > div {
+            background: var(--md-sys-color-surface-container) !important;
+            border: 1px solid var(--md-sys-color-outline-variant) !important;
+            border-radius: 12px !important;
+        }
+
+        .stRadio > div {
+            background: var(--md-sys-color-surface-container) !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+        }
+
+        /* Text area styling */
+        .stTextArea > div > div > textarea {
+            background: var(--md-sys-color-surface-container) !important;
+            border: 1px solid var(--md-sys-color-outline-variant) !important;
+            border-radius: 12px !important;
+            color: var(--md-sys-color-on-surface) !important;
+        }
+
+        /* Status indicators */
+        .status-success {
+            background: var(--md-sys-color-success);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+
+        .status-info {
+            background: var(--md-sys-color-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+
+        /* Section headers */
+        .section-header {
+            color: var(--md-sys-color-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--md-sys-color-primary-container);
+        }
+
+        /* Profile card styling */
+        .profile-card {
+            background: var(--md-sys-color-tertiary-container);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--md-sys-color-tertiary);
+        }
+
+        .profile-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .profile-field:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            font-weight: 500;
+            color: var(--md-sys-color-on-tertiary-container);
+        }
+
+        .profile-value {
+            color: var(--md-sys-color-on-tertiary-container);
+            font-style: italic;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Main header
+    st.markdown("""
+    <div class="main-header">
+        <h1>🎙️ AI Voice Conversation Hub</h1>
+        <p>Intelligent Real-time Audio Conversations with AI Assistant</p>
+    </div>
+    """, unsafe_allow_html=True)
     json_str = ""
 
-    # Sidebar for JSON input
+    # Enhanced sidebar with Material Design 3
     with st.sidebar:
-        st.header("RAG Data Source")
+        st.markdown("""
+        <div class="feature-card">
+            <h3 style="color: var(--md-sys-color-primary); margin-bottom: 1rem;">🎯 Configuration</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("#### 🎵 Voice Settings")
         option_to_file = {
-            'Learner': 'ai_learning_paths.json',
-            'Administrator': 'learning_admin_data.json',
-            'Coach': 'ai_learning_paths.json',
+            '👨‍🎓 Learner': 'ai_learning_paths.json',
+            '👨‍💼 Administrator': 'learning_admin_data.json',
+            '🏃‍♂️ Coach': 'ai_learning_paths.json',
         }
         voices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse']
-        selected_voice = st.selectbox("Choose a voice", voices)
+        
+        selected_voice = st.selectbox(
+            "🗣️ Choose AI Voice", 
+            voices, 
+            help="Select the voice personality for your AI assistant"
+        )
+        
+        st.markdown("#### 🎯 Learning Profile")
         options = list(option_to_file.keys())
-        selected_option = st.radio("Choose an option:", options, horizontal=False)
+        selected_option = st.radio(
+            "Choose your learning role:", 
+            options, 
+            horizontal=False,
+            help="Select your role to get personalized learning content"
+        )
+        
         file_path = option_to_file[selected_option]
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 json_str = f.read()
         except Exception as e:
             json_str = "{}"
-            st.warning(f"Could not load {file_path}: {e}")
-        json_input = st.text_area("Enter JSON string for RAG content", height=200, value=json_str)
-        st.info("Enter a valid JSON string containing key-value pairs or a list of documents.")
+            st.warning(f"⚠️ Could not load {file_path}: {e}")
+        
+        st.markdown("#### 📚 Knowledge Base")
+        json_input = st.text_area(
+            "RAG Content (JSON)", 
+            height=200, 
+            value=json_str,
+            help="Enter JSON data that will be used as context for the AI assistant"
+        )
+        
+        st.markdown("""
+        <div style="background: var(--md-sys-color-surface-container); 
+                    padding: 1rem; border-radius: 12px; margin: 1rem 0;">
+            <small style="color: var(--md-sys-color-on-surface-variant);">
+                💡 <strong>Tip:</strong> The AI will use this knowledge base to provide more accurate and contextual responses.
+            </small>
+        </div>
+        """, unsafe_allow_html=True)
         url = f"https://agentnew-resource.openai.azure.com/openai/realtimeapi/sessions?api-version=2025-04-01-preview"
         endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         apikey = os.getenv("AZURE_OPENAI_KEY")
@@ -328,76 +597,178 @@ def main():
     if "user_profile" not in st.session_state:
         st.session_state["user_profile"] = {k: None for k, _ in required_profile_fields}
 
-    # --- AUDIO INPUT AND SEND BUTTON AT THE TOP ---
-    st.subheader("Record your voice message")
-    audio_data = st.audio_input("Record your voice message")
-    send_col, clear_col = st.columns([1, 1])
-    with send_col:
-        send_clicked = st.button("Send Message")
-    with clear_col:
-        clear_clicked = st.button("Clear Conversation", type="secondary")
+    # --- ENHANCED AUDIO INPUT SECTION ---
+    st.markdown('<div class="section-header">🎙️ Voice Message Center</div>', unsafe_allow_html=True)
+    
+    # Audio input in a styled container
+    st.markdown("""
+    <div class="feature-card">
+        <h4 style="color: var(--md-sys-color-primary); margin-bottom: 1rem;">📹 Record Your Message</h4>
+        <p style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 1rem;">
+            Click the microphone button below to start recording your voice message. The AI will process your audio and respond with both text and voice.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    audio_data = st.audio_input("🎤 Record your voice message")
+    
+    # Action buttons with improved layout
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col1:
+        send_clicked = st.button("🚀 Send & Process Message", type="primary")
+    with col2:
+        clear_clicked = st.button("🗑️ Clear Chat", type="secondary")
+    with col3:
+        if st.button("ℹ️ Help"):
+            st.info("""
+            **How to use:**
+            1. Click the microphone to record
+            2. Speak your message clearly
+            3. Click 'Send & Process Message'
+            4. Wait for AI response (text + audio)
+            """)
 
     # Handle clear conversation
     if clear_clicked:
         st.session_state["conversation_history"] = []
         st.session_state["transcript_history"] = []
         st.session_state["user_profile"] = {k: None for k, _ in required_profile_fields}
+        st.success("✅ Conversation cleared!")
         st.experimental_rerun()
 
-    # --- LAYOUT: AUDIO/TRANSCRIPT LEFT, CHAT HISTORY RIGHT ---
-    left_col, right_col = st.columns([1, 2])
+    # --- ENHANCED LAYOUT: USER PROFILE, CHAT HISTORY, AND STATUS ---
+    col_left, col_right = st.columns([1, 2])
 
-    with right_col:
+    with col_left:
+        st.markdown('<div class="section-header">👤 User Profile</div>', unsafe_allow_html=True)
+        
+        # User profile display
+        profile = st.session_state["user_profile"]
+        profile_html = '<div class="profile-card">'
+        
+        for field, question in required_profile_fields:
+            value = profile.get(field) or "Not provided"
+            field_name = field.replace('_', ' ').title()
+            profile_html += f'''
+            <div class="profile-field">
+                <span class="profile-label">{field_name}:</span>
+                <span class="profile-value">{value}</span>
+            </div>
+            '''
+        
+        profile_html += '</div>'
+        st.markdown(profile_html, unsafe_allow_html=True)
+        
+        # Processing status
+        st.markdown('<div class="section-header">📊 Status</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card">
+            <div style="margin-bottom: 0.5rem;">
+                <span class="status-info">🟢 System Ready</span>
+            </div>
+            <div style="margin-bottom: 0.5rem;">
+                <span class="status-success">🎙️ Audio Processing Active</span>
+            </div>
+            <div>
+                <span class="status-info">🤖 AI Assistant Online</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_right:
+        st.markdown('<div class="section-header">💬 Conversation History</div>', unsafe_allow_html=True)
+        
+        # Enhanced chat styling
         st.markdown("""
         <style>
-        /* Material Design-inspired chat container */
+        /* Enhanced Material Design chat container */
         .chat-history-container {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
-            background: #FAFAFA;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(60,60,60,0.08), 0 1.5px 4px rgba(60,60,60,0.06);
-            padding: 1.2em 1em 1em 1em;
-            margin-bottom: 1.5em;
-            font-size: 1.08em;
-            border: none;
+            background: var(--md-sys-color-surface-container);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+        
         .chat-message-user {
-            background: #E3F2FD;
-            color: #1565c0;
-            margin-bottom: 0.5em;
-            margin-right: 2.5em;
-            padding: 0.7em 1em;
-            border-radius: 18px 18px 4px 18px;
-            box-shadow: 0 1px 3px rgba(21,101,192,0.07);
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #8A2BE2 100%);
+            color: var(--md-sys-color-on-primary);
+            margin: 0.75rem 0 0.75rem 3rem;
+            padding: 1rem 1.25rem;
+            border-radius: 20px 20px 8px 20px;
+            box-shadow: 0 3px 12px rgba(103, 80, 164, 0.2);
             font-weight: 500;
-            width: fit-content;
-            max-width: 80%;
-            align-self: flex-end;
+            max-width: 85%;
             float: right;
             clear: both;
+            position: relative;
+            animation: slideInRight 0.3s ease-out;
         }
+        
         .chat-message-assistant {
-            background: #E8F5E9;
-            color: #2e7d32;
-            margin-bottom: 1em;
-            margin-left: 2.5em;
-            padding: 0.7em 1em;
-            border-radius: 18px 18px 18px 4px;
-            box-shadow: 0 1px 3px rgba(46,125,50,0.07);
-            width: fit-content;
-            max-width: 80%;
-            align-self: flex-start;
+            background: linear-gradient(135deg, var(--md-sys-color-tertiary-container) 0%, #E1F5FE 100%);
+            color: var(--md-sys-color-on-tertiary-container);
+            margin: 0.75rem 3rem 0.75rem 0;
+            padding: 1rem 1.25rem;
+            border-radius: 20px 20px 20px 8px;
+            box-shadow: 0 3px 12px rgba(125, 82, 96, 0.15);
+            max-width: 85%;
             float: left;
             clear: both;
+            position: relative;
+            animation: slideInLeft 0.3s ease-out;
+            line-height: 1.5;
         }
+        
+        .chat-message-user::before {
+            content: "👤";
+            position: absolute;
+            right: -2.5rem;
+            top: 0.75rem;
+            font-size: 1.5rem;
+        }
+        
+        .chat-message-assistant::before {
+            content: "🤖";
+            position: absolute;
+            left: -2.5rem;
+            top: 0.75rem;
+            font-size: 1.5rem;
+        }
+        
         .chat-message-user::after, .chat-message-assistant::after {
             content: "";
             display: table;
             clear: both;
         }
-        /* Remove default Streamlit padding for a more app-like look */
-        section.main > div { padding-top: 1.5rem; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .chat-empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--md-sys-color-on-surface-variant);
+            font-style: italic;
+        }
+        
+        .chat-empty-state::before {
+            content: "💭";
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
         </style>
         """, unsafe_allow_html=True)
 
@@ -405,23 +776,39 @@ def main():
         if st.session_state["conversation_history"]:
             for turn in st.session_state["conversation_history"]:
                 if turn["role"] == "user":
-                    chat_html += f"<div class='chat-message-user'>You: {turn['content']}</div>"
+                    content = turn['content'].replace('\n', '<br>')
+                    chat_html += f"<div class='chat-message-user'>{content}</div>"
                 else:
-                    chat_html += f"<div class='chat-message-assistant'>Assistant: {turn['content']}</div>"
+                    content = turn['content'].replace('\n', '<br>')
+                    chat_html += f"<div class='chat-message-assistant'>{content}</div>"
         else:
-            chat_html += "<div>No conversation yet. Record your first message!</div>"
+            chat_html += """
+            <div class='chat-empty-state'>
+                <strong>Ready to start your conversation!</strong><br>
+                Record your first message to begin chatting with the AI assistant.
+            </div>
+            """
         chat_html += "</div>"
-        # Add JS to scroll to bottom on update
+        
+        # Enhanced auto-scroll script
         chat_html += """
         <script>
-        var chatDiv = document.getElementById('chat-history');
-        if (chatDiv) { chatDiv.scrollTop = chatDiv.scrollHeight; }
+        function scrollToBottom() {
+            var chatDiv = document.getElementById('chat-history');
+            if (chatDiv) { 
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+                chatDiv.style.scrollBehavior = 'smooth';
+            }
+        }
+        scrollToBottom();
+        // Auto-scroll after a brief delay to ensure content is loaded
+        setTimeout(scrollToBottom, 100);
         </script>
         """
         st.markdown(chat_html, unsafe_allow_html=True)
 
     # --- AUDIO PROCESSING AND SESSION LOGIC ---
-    with left_col:
+    with col_left:
         def extract_and_update_profile_from_transcript(transcript, required_profile_fields):
             """
             Extracts and updates user profile fields from the transcript using simple keyword/regex matching.
