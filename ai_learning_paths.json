@@ -1,0 +1,1012 @@
+{
+  "learning_paths": [
+    {
+      "path_id": "DS001",
+      "persona": "Data Scientist",
+      "title": "Foundational AI for Data Scientists",
+      "duration_months": 6,
+      "skill_level": "Beginner",
+      "technologies": ["Python", "Pandas", "Scikit-learn", "TensorFlow"],
+      "courses": [
+        {"title": "Python for Data Science", "duration_hours": 20},
+        {"title": "Introduction to Machine Learning", "duration_hours": 30},
+        {"title": "Deep Learning Basics with TensorFlow", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Master Python for data manipulation",
+        "Build and evaluate ML models",
+        "Understand neural network fundamentals"
+      ]
+    },
+    {
+      "path_id": "DS002",
+      "persona": "Data Scientist",
+      "title": "Advanced Gen AI for Predictive Modeling",
+      "duration_months": 9,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "Hugging Face", "PyTorch", "SQL"],
+      "courses": [
+        {"title": "Natural Language Processing with Transformers", "duration_hours": 35},
+        {"title": "Generative AI with GANs", "duration_hours": 30},
+        {"title": "Advanced SQL for Data Scientists", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Implement transformer-based models",
+        "Generate synthetic data with GANs",
+        "Optimize data queries for AI pipelines"
+      ]
+    },
+    {
+      "path_id": "DS003",
+      "persona": "Data Scientist",
+      "title": "Quantum Machine Learning Exploration",
+      "duration_months": 12,
+      "skill_level": "Advanced",
+      "technologies": ["Qiskit", "Python", "TensorFlow Quantum", "NumPy"],
+      "courses": [
+        {"title": "Introduction to Quantum Computing", "duration_hours": 40},
+        {"title": "Quantum Machine Learning with Qiskit", "duration_hours": 35},
+        {"title": "Advanced Linear Algebra for Quantum", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Understand quantum computing principles",
+        "Build quantum ML models",
+        "Apply linear algebra in quantum contexts"
+      ]
+    },
+    {
+      "path_id": "DS004",
+      "persona": "Data Scientist",
+      "title": "Gen AI for Text and Image Analysis",
+      "duration_months": 8,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "OpenCV", "Hugging Face", "NLTK"],
+      "courses": [
+        {"title": "Computer Vision with OpenCV", "duration_hours": 30},
+        {"title": "NLP with Hugging Face Transformers", "duration_hours": 35},
+        {"title": "Generative Models for Multimodal Data", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Analyze images with computer vision",
+        "Process text with transformer models",
+        "Create multimodal generative models"
+      ]
+    },
+    {
+      "path_id": "DS005",
+      "persona": "Data Scientist",
+      "title": "AI Pipeline Optimization",
+      "duration_months": 7,
+      "skill_level": "Intermediate",
+      "technologies": ["Apache Spark", "Python", "MLflow", "Docker"],
+      "courses": [
+        {"title": "Big Data Processing with Spark", "duration_hours": 30},
+        {"title": "ML Pipeline with MLflow", "duration_hours": 25},
+        {"title": "Containerization with Docker", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Process large datasets with Spark",
+        "Manage ML pipelines",
+        "Deploy models using containers"
+      ]
+    },
+    {
+      "path_id": "DS006",
+      "persona": "Data Scientist",
+      "title": "Reinforcement Learning for Decision Systems",
+      "duration_months": 10,
+      "skill_level": "Advanced",
+      "technologies": ["Python", "Gym", "PyTorch", "RLlib"],
+      "courses": [
+        {"title": "Fundamentals of Reinforcement Learning", "duration_hours": 35},
+        {"title": "Deep RL with PyTorch", "duration_hours": 30},
+        {"title": "Scaling RL with RLlib", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Design RL algorithms",
+        "Implement deep RL models",
+        "Scale RL for real-world applications"
+      ]
+    },
+    {
+      "path_id": "DS007",
+      "persona": "Data Scientist",
+      "title": "Time Series Analysis with AI",
+      "duration_months": 6,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "Statsmodels", "Prophet", "TensorFlow"],
+      "courses": [
+        {"title": "Time Series Analysis Basics", "duration_hours": 20},
+        {"title": "Forecasting with Prophet", "duration_hours": 25},
+        {"title": "Deep Learning for Time Series", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Understand time series concepts",
+        "Build forecasting models",
+        "Apply deep learning to time series"
+      ]
+    },
+    {
+      "path_id": "DS008",
+      "persona": "Data Scientist",
+      "title": "Ethics and Bias in AI",
+      "duration_months": 4,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "Fairlearn", "SHAP"],
+      "courses": [
+        {"title": "AI Ethics and Fairness", "duration_hours": 15},
+        {"title": "Bias Detection with Fairlearn", "duration_hours": 20},
+        {"title": "Model Interpretability with SHAP", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Identify ethical issues in AI",
+        "Detect and mitigate bias",
+        "Interpret ML model outputs"
+      ]
+    },
+    {
+      "path_id": "DS009",
+      "persona": "Data Scientist",
+      "title": "Graph Neural Networks for Data Science",
+      "duration_months": 9,
+      "skill_level": "Advanced",
+      "technologies": ["Python", "PyG", "DGL", "Neo4j"],
+      "courses": [
+        {"title": "Graph Theory for Data Scientists", "duration_hours": 25},
+        {"title": "Graph Neural Networks with PyG", "duration_hours": 30},
+        {"title": "Graph Databases with Neo4j", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Understand graph structures",
+        "Build GNN models",
+        "Integrate graph databases"
+      ]
+    },
+    {
+      "path_id": "DS010",
+      "persona": "Data Scientist",
+      "title": "AI for Healthcare Analytics",
+      "duration_months": 8,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "TensorFlow", "Pandas", "FHIR"],
+      "courses": [
+        {"title": "Healthcare Data Analysis", "duration_hours": 25},
+        {"title": "AI for Medical Imaging", "duration_hours": 30},
+        {"title": "Interoperability with FHIR", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Analyze healthcare datasets",
+        "Apply AI to medical imaging",
+        "Understand healthcare data standards"
+      ]
+    },
+    {
+      "path_id": "BU001",
+      "persona": "Business User",
+      "title": "AI Literacy for Business Leaders",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["Microsoft Copilot", "Power BI", "Excel"],
+      "courses": [
+        {"title": "Introduction to AI for Business", "duration_hours": 10},
+        {"title": "Data Visualization with Power BI", "duration_hours": 15},
+        {"title": "Using Microsoft Copilot", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Understand AI concepts",
+        "Visualize business data",
+        "Leverage AI tools for productivity"
+      ]
+    },
+    {
+      "path_id": "BU002",
+      "persona": "Business User",
+      "title": "Gen AI for Marketing Insights",
+      "duration_months": 4,
+      "skill_level": "Beginner",
+      "technologies": ["Google Analytics", "Hugging Face", "Canva"],
+      "courses": [
+        {"title": "AI in Marketing", "duration_hours": 15},
+        {"title": "Text Generation with Hugging Face", "duration_hours": 15},
+        {"title": "Visual Content with Canva AI", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Apply AI to marketing strategies",
+        "Generate marketing content",
+        "Create AI-enhanced visuals"
+      ]
+    },
+    {
+      "path_id": "BU003",
+      "persona": "Business User",
+      "title": "AI-Driven Business Strategy",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["Tableau", "Azure AI", "PowerPoint"],
+      "courses": [
+        {"title": "Strategic AI Implementation", "duration_hours": 20},
+        {"title": "Advanced Analytics with Tableau", "duration_hours": 15},
+        {"title": "AI Solutions with Azure", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Develop AI business strategies",
+        "Analyze data for decisions",
+        "Integrate AI in operations"
+      ]
+    },
+    {
+      "path_id": "BU004",
+      "persona": "Business User",
+      "title": "Quantum Computing for Business Innovation",
+      "duration_months": 6,
+      "skill_level": "Intermediate",
+      "technologies": ["Qiskit", "IBM Quantum", "Excel"],
+      "courses": [
+        {"title": "Quantum Computing for Business", "duration_hours": 20},
+        {"title": "Introduction to Qiskit", "duration_hours": 20},
+        {"title": "Quantum Use Cases", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Understand quantum computing",
+        "Explore quantum business applications",
+        "Identify quantum opportunities"
+      ]
+    },
+    {
+      "path_id": "BU005",
+      "persona": "Business User",
+      "title": "AI for Customer Experience",
+      "duration_months": 4,
+      "skill_level": "Beginner",
+      "technologies": ["Salesforce Einstein", "Zendesk AI", "Google Dialogflow"],
+      "courses": [
+        {"title": "AI for Customer Service", "duration_hours": 15},
+        {"title": "Chatbots with Dialogflow", "duration_hours": 15},
+        {"title": "CRM AI with Salesforce", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Enhance customer interactions with AI",
+        "Build conversational AI",
+        "Leverage CRM AI tools"
+      ]
+    },
+    {
+      "path_id": "BU006",
+      "persona": "Business User",
+      "title": "Gen AI for Content Creation",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["DALL-E", "Grammarly AI", "Adobe Express"],
+      "courses": [
+        {"title": "Generative AI for Content", "duration_hours": 10},
+        {"title": "Image Generation with DALL-E", "duration_hours": 10},
+        {"title": "AI Writing with Grammarly", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Create content with Gen AI",
+        "Generate images for marketing",
+        "Improve writing with AI"
+      ]
+    },
+    {
+      "path_id": "BU007",
+      "persona": "Business User",
+      "title": "AI for Financial Analysis",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["QuickBooks AI", "Power BI", "Python"],
+      "courses": [
+        {"title": "AI in Finance", "duration_hours": 20},
+        {"title": "Financial Dashboards with Power BI", "duration_hours": 15},
+        {"title": "Python for Financial Analysis", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Apply AI to financial data",
+        "Build financial dashboards",
+        "Analyze data with Python"
+      ]
+    },
+    {
+      "path_id": "BU008",
+      "persona": "Business User",
+      "title": "AI Ethics for Business Decision-Makers",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["None"],
+      "courses": [
+        {"title": "AI Ethics and Governance", "duration_hours": 15},
+        {"title": "Responsible AI in Business", "duration_hours": 10},
+        {"title": "Case Studies in AI Ethics", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Understand AI ethics",
+        "Implement responsible AI",
+        "Evaluate AI ethical dilemmas"
+      ]
+    },
+    {
+      "path_id": "BU009",
+      "persona": "Business User",
+      "title": "AI for Supply Chain Optimization",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["SAP AI", "Tableau", "Excel"],
+      "courses": [
+        {"title": "AI in Supply Chain", "duration_hours": 20},
+        {"title": "Data Analysis with Tableau", "duration_hours": 15},
+        {"title": "SAP AI Solutions", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Optimize supply chains with AI",
+        "Visualize supply chain data",
+        "Implement SAP AI tools"
+      ]
+    },
+    {
+      "path_id": "BU010",
+      "persona": "Business User",
+      "title": "Gen AI for HR Analytics",
+      "duration_months": 4,
+      "skill_level": "Beginner",
+      "technologies": ["Workday AI", "Power BI", "Excel"],
+      "courses": [
+        {"title": "AI in Human Resources", "duration_hours": 15},
+        {"title": "HR Analytics with Power BI", "duration_hours": 15},
+        {"title": "Workday AI Features", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Apply AI to HR processes",
+        "Analyze HR data",
+        "Use Workday AI tools"
+      ]
+    },
+    {
+      "path_id": "AIE001",
+      "persona": "AI Engineer",
+      "title": "Core AI Engineering Skills",
+      "duration_months": 8,
+      "skill_level": "Beginner",
+      "technologies": ["Python", "TensorFlow", "Git", "Docker"],
+      "courses": [
+        {"title": "Python Programming for AI", "duration_hours": 25},
+        {"title": "Machine Learning with TensorFlow", "duration_hours": 30},
+        {"title": "Version Control with Git", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Master Python for AI development",
+        "Build ML models",
+        "Manage code with Git"
+      ]
+    },
+    {
+      "path_id": "AIE002",
+      "persona": "AI Engineer",
+      "title": "Gen AI Model Development",
+      "duration_months": 10,
+      "skill_level": "Intermediate",
+      "technologies": ["PyTorch", "Hugging Face", "Transformers", "Kubernetes"],
+      "courses": [
+        {"title": "Deep Learning with PyTorch", "duration_hours": 30},
+        {"title": "Transformers for Gen AI", "duration_hours": 35},
+        {"title": "Deploying AI with Kubernetes", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Develop deep learning models",
+        "Build transformer-based Gen AI",
+        "Deploy models at scale"
+      ]
+    },
+    {
+      "path_id": "AIE003",
+      "persona": "AI Engineer",
+      "title": "Quantum AI Engineering",
+      "duration_months": 12,
+      "skill_level": "Advanced",
+      "technologies": ["Qiskit", "Cirq", "TensorFlow Quantum", "Python"],
+      "courses": [
+        {"title": "Quantum Computing Fundamentals", "duration_hours": 40},
+        {"title": "Quantum AI with Qiskit", "duration_hours": 35},
+        {"title": "Hybrid Quantum-Classical Models", "duration_hours": 30}
+      ],
+      "learning_objectives": [
+        "Understand quantum principles",
+        "Build quantum AI models",
+        "Integrate quantum and classical AI"
+      ]
+    },
+    {
+      "path_id": "AIE004",
+      "persona": "AI Engineer",
+      "title": "Computer Vision Engineering",
+      "duration_months": 9,
+      "skill_level": "Intermediate",
+      "technologies": ["OpenCV", "TensorFlow", "YOLO", "Python"],
+      "courses": [
+        {"title": "Computer Vision with OpenCV", "duration_hours": 30},
+        {"title": "Object Detection with YOLO", "duration_hours": 25},
+        {"title": "Deep Learning for Vision", "duration_hours": 30}
+      ],
+      "learning_objectives": [
+        "Process images with OpenCV",
+        "Implement object detection",
+        "Build vision-based AI models"
+      ]
+    },
+    {
+      "path_id": "AIE005",
+      "persona": "AI Engineer",
+      "title": "NLP Engineering with Gen AI",
+      "duration_months": 8,
+      "skill_level": "Intermediate",
+      "technologies": ["Hugging Face", "spaCy", "PyTorch", "NLTK"],
+      "courses": [
+        {"title": "NLP Fundamentals", "duration_hours": 25},
+        {"title": "Advanced NLP with Transformers", "duration_hours": 30},
+        {"title": "Deploying NLP Models", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Process natural language data",
+        "Build transformer models",
+        "Deploy NLP applications"
+      ]
+    },
+    {
+      "path_id": "AIE006",
+      "persona": "AI Engineer",
+      "title": "MLOps for AI Engineers",
+      "duration_months": 7,
+      "skill_level": "Intermediate",
+      "technologies": ["MLflow", "Kubeflow", "Docker", "AWS SageMaker"],
+      "courses": [
+        {"title": "Introduction to MLOps", "duration_hours": 20},
+        {"title": "ML Pipelines with Kubeflow", "duration_hours": 25},
+        {"title": "Model Deployment with SageMaker", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Understand MLOps principles",
+        "Build ML pipelines",
+        "Deploy models on cloud platforms"
+      ]
+    },
+    {
+      "path_id": "AIE007",
+      "persona": "AI Engineer",
+      "title": "Reinforcement Learning Engineering",
+      "duration_months": 10,
+      "skill_level": "Advanced",
+      "technologies": ["Python", "Gym", "Ray", "PyTorch"],
+      "courses": [
+        {"title": "Reinforcement Learning Basics", "duration_hours": 30},
+        {"title": "Deep RL with Ray", "duration_hours": 35},
+        {"title": "RL in Robotics", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Design RL algorithms",
+        "Implement deep RL",
+        "Apply RL to robotics"
+      ]
+    },
+    {
+      "path_id": "AIE008",
+      "persona": "AI Engineer",
+      "title": "AI for Edge Devices",
+      "duration_months": 9,
+      "skill_level": "Intermediate",
+      "technologies": ["TensorFlow Lite", "ONNX", "Raspberry Pi", "Python"],
+      "courses": [
+        {"title": "Edge AI Fundamentals", "duration_hours": 25},
+        {"title": "Model Optimization with TensorFlow Lite", "duration_hours": 30},
+        {"title": "Deploying AI on Raspberry Pi", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Understand edge AI",
+        "Optimize models for edge",
+        "Deploy AI on IoT devices"
+      ]
+    },
+    {
+      "path_id": "AIE009",
+      "persona": "AI Engineer",
+      "title": "Federated Learning Engineering",
+      "duration_months": 10,
+      "skill_level": "Advanced",
+      "technologies": ["TensorFlow Federated", "PySyft", "Python", "Docker"],
+      "courses": [
+        {"title": "Federated Learning Basics", "duration_hours": 30},
+        {"title": "Privacy-Preserving AI with PySyft", "duration_hours": 25},
+        {"title": "Scaling Federated Learning", "duration_hours": 30}
+      ],
+      "learning_objectives": [
+        "Implement federated learning",
+        "Ensure data privacy in AI",
+        "Scale distributed AI models"
+      ]
+    },
+    {
+      "path_id": "AIE010",
+      "persona": "AI Engineer",
+      "title": "AI Infrastructure Design",
+      "duration_months": 8,
+      "skill_level": "Intermediate",
+      "technologies": ["Kubernetes", "Terraform", "AWS", "Python"],
+      "courses": [
+        {"title": "Cloud Infrastructure for AI", "duration_hours": 25},
+        {"title": "Kubernetes for AI Workloads", "duration_hours": 30},
+        {"title": "Infrastructure as Code with Terraform", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Design AI infrastructure",
+        "Manage AI workloads",
+        "Automate infrastructure deployment"
+      ]
+    },
+    {
+      "path_id": "PM001",
+      "persona": "Project Manager",
+      "title": "AI Project Management Basics",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["Jira", "Trello", "Microsoft Project"],
+      "courses": [
+        {"title": "Introduction to AI Projects", "duration_hours": 10},
+        {"title": "Agile Project Management", "duration_hours": 15},
+        {"title": "Tools for Project Tracking", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Understand AI project lifecycles",
+        "Apply Agile methodologies",
+        "Use project management tools"
+      ]
+    },
+    {
+      "path_id": "PM002",
+      "persona": "Project Manager",
+      "title": "Managing Gen AI Projects",
+      "duration_months": 4,
+      "skill_level": "Intermediate",
+      "technologies": ["Asana", "Azure DevOps", "None"],
+      "courses": [
+        {"title": "Gen AI Project Fundamentals", "duration_hours": 15},
+        {"title": "Stakeholder Management for AI", "duration_hours": 15},
+        {"title": "DevOps for AI Projects", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Manage Gen AI projects",
+        "Engage AI stakeholders",
+        "Integrate DevOps in AI"
+      ]
+    },
+    {
+      "path_id": "PM003",
+      "persona": "Project Manager",
+      "title": "Quantum Computing Project Management",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["Monday.com", "Qiskit", "None"],
+      "courses": [
+        {"title": "Quantum Project Overview", "duration_hours": 20},
+        {"title": "Managing Quantum Teams", "duration_hours": 15},
+        {"title": "Quantum Use Case Planning", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Understand quantum projects",
+        "Lead quantum teams",
+        "Plan quantum initiatives"
+      ]
+    },
+    {
+      "path_id": "PM004",
+      "persona": "Project Manager",
+      "title": "AI Ethics in Project Management",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["None"],
+      "courses": [
+        {"title": "AI Ethics for PMs", "duration_hours": 10},
+        {"title": "Responsible AI Project Planning", "duration_hours": 10},
+        {"title": "Ethical Risk Management", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Apply AI ethics in projects",
+        "Plan responsible AI",
+        "Manage ethical risks"
+      ]
+    },
+    {
+      "path_id": "PM005",
+      "persona": "Project Manager",
+      "title": "Scaling AI Projects",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["Jira", "Confluence", "AWS"],
+      "courses": [
+        {"title": "Scaling AI Initiatives", "duration_hours": 20},
+        {"title": "Cloud for AI Projects", "duration_hours": 15},
+        {"title": "Advanced Jira for PMs", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Scale AI projects",
+        "Leverage cloud for AI",
+        "Optimize project tracking"
+      ]
+    },
+    {
+      "path_id": "PM006",
+      "persona": "Project Manager",
+      "title": "AI Product Development",
+      "duration_months": 4,
+      "skill_level": "Intermediate",
+      "technologies": ["Productboard", "Figma", "None"],
+      "courses": [
+        {"title": "AI Product Management", "duration_hours": 15},
+        {"title": "Prototyping AI Products", "duration_hours": 15},
+        {"title": "Roadmapping AI Solutions", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Manage AI product lifecycles",
+        "Prototype AI solutions",
+        "Create AI product roadmaps"
+      ]
+    },
+    {
+      "path_id": "PM007",
+      "persona": "Project Manager",
+      "title": "Managing MLOps Projects",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["MLflow", "Kubernetes", "Jira"],
+      "courses": [
+        {"title": "MLOps for Project Managers", "duration_hours": 20},
+        {"title": "Managing ML Pipelines", "duration_hours": 15},
+        {"title": "Kubernetes for AI Projects", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Understand MLOps workflows",
+        "Manage ML pipelines",
+        "Oversee AI infrastructure"
+      ]
+    },
+    {
+      "path_id": "PM008",
+      "persona": "Project Manager",
+      "title": "AI for Agile Teams",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["Trello", "Scrum", "None"],
+      "courses": [
+        {"title": "Agile for AI Projects", "duration_hours": 10},
+        {"title": "Scrum for AI Teams", "duration_hours": 10},
+        {"title": "Trello for Project Management", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Apply Agile to AI",
+        "Implement Scrum in AI",
+        "Use Trello for AI projects"
+      ]
+    },
+    {
+      "path_id": "PM009",
+      "persona": "Project Manager",
+      "title": "AI Risk Management",
+      "duration_months": 4,
+      "skill_level": "Intermediate",
+      "technologies": ["RiskyProject", "Jira", "None"],
+      "courses": [
+        {"title": "AI Project Risks", "duration_hours": 15},
+        {"title": "Risk Management Tools", "duration_hours": 15},
+        {"title": "Mitigating AI Risks", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Identify AI project risks",
+        "Use risk management tools",
+        "Mitigate AI-related risks"
+      ]
+    },
+    {
+      "path_id": "PM010",
+      "persona": "Project Manager",
+      "title": "AI Vendor Management",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["None"],
+      "courses": [
+        {"title": "AI Vendor Selection", "duration_hours": 10},
+        {"title": "Managing AI Vendor Contracts", "duration_hours": 10},
+        {"title": "Evaluating AI Solutions", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Select AI vendors",
+        "Manage vendor contracts",
+        "Evaluate AI vendor solutions"
+      ]
+    },
+    {
+      "path_id": "DS011",
+      "persona": "Data Scientist",
+      "title": "AI for Fraud Detection",
+      "duration_months": 7,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "XGBoost", "SQL", "Anomaly Detection"],
+      "courses": [
+        {"title": "Anomaly Detection Techniques", "duration_hours": 25},
+        {"title": "ML for Fraud Detection", "duration_hours": 30},
+        {"title": "SQL for Data Analysis", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Detect anomalies in data",
+        "Build fraud detection models",
+        "Query data for fraud analysis"
+      ]
+    },
+    {
+      "path_id": "DS012",
+      "persona": "Data Scientist",
+      "title": "Gen AI for Synthetic Data",
+      "duration_months": 8,
+      "skill_level": "Advanced",
+      "technologies": ["Python", "VAE", "GANs", "Synthetic Data Vault"],
+      "courses": [
+        {"title": "Variational Autoencoders", "duration_hours": 30},
+        {"title": "GANs for Synthetic Data", "duration_hours": 35},
+        {"title": "Synthetic Data Generation", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Understand VAEs and GANs",
+        "Generate synthetic datasets",
+        "Evaluate synthetic data quality"
+      ]
+    },
+    {
+      "path_id": "BU011",
+      "persona": "Business User",
+      "title": "AI for Retail Analytics",
+      "duration_months": 4,
+      "skill_level": "Beginner",
+      "technologies": ["Power BI", "Google Analytics", "Shopify AI"],
+      "courses": [
+        {"title": "AI in Retail", "duration_hours": 15},
+        {"title": "Retail Dashboards with Power BI", "duration_hours": 15},
+        {"title": "Shopify AI Tools", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Apply AI to retail",
+        "Build retail dashboards",
+        "Use Shopify AI features"
+      ]
+    },
+    {
+      "path_id": "BU012",
+      "persona": "Business User",
+      "title": "AI for Competitive Analysis",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["Tableau", "Google Trends", "None"],
+      "courses": [
+        {"title": "AI for Market Analysis", "duration_hours": 10},
+        {"title": "Competitive Analysis with Tableau", "duration_hours": 15},
+        {"title": "Using Google Trends", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Analyze markets with AI",
+        "Visualize competitive data",
+        "Leverage Google Trends"
+      ]
+    },
+    {
+      "path_id": "AIE011",
+      "persona": "AI Engineer",
+      "title": "AI for Autonomous Systems",
+      "duration_months": 10,
+      "skill_level": "Advanced",
+      "technologies": ["ROS", "TensorFlow", "Python", "LIDAR"],
+      "courses": [
+        {"title": "Robotics with ROS", "duration_hours": 35},
+        {"title": "AI for Autonomous Vehicles", "duration_hours": 30},
+        {"title": "Sensor Fusion with LIDAR", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Program autonomous systems",
+        "Build AI for vehicles",
+        "Integrate sensor data"
+      ]
+    },
+    {
+      "path_id": "AIE012",
+      "persona": "AI Engineer",
+      "title": "AI Security Engineering",
+      "duration_months": 8,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "TensorFlow", "Adversarial ML", "AWS"],
+      "courses": [
+        {"title": "AI Security Fundamentals", "duration_hours": 25},
+        {"title": "Adversarial Machine Learning", "duration_hours": 30},
+        {"title": "Secure AI Deployment", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Understand AI security",
+        "Counter adversarial attacks",
+        "Deploy secure AI models"
+      ]
+    },
+    {
+      "path_id": "PM011",
+      "persona": "Project Manager",
+      "title": "AI Budget Management",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["Excel", "Jira", "None"],
+      "courses": [
+        {"title": "AI Project Budgeting", "duration_hours": 10},
+        {"title": "Cost Tracking with Excel", "duration_hours": 10},
+        {"title": "Jira for Budget Management", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Budget AI projects",
+        "Track costs with Excel",
+        "Use Jira for budgeting"
+      ]
+    },
+    {
+      "path_id": "PM012",
+      "persona": "Project Manager",
+      "title": "AI Team Collaboration",
+      "duration_months": 4,
+      "skill_level": "Intermediate",
+      "technologies": ["Slack", "Confluence", "None"],
+      "courses": [
+        {"title": "AI Team Dynamics", "duration_hours": 15},
+        {"title": "Collaboration with Slack", "duration_hours": 10},
+        {"title": "Knowledge Management with Confluence", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Foster AI team collaboration",
+        "Use Slack for communication",
+        "Manage knowledge with Confluence"
+      ]
+    },
+    {
+      "path_id": "DS013",
+      "persona": "Data Scientist",
+      "title": "AI for Recommendation Systems",
+      "duration_months": 7,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "TensorFlow", "Surprise", "SQL"],
+      "courses": [
+        {"title": "Recommendation Systems Basics", "duration_hours": 25},
+        {"title": "Collaborative Filtering with Surprise", "duration_hours": 20},
+        {"title": "Deep Learning for Recommendations", "duration_hours": 25}
+      ],
+      "learning_objectives": [
+        "Understand recommendation algorithms",
+        "Build collaborative filtering models",
+        "Apply deep learning to recommendations"
+      ]
+    },
+    {
+      "path_id": "DS014",
+      "persona": "Data Scientist",
+      "title": "AutoML for Data Scientists",
+      "duration_months": 5,
+      "skill_level": "Intermediate",
+      "technologies": ["AutoML", "Google Cloud", "H2O.ai", "Python"],
+      "courses": [
+        {"title": "Introduction to AutoML", "duration_hours": 20},
+        {"title": "AutoML with Google Cloud", "duration_hours": 25},
+        {"title": "H2O.ai for Automated ML", "duration_hours": 15}
+      ],
+      "learning_objectives": [
+        "Understand AutoML concepts",
+        "Use Google Cloud AutoML",
+        "Implement H2O.ai for ML automation"
+      ]
+    },
+    {
+      "path_id": "BU013",
+      "persona": "Business User",
+      "title": "AI for Sales Optimization",
+      "duration_months": 4,
+      "skill_level": "Beginner",
+      "technologies": ["Salesforce Einstein", "Power BI", "Excel"],
+      "courses": [
+        {"title": "AI for Sales", "duration_hours": 15},
+        {"title": "Sales Dashboards with Power BI", "duration_hours": 15},
+        {"title": "Salesforce Einstein Features", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Apply AI to sales strategies",
+        "Build sales dashboards",
+        "Use Salesforce AI tools"
+      ]
+    },
+    {
+      "path_id": "BU014",
+      "persona": "Business User",
+      "title": "AI for Risk Assessment",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["Tableau", "Excel", "None"],
+      "courses": [
+        {"title": "AI for Risk Management", "duration_hours": 10},
+        {"title": "Risk Analysis with Tableau", "duration_hours": 15},
+        {"title": "Excel for Risk Modeling", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Assess risks with AI",
+        "Visualize risk data",
+        "Model risks in Excel"
+      ]
+    },
+    {
+      "path_id": "AIE013",
+      "persona": "AI Engineer",
+      "title": "AI for Speech Recognition",
+      "duration_months": 8,
+      "skill_level": "Intermediate",
+      "technologies": ["DeepSpeech", "PyTorch", "Python", "Librosa"],
+      "courses": [
+        {"title": "Speech Recognition Basics", "duration_hours": 25},
+        {"title": "Deep Learning for Audio", "duration_hours": 30},
+        {"title": "Audio Processing with Librosa", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Understand speech recognition",
+        "Build audio ML models",
+        "Process audio data"
+      ]
+    },
+    {
+      "path_id": "AIE014",
+      "persona": "AI Engineer",
+      "title": "AI for Anomaly Detection",
+      "duration_months": 7,
+      "skill_level": "Intermediate",
+      "technologies": ["Python", "Isolation Forest", "Autoencoders", "AWS"],
+      "courses": [
+        {"title": "Anomaly Detection Techniques", "duration_hours": 25},
+        {"title": "Autoencoders for Anomalies", "duration_hours": 25},
+        {"title": "Deploying Anomaly Detection", "duration_hours": 20}
+      ],
+      "learning_objectives": [
+        "Detect anomalies with ML",
+        "Use autoencoders for detection",
+        "Deploy anomaly detection systems"
+      ]
+    },
+    {
+      "path_id": "PM013",
+      "persona": "Project Manager",
+      "title": "AI Stakeholder Engagement",
+      "duration_months": 3,
+      "skill_level": "Beginner",
+      "technologies": ["None"],
+      "courses": [
+        {"title": "AI Stakeholder Management", "duration_hours": 10},
+        {"title": "Communication for AI Projects", "duration_hours": 10},
+        {"title": "Building AI Business Cases", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Engage AI stakeholders",
+        "Communicate AI project goals",
+        "Develop AI business cases"
+      ]
+    },
+    {
+      "path_id": "PM014",
+      "persona": "Project Manager",
+      "title": "AI Project Metrics",
+      "duration_months": 4,
+      "skill_level": "Intermediate",
+      "technologies": ["Jira", "Excel", "None"],
+      "courses": [
+        {"title": "AI Project KPIs", "duration_hours": 15},
+        {"title": "Tracking Metrics with Jira", "duration_hours": 15},
+        {"title": "Excel for Project Metrics", "duration_hours": 10}
+      ],
+      "learning_objectives": [
+        "Define AI project metrics",
+        "Track metrics with Jira",
+        "Analyze metrics in Excel"
+      ]
+    }
+  ]
+}

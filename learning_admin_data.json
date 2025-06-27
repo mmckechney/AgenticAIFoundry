@@ -1,0 +1,184 @@
+{
+  "administration_data": {
+    "users": [
+      {
+        "user_id": "USR001",
+        "name": "Alice Johnson",
+        "role": "Data Scientist",
+        "email": "alice.johnson@example.com"
+      },
+      {
+        "user_id": "USR002",
+        "name": "Bob Smith",
+        "role": "Business User",
+        "email": "bob.smith@example.com"
+      },
+      {
+        "user_id": "USR003",
+        "name": "Clara Lee",
+        "role": "AI Engineer",
+        "email": "clara.lee@example.com"
+      },
+      {
+        "user_id": "USR004",
+        "name": "David Kim",
+        "role": "Project Manager",
+        "email": "david.kim@example.com"
+      },
+      {
+        "user_id": "USR005",
+        "name": "Emma Brown",
+        "role": "Data Scientist",
+        "email": "emma.brown@example.com"
+      },
+      {
+        "user_id": "USR006",
+        "name": "Frank Wilson",
+        "role": "Business User",
+        "email": "frank.wilson@example.com"
+      },
+      {
+        "user_id": "USR007",
+        "name": "Grace Chen",
+        "role": "AI Engineer",
+        "email": "grace.chen@example.com"
+      },
+      {
+        "user_id": "USR008",
+        "name": "Henry Patel",
+        "role": "Project Manager",
+        "email": "henry.patel@example.com"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_id": "ENR001",
+        "user_id": "USR001",
+        "path_id": "DS001",
+        "enrollment_date": "2025-01-15",
+        "progress_percentage": 80,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Completed Python for Data Science course"
+      },
+      {
+        "enrollment_id": "ENR002",
+        "user_id": "USR001",
+        "path_id": "DS003",
+        "enrollment_date": "2025-03-01",
+        "progress_percentage": 20,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Started Quantum Computing course"
+      },
+      {
+        "enrollment_id": "ENR003",
+        "user_id": "USR002",
+        "path_id": "BU001",
+        "enrollment_date": "2025-02-10",
+        "progress_percentage": 100,
+        "completion_status": "Completed",
+        "completion_date": "2025-05-10",
+        "certificate_id": "CERT001",
+        "notes": "Earned certificate in AI Literacy"
+      },
+      {
+        "enrollment_id": "ENR004",
+        "user_id": "USR002",
+        "path_id": "BU006",
+        "enrollment_date": "2025-04-01",
+        "progress_percentage": 50,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Working on DALL-E course"
+      },
+      {
+        "enrollment_id": "ENR005",
+        "user_id": "USR003",
+        "path_id": "AIE001",
+        "enrollment_date": "2025-01-20",
+        "progress_percentage": 90,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Nearly completed TensorFlow course"
+      },
+      {
+        "enrollment_id": "ENR006",
+        "user_id": "USR003",
+        "path_id": "AIE004",
+        "enrollment_date": "2025-03-15",
+        "progress_percentage": 30,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Started Computer Vision course"
+      },
+      {
+        "enrollment_id": "ENR007",
+        "user_id": "USR004",
+        "path_id": "PM001",
+        "enrollment_date": "2025-02-05",
+        "progress_percentage": 100,
+        "completion_status": "Completed",
+        "completion_date": "2025-05-05",
+        "certificate_id": "CERT002",
+        "notes": "Completed Agile PM course"
+      },
+      {
+        "enrollment_id": "ENR008",
+        "user_id": "USR004",
+        "path_id": "PM004",
+        "enrollment_date": "2025-04-10",
+        "progress_percentage": 60,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Working on AI Ethics course"
+      },
+      {
+        "enrollment_id": "ENR009",
+        "user_id": "USR005",
+        "path_id": "DS005",
+        "enrollment_date": "2025-02-20",
+        "progress_percentage": 70,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Completed Spark course"
+      },
+      {
+        "enrollment_id": "ENR010",
+        "user_id": "USR005",
+        "path_id": "DS008",
+        "enrollment_date": "2025-04-15",
+        "progress_percentage": 40,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Started Bias Detection course"
+      },
+      {
+        "enrollment_id": "ENR011",
+        "user_id": "USR006",
+        "path_id": "BU003",
+        "enrollment_date": "2025-03-01",
+        "progress_percentage": 85,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Completed Tableau course"
+      },
+      {
+        "enrollment_id": "ENR012",
+        "user_id": "USR006",
+        "path_id": "BU009",
+        "enrollment_date": "2025-05-01",
+        "progress_percentage": 20,
+        "completion_status": "In Progress",
+        "completion_date": null,
+        "certificate_id": null,
+        "notes": "Started Supply
