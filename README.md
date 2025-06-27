@@ -68,6 +68,13 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 - **Interactive MCP Selection**: Dynamic switching between different MCP server providers
 - **Conversational AI**: Optimized responses for voice interaction and accessibility
 
+### 🖼️ Computer Vision & Image Analysis
+- **Advanced Vision Models**: Dual-model support for Azure GPT-4.1 Vision and O3 models
+- **Technical Drawing Analysis**: Specialized processing for engineering and architectural drawings
+- **Structured Data Extraction**: Automated extraction of materials, quantities, and dimensions
+- **Multi-format Support**: Compatible with JPG, JPEG, PNG image formats
+- **JSON Output**: Structured data output for integration with other systems
+
 ## 📚 Documentation
 
 For detailed architecture and implementation information, see the comprehensive documentation in the `docs/` directory:
@@ -236,6 +243,23 @@ streamlit run bbmcp.py
 
 Access the MCP interface at: **http://localhost:8501**
 
+### 🖼️ Technical Drawing Analysis
+
+For image analysis using advanced vision models:
+
+```bash
+streamlit run stdrawing.py
+```
+
+**Image Analysis Features:**
+- 📸 **Multi-format Support**: Upload JPG, JPEG, PNG images
+- 🔍 **Dual Model Analysis**: Choose between Azure GPT-4.1 Vision and O3 models
+- 📊 **Technical Extraction**: Extract materials, quantities, and dimensions from technical drawings
+- 💾 **JSON Output**: Structured data extraction for further processing
+- 🎯 **Custom Questions**: Ask specific questions about uploaded images
+
+Access the analysis interface at: **http://localhost:8501**
+
 ### 📋 Command Line Usage
 
 ### Running the Main Application
@@ -362,6 +386,7 @@ AgenticAIFoundry/
 ├── agenticai.py              # Main application with all agent examples
 ├── streamlit_app.py          # Web interface for all functionality
 ├── bbmcp.py                  # MCP Servers voice chat interface
+├── stdrawing.py              # Technical drawing analysis with vision models
 ├── utils.py                  # Utility functions (email sending, etc.)
 ├── requirements.txt          # Python dependencies
 ├── README.md                # This documentation
@@ -419,6 +444,15 @@ AgenticAIFoundry/
 | `hf_generate_chat_response()` | HuggingFace MCP integration | Machine learning models and datasets access |
 | `transcribe_audio()` | Azure OpenAI Whisper transcription | Voice-to-text conversion |
 | `generate_audio_response_gpt()` | Azure OpenAI TTS audio generation | Text-to-speech response creation |
+
+### Technical Drawing Analysis Functions
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `stdrawing.py main()` | Technical drawing analysis interface | Image analysis with advanced vision models |
+| `analyze_with_azure()` | Azure GPT-4.1 Vision analysis | Technical drawing interpretation and data extraction |
+| `analyze_with_o3()` | O3 model image analysis | Advanced reasoning for complex technical drawings |
+| `image_to_base64()` | Image encoding for API calls | Prepare images for vision model processing |
 
 ### Multi-Agent Team Functions
 

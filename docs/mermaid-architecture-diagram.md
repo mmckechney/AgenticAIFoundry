@@ -20,6 +20,7 @@ graph TB
     %% Main Controller
     User[User Request] --> Main[Main Controller<br/>agenticai.py]
     User --> MCPInterface[MCP Voice Interface<br/>bbmcp.py]
+    User --> VisionInterface[Vision Analysis Interface<br/>stdrawing.py]
     
     %% Core Agent Ecosystem
     Main --> AgentManager[Agent Manager]
@@ -35,6 +36,12 @@ graph TB
     MCPManager --> MSFTLearnMCP[Microsoft Learn MCP<br/>msft_generate_chat_response]
     MCPManager --> GitHubMCP[GitHub Copilot MCP<br/>bbgithub_generate_chat_response]
     MCPManager --> HuggingFaceMCP[HuggingFace MCP<br/>hf_generate_chat_response]
+    
+    %% Vision Analysis Layer
+    VisionInterface --> VisionManager[Vision Analysis Manager]
+    VisionManager --> AzureVision[Azure GPT-4.1 Vision<br/>analyze_with_azure]
+    VisionManager --> O3Vision[O3 Vision Model<br/>analyze_with_o3]
+    VisionManager --> ImageProcessor[Image Processing<br/>image_to_base64]
     
     %% Voice Interface Components
     MCPInterface --> VoiceInput[Audio Input<br/>save_audio_file]
@@ -215,6 +222,7 @@ graph TB
     class DataStorage,JSONLFiles,JSONResults dataClass
     class MCPInterface,MCPManager,MSFTLearnMCP,GitHubMCP,HuggingFaceMCP mcpClass
     class VoiceInput,Transcription,TextToSpeech,ChatHistory voiceClass
+    class VisionInterface,VisionManager,AzureVision,O3Vision,ImageProcessor visionClass
 ```
 
 ## Multi-Agent Team Coordination Architecture
