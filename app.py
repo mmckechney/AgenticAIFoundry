@@ -278,7 +278,7 @@ def main():
             """, unsafe_allow_html=True)
             
             if st.button("🚀 Execute Code Interpreter", key="code_interpreter"):
-                with st.spinner("🔄 Executing code interpreter..."):
+                with st.spinner("🔄 Executing code interpreter...", show_time=True):
                     if DEPENDENCIES_AVAILABLE:
                         code_interpreter()
                         st.success("✅ Code interpreter executed successfully!")
@@ -300,7 +300,7 @@ def main():
                 """, unsafe_allow_html=True)
                 
                 if st.button("📈 Run AI Evaluation", key="ai_eval"):
-                    with st.spinner("🔄 Running AI evaluation..."):
+                    with st.spinner("🔄 Running AI evaluation...", show_time=True):
                         if DEPENDENCIES_AVAILABLE:
                             evalrs = ai_eval()
                             st.json(evalrs)
@@ -318,7 +318,7 @@ def main():
                 """, unsafe_allow_html=True)
                 
                 if st.button("🔍 Evaluate Agent", key="agent_eval"):
-                    with st.spinner("🔄 Running agent evaluation..."):
+                    with st.spinner("🔄 Running agent evaluation...", show_time=True):
                         if DEPENDENCIES_AVAILABLE:
                             agent_evalrs = agent_eval()
                             st.json(agent_evalrs)
@@ -337,7 +337,7 @@ def main():
             """, unsafe_allow_html=True)
             
             if st.button("🔒 Launch RedTeam Testing", key="redteam"):
-                with st.spinner("🔄 Running RedTeam security analysis..."):
+                with st.spinner("🔄 Running RedTeam security analysis...", show_time=True):
                     if DEPENDENCIES_AVAILABLE:
                         redteamrs = asyncio.run(redteam())
                         st.json(redteamrs)
@@ -376,7 +376,7 @@ def main():
                 )
             
             if st.button("🚀 Connect to MCP Server", key="mcp_server"):
-                with st.spinner(f"🔄 Connecting to {selected_mcp} MCP server..."):
+                with st.spinner(f"🔄 Connecting to {selected_mcp} MCP server...", show_time=True):
                     if DEPENDENCIES_AVAILABLE:
                         try:
                             # Import the MCP functions from bbmcp
@@ -422,7 +422,7 @@ def main():
                 query = st.text_input("💬 Enter your query:", value="What is the stock price of Microsoft?", key="query_input")
                 
                 if st.button("🚀 Connect to Agent", key="connected_agent"):
-                    with st.spinner("🔄 Connecting to agent..."):
+                    with st.spinner("🔄 Connecting to agent...", show_time=True):
                         if DEPENDENCIES_AVAILABLE:
                             connected_agentrs = connected_agent(query)
                             st.write("**Agent Response:**")
@@ -441,7 +441,7 @@ def main():
                 """, unsafe_allow_html=True)
                 
                 if st.button("🗑️ Delete Agent", key="delete_agent"):
-                    with st.spinner("🔄 Cleaning up agent resources..."):
+                    with st.spinner("🔄 Cleaning up agent resources...", show_time=True):
                         if DEPENDENCIES_AVAILABLE:
                             delete_agentrs = delete_agent()
                             st.success(f"✅ {delete_agentrs}")
@@ -655,7 +655,7 @@ def mcp_audio_chat_interface():
             # Process user input without nested chat messages
             st.audio(audio_value)
             
-            with st.spinner("🔄 Transcribing audio..."):
+            with st.spinner("🔄 Transcribing audio...", show_time=True):
                 try:
                     audio_file_path = save_audio_file(audio_value.getvalue())
                     transcription = transcribe_audio(audio_file_path)
@@ -672,7 +672,7 @@ def mcp_audio_chat_interface():
                     st.session_state.mcp_messages.append({"role": "user", "content": transcription})
 
                     # Process assistant response
-                    with st.spinner(f"🔄 Generating response from {selected_mcp_audio} MCP server..."):
+                    with st.spinner(f"🔄 Generating response from {selected_mcp_audio} MCP server...", show_time=True):
                         # Retrieve relevant content from JSON (empty for now)
                         context = ""
                         
