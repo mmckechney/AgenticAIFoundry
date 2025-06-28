@@ -60,7 +60,7 @@ from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from utils import send_email
 from user_logic_apps import AzureLogicAppTool, create_send_email_function
-from azure.ai.agents.models import ListSortOrder
+from azure.ai.agents.models import MessageTextContent, ListSortOrder
 
 from dotenv import load_dotenv
 
@@ -1002,6 +1002,144 @@ def load_existing_agent(query: str) -> str:
 
     return returntxt
 
+def msft_learn_mcp_agent(query: str) -> str:
+    returntxt = ""
+
+    # Retrieve the endpoint from environment variables
+    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
+
+    # Initialize the AIProjectClient
+    project_client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),
+        # api_version="latest",
+    )
+
+    with project_client:
+        agent = project_client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"], 
+            name="msftlearnmcp-agent", 
+            instructions="You are a helpful assistant. Use the tools provided to answer the user's questions. Be sure to cite your sources.",
+            tools= [
+                {
+                    "type": "mcp",
+                    "server_label": "MicrosoftLearn",
+                    "server_url": "https://learn.microsoft.com/api/mcp",
+                    "require_approval": "never"
+                }
+            ],
+            tool_resources=None
+        )
+        print(f"Created agent, agent ID: {agent.id}")
+        thread = project_client.agents.threads.create()
+        print(f"Created thread, thread ID: {thread.id}")
+
+        message = project_client.agents.messages.create(
+            thread_id=thread.id, role="user", content="<a question for your MCP server>",
+        )
+        print(f"Created message, message ID: {message.id}")
+
+        run = project_client.agents.runs.create(thread_id=thread.id, agent_id=agent.id)
+        
+        # Poll the run as long as run status is queued or in progress
+        while run.status in ["queued", "in_progress", "requires_action"]:
+            # Wait for a second
+            time.sleep(1)
+            run = project_client.agents.runs.get(thread_id=thread.id, run_id=run.id)
+            print(f"Run status: {run.status}")
+
+        if run.status == "failed":
+            print(f"Run error: {run.last_error}")
+
+        run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+        for step in run_steps:
+            print(f"Run step: {step.id}, status: {step.status}, type: {step.type}")
+            if step.type == "tool_calls":
+                print(f"Tool call details:")
+                for tool_call in step.step_details.tool_calls:
+                    print(json.dumps(tool_call.as_dict(), indent=2))
+
+        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+        for data_point in messages:
+            last_message_content = data_point.content[-1]
+            if isinstance(last_message_content, MessageTextContent):
+                print(f"{data_point.role}: {last_message_content.text.value}")
+                returntxt += f"{data_point.role}: {last_message_content.text.value}\n"
+    project_client.agents.delete_agent(agent.id)
+    print(f"Deleted agent, agent ID: {agent.id}")
+
+    return returntxt
+
+def hf_mcp_agent(query: str) -> str:
+    returntxt = ""
+
+    # Retrieve the endpoint from environment variables
+    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
+
+    # Initialize the AIProjectClient
+    project_client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),
+        # api_version="latest",
+    )
+
+    with project_client:
+        agent = project_client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"], 
+            name="msftlearnmcp-agent", 
+            instructions="You are a helpful assistant. Use the tools provided to answer the user's questions. Be sure to cite your sources.",
+            tools= [
+                {
+                    "type": "mcp",
+                    "server_label": "huggingface",
+                    "server_url": "https://hf.co/mcp",
+                    "require_approval": "never"
+                }
+            ],
+            tool_resources=None
+        )
+        print(f"Created agent, agent ID: {agent.id}")
+        thread = project_client.agents.threads.create()
+        print(f"Created thread, thread ID: {thread.id}")
+
+        message = project_client.agents.messages.create(
+            thread_id=thread.id, role="user", content="<a question for your MCP server>",
+        )
+        print(f"Created message, message ID: {message.id}")
+
+        run = project_client.agents.runs.create(thread_id=thread.id, agent_id=agent.id)
+        
+        # Poll the run as long as run status is queued or in progress
+        while run.status in ["queued", "in_progress", "requires_action"]:
+            # Wait for a second
+            time.sleep(1)
+            run = project_client.agents.runs.get(thread_id=thread.id, run_id=run.id)
+            print(f"Run status: {run.status}")
+
+        if run.status == "failed":
+            print(f"Run error: {run.last_error}")
+
+        run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+        for step in run_steps:
+            print(f"Run step: {step.id}, status: {step.status}, type: {step.type}")
+            if step.type == "tool_calls":
+                print(f"Tool call details:")
+                for tool_call in step.step_details.tool_calls:
+                    print(json.dumps(tool_call.as_dict(), indent=2))
+
+        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+        for data_point in messages:
+            last_message_content = data_point.content[-1]
+            if isinstance(last_message_content, MessageTextContent):
+                print(f"{data_point.role}: {last_message_content.text.value}")
+                returntxt += f"{data_point.role}: {last_message_content.text.value}\n"
+    project_client.agents.delete_agent(agent.id)
+    print(f"Deleted agent, agent ID: {agent.id}")
+
+    return returntxt
+
 
 def main():
     with tracer.start_as_current_span("azureaifoundryagent-tracing"):
@@ -1039,10 +1177,10 @@ def main():
         print("Calling existing agent example...")
         starttime = datetime.now()
         # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
-        exsitingagentrs = load_existing_agent("Summarize sustainability framework for learning factory from file uploaded and get me microsoft stock price")
-        print(exsitingagentrs)
-        endtime = datetime.now()
-        print(f"Delete agent example completed in {endtime - starttime} seconds")
+        # exsitingagentrs = load_existing_agent("Summarize sustainability framework for learning factory from file uploaded and get me microsoft stock price")
+        #print(exsitingagentrs)
+        #endtime = datetime.now()
+        # print(f"Delete agent example completed in {endtime - starttime} seconds")
 
         print("Deleteing agents...")
         # starttime = datetime.now()
@@ -1056,6 +1194,20 @@ def main():
 
         # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_multiagent/sample_agents_multi_agent_team.py
         # multiagent
+
+        # msft learn
+        # starttime = datetime.now()
+        # msft_learn_result = msft_learn_mcp_agent("Show me top 5 AI courses?")
+        # print(msft_learn_result)
+        # endtime = datetime.now()
+        # print(f"MSFT Learn MCP agent example completed in {endtime - starttime} seconds")
+
+        #hf_mcp_agent
+        starttime = datetime.now()
+        hf_mcp_result = hf_mcp_agent("Show me top 5 latest models with details?")
+        print(hf_mcp_result)
+        endtime = datetime.now()
+        print(f"Hugging Face MCP agent example completed in {endtime - starttime} seconds")
 
 if __name__ == "__main__":
     main()
