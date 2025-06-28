@@ -1203,6 +1203,7 @@ def main():
         # print(f"MSFT Learn MCP agent example completed in {endtime - starttime} seconds")
 
         #hf_mcp_agent
+        # https://devblogs.microsoft.com/foundry/announcing-model-context-protocol-support-preview-in-azure-ai-foundry-agent-service/
         starttime = datetime.now()
         hf_mcp_result = hf_mcp_agent("Show me top 5 latest models with details?")
         print(hf_mcp_result)
