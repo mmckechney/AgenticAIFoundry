@@ -12,6 +12,11 @@ import numpy as np
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from scipy.signal import resample
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+from azure.ai.agents.models import FilePurpose
+from azure.ai.agents.models import FileSearchTool
+from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 
 from dotenv import load_dotenv
 
@@ -166,6 +171,123 @@ def generate_response(user_query: str, context: str, conversation_history: List[
     except Exception as e:
         st.error(f"❌ AI response generation failed: {e}")
         return "I apologize, but I'm having trouble generating a response right now. Please try again."
+    
+def generate_response_file(user_query: str, context: str, conversation_history: List[Dict]) -> str:
+    """Generate AI response using Azure OpenAI with ServiceNow context."""
+    returntxt = ""
+    try:
+        
+        # Build conversation messages
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a ServiceNow IT Service Management expert assistant. 
+                Use the following ServiceNow incident data to help users with their queries:
+
+                {context}
+
+                Instructions:
+                - Provide helpful, accurate information about ServiceNow incidents
+                - When discussing incidents, reference specific incident IDs when relevant
+                - Suggest solutions based on similar resolved incidents
+                - Be conversational and helpful
+                - If asked about trends, analyze the data provided
+                - Format responses clearly with bullet points or numbered lists when appropriate
+                - Keep responses concise and clear for both text and audio playback
+                """
+            }
+        ]
+        
+        # Add conversation history (last 6 messages for context)
+        for msg in conversation_history[-6:]:
+            messages.append(msg)
+        
+        # Add current user query
+        messages.append({"role": "user", "content": user_query})
+        
+        # response = client.chat.completions.create(
+        #     model=CHAT_DEPLOYMENT_NAME,
+        #     messages=messages,
+        #     max_tokens=1500,
+        #     temperature=0.7
+        # )
+        # Define the project endpoint
+        project_endpoint = os.environ["PROJECT_ENDPOINT"]  # Ensure the PROJECT_ENDPOINT environment variable is set
+
+        # Initialize the AIProjectClient
+        project_client = AIProjectClient(
+            endpoint=project_endpoint,
+            credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),  # Use Azure Default Credential for authentication
+            # api_version="latest",
+        )
+        # Define the path to the file to be uploaded
+        file_path = "./servicenow_incidents_full.json"
+
+        # Upload the file
+        file = project_client.agents.files.upload_and_poll(file_path=file_path, purpose=FilePurpose.AGENTS)
+        print(f"Uploaded file, file ID: {file.id}")
+
+        vector_store = project_client.agents.vector_stores.create_and_poll(file_ids=[file.id], name="svcnowstore")
+        print(f"Created vector store, vector store ID: {vector_store.id}")
+        # Create a file search tool
+        file_search = FileSearchTool(vector_store_ids=[vector_store.id])
+
+        # Create an agent with the file search tool
+        agent = project_client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],  # Model deployment name
+            name="svcnow-agent",  # Name of the agent
+            instructions="You are a helpful agent and can search information from uploaded files",  # Instructions for the agent
+            tools=file_search.definitions,  # Tools available to the agent
+            tool_resources=file_search.resources,  # Resources for the tools
+        )
+        print(f"Created agent, ID: {agent.id}")
+        # Create a thread
+        thread = project_client.agents.threads.create()
+        print(f"Created thread, ID: {thread.id}")
+
+        # Send a message to the thread
+        message = project_client.agents.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=user_query,  # Message content
+        )
+        print(f"Created message, ID: {message['id']}")
+        # Create and process an agent run in the thread
+        run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+        print(f"Run finished with status: {run.status}")
+
+        if run.status == "failed":
+            print(f"Run failed: {run.last_error}")
+
+        # Cleanup resources
+        project_client.agents.vector_stores.delete(vector_store.id)
+        print("Deleted vector store")
+
+        project_client.agents.files.delete(file.id)
+        print("Deleted file")
+
+        project_client.agents.delete_agent(agent.id)
+        print("Deleted agent")
+
+        # Fetch and log all messages from the thread
+        # messages = project_client.agents.messages.list(thread_id=thread.id)
+        # for message in messages.data:
+        #     print(f"Role: {message.role}, Content: {message.content}")
+        #     returntxt += message.content.strip()
+        messages = project_client.agents.messages.list(thread_id=thread.id)
+        for message in messages:
+            if message.role == MessageRole.AGENT:
+                print(f"Role: {message.role}, Content: {message.content}")
+                # returntxt += f"Role: {message.role}, Content: {message.content}\n"
+                # returntxt += f"Source: {message.content[0]['text']['value']}\n"
+                returntxt += f"Source: {message.content[0].text.value}\n"
+
+        
+        return returntxt #response.choices[0].message.content.strip()
+    
+    except Exception as e:
+        st.error(f"❌ AI response generation failed: {e}")
+        return "I apologize, but I'm having trouble generating a response right now. Please try again."
 
 def generate_audio_response(text: str) -> Optional[bytes]:
     """Generate professional audio from text using Azure OpenAI TTS with human-like persona."""
@@ -258,7 +380,8 @@ def process_audio_input(audio_data, incident_manager: ServiceNowIncidentManager,
     context = incident_manager.get_incident_context(incidents)
     
     # Generate AI response
-    response = generate_response(transcription, context, conversation_history)
+    # response = generate_response(transcription, context, conversation_history)
+    response = generate_response_file(transcription, context, conversation_history)
     
     return transcription, response
 
@@ -269,7 +392,8 @@ def process_text_input(user_input: str, incident_manager: ServiceNowIncidentMana
     context = incident_manager.get_incident_context(incidents)
     
     # Generate AI response
-    response = generate_response(user_input, context, conversation_history)
+    # response = generate_response(user_input, context, conversation_history)
+    response = generate_response_file(user_input, context, conversation_history)
     
     # Generate audio response with better error handling
     audio_response = None
@@ -331,9 +455,9 @@ def main():
         /* Header styling */
         .main-header {
             background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-tertiary) 100%);
-            padding: 2rem;
-            border-radius: 24px;
-            margin-bottom: 2rem;
+            padding: 1rem 1.5rem; /* Reduced vertical padding */
+            border-radius: 16px;   /* Slightly smaller border radius */
+            margin-bottom: 1.2rem; /* Slightly less margin below */
             box-shadow: 0 6px 20px rgba(25, 118, 210, 0.15);
             text-align: center;
             position: relative;
@@ -352,7 +476,7 @@ def main():
 
         .main-header h1 {
             color: var(--md-sys-color-on-primary);
-            font-size: 2.5rem;
+            font-size: 2.1rem; /* Slightly smaller font */
             font-weight: 600;
             margin: 0;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -362,8 +486,8 @@ def main():
 
         .main-header p {
             color: var(--md-sys-color-on-primary);
-            font-size: 1.1rem;
-            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+            margin: 0.3rem 0 0 0;
             opacity: 0.9;
             position: relative;
             z-index: 1;
@@ -372,150 +496,45 @@ def main():
         /* Card styling */
         .feature-card {
             background: var(--md-sys-color-surface);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
             border: 1px solid var(--md-sys-color-outline-variant);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .feature-card h4, .feature-card h6 {
+            margin-bottom: 0.5rem !important;
+        }
+
+        .feature-card p {
+            margin-bottom: 0.5rem !important;
+        }
+
         .feature-card:hover {
-            box-shadow: 0 6px 24px rgba(25, 118, 210, 0.15);
-            transform: translateY(-4px);
+            box-shadow: 0 3px 12px rgba(25, 118, 210, 0.10);
+            transform: translateY(-2px);
         }
 
-        /* Chat message styling */
-        .chat-message-user {
-            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #1565C0 100%);
-            color: var(--md-sys-color-on-primary);
-            margin: 0.75rem 0 0.75rem 3rem;
-            padding: 1rem 1.25rem;
-            border-radius: 20px 20px 8px 20px;
-            box-shadow: 0 3px 12px rgba(25, 118, 210, 0.2);
-            font-weight: 500;
-            max-width: 85%;
-            float: right;
-            clear: both;
-            position: relative;
-            animation: slideInRight 0.3s ease-out;
-        }
-        
-        .chat-message-assistant {
-            background: linear-gradient(135deg, var(--md-sys-color-tertiary-container) 0%, #E0F2F1 100%);
-            color: var(--md-sys-color-on-tertiary-container);
-            margin: 0.75rem 3rem 0.75rem 0;
-            padding: 1rem 1.25rem;
-            border-radius: 20px 20px 20px 8px;
-            box-shadow: 0 3px 12px rgba(0, 137, 123, 0.15);
-            max-width: 85%;
-            float: left;
-            clear: both;
-            position: relative;
-            animation: slideInLeft 0.3s ease-out;
-            line-height: 1.5;
-        }
-
-        .chat-message-user::before {
-            content: "👤";
-            position: absolute;
-            right: -2.5rem;
-            top: 0.75rem;
-            font-size: 1.5rem;
-        }
-        
-        .chat-message-assistant::before {
-            content: "🤖";
-            position: absolute;
-            left: -2.5rem;
-            top: 0.75rem;
-            font-size: 1.5rem;
-        }
-
-        /* Button styling */
-        .stButton > button {
-            background: var(--md-sys-color-primary) !important;
-            color: var(--md-sys-color-on-primary) !important;
-            border: none !important;
-            border-radius: 24px !important;
-            padding: 0.875rem 2rem !important;
-            font-weight: 500 !important;
-            font-size: 1rem !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 3px 12px rgba(25, 118, 210, 0.2) !important;
-            width: 100% !important;
-            margin: 0.5rem 0 !important;
-            letter-spacing: 0.025em !important;
-        }
-
-        .stButton > button:hover {
-            background: #1565C0 !important;
-            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.3) !important;
-            transform: translateY(-2px) !important;
-        }
-
-        /* Input styling */
-        .stTextInput > div > div > input {
-            background: var(--md-sys-color-surface-container) !important;
-            border: 1px solid var(--md-sys-color-outline-variant) !important;
-            border-radius: 12px !important;
-            color: var(--md-sys-color-on-surface) !important;
-            padding: 0.75rem 1rem !important;
-        }
-
-        /* Status indicators */
-        .status-success {
-            background: var(--md-sys-color-success);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: inline-block;
-            margin: 0.25rem;
-        }
-
-        .status-info {
-            background: var(--md-sys-color-primary);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: inline-block;
-            margin: 0.25rem;
-        }
-
-        /* Section headers */
+        /* Reduce margin for input sections */
         .section-header {
-            color: var(--md-sys-color-primary);
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 1.5rem 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--md-sys-color-primary-container);
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.2rem;
         }
 
-        @keyframes slideInRight {
-            from { transform: translateX(50px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideInLeft {
-            from { transform: translateX(-50px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
+        /* Chat history container: make it fill the right column and always scrollable */
         .chat-history-container {
             height: 70vh;
             max-height: 70vh;
+            min-height: 350px;
             overflow-y: auto;
             overflow-x: hidden;
             background: var(--md-sys-color-surface-container);
             border-radius: 16px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
             border: 1px solid var(--md-sys-color-outline-variant);
             scroll-behavior: smooth;
         }
@@ -793,7 +812,7 @@ def main():
         
         # Processing logic for text input
         if send_button and user_input:
-            with st.spinner("🤖 Processing your request and generating professional response..."):
+            with st.spinner("🤖 Processing your request and generating professional response...", show_time=True):
                 # Process text input and generate response with audio
                 response, audio_response = process_text_input(
                     user_input, 
@@ -821,7 +840,7 @@ def main():
         
         # Processing logic for voice input
         if audio_data and 'process_audio' in locals() and process_audio:
-            with st.spinner("🎤 Processing audio and generating professional response..."):
+            with st.spinner("🎤 Processing audio and generating professional response...", show_time=True):
                 transcription, response = process_audio_input(
                     audio_data, 
                     st.session_state.incident_manager, 
@@ -835,7 +854,7 @@ def main():
                     
                     # Generate audio response for voice input
                     if st.session_state.audio_enabled:
-                        with st.spinner("🎵 Generating professional voice response..."):
+                        with st.spinner("🎵 Generating professional voice response...", show_time=True):
                             audio_response = generate_audio_response_gpt_1(response, "nova")
                             if audio_response:
                                 response_id = len(st.session_state.conversation_history) - 1
@@ -851,30 +870,20 @@ def main():
     with col2:
         st.markdown('<div class="section-header">💬 Conversation History</div>', unsafe_allow_html=True)
         
-        # Enhanced chat history display
-        # st.markdown('<div class="chat-history-container" id="chat-history">', unsafe_allow_html=True)
-        
+        # Enhanced chat history display (text only, no audio here)
         if st.session_state.conversation_history:
             for i, message in enumerate(st.session_state.conversation_history):
                 if message["role"] == "user":
                     content = message['content'].replace('\n', '<br>')
-                    # Check if it's a voice message
                     if content.startswith('🎤'):
-                        # Remove the emoji for cleaner display but keep voice indicator
-                        content = content[2:].strip()  # Remove emoji and extra space
+                        content = content[2:].strip()
                         st.markdown(f"<div class='chat-message-user'>🎤 {content}</div>", unsafe_allow_html=True)
                     else:
                         st.markdown(f"<div class='chat-message-user'>{content}</div>", unsafe_allow_html=True)
                 else:
                     content = message['content'].replace('\n', '<br>')
+                    # Render assistant response INSIDE the chat-history-container (text only)
                     st.markdown(f"<div class='chat-message-assistant'>{content}</div>", unsafe_allow_html=True)
-                    
-                    # Add audio playback for assistant responses if available
-                    if i in st.session_state.audio_responses and st.session_state.audio_enabled:
-                        audio_data = st.session_state.audio_responses[i]
-                        st.markdown('<div class="audio-container">', unsafe_allow_html=True)
-                        st.audio(audio_data, format="audio/mp3", autoplay=False)
-                        st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.markdown("""
             <div class='chat-empty-state'>
@@ -883,9 +892,20 @@ def main():
                 <small>Use text input or voice recording on the left.</small>
             </div>
             """, unsafe_allow_html=True)
-        
         st.markdown("</div>", unsafe_allow_html=True)
         
+        # --- Only show audio player for the latest assistant response with audio, directly after chat history ---
+        if st.session_state.audio_enabled and st.session_state.conversation_history:
+            # Find the last assistant message with audio
+            for i in range(len(st.session_state.conversation_history) - 1, -1, -1):
+                msg = st.session_state.conversation_history[i]
+                if msg["role"] == "assistant" and i in st.session_state.audio_responses:
+                    audio_data = st.session_state.audio_responses[i]
+                    st.markdown('<div class="audio-container">', unsafe_allow_html=True)
+                    st.audio(audio_data, format="audio/mp3", autoplay=False)
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    break
+
         # Enhanced auto-scroll script for chat
         st.markdown("""
         <script>
@@ -943,18 +963,6 @@ def main():
                     high_priority = len([i for i in incidents if i.get('priority') == 'High'])
                     resolved = len([i for i in incidents if i.get('status') == 'Resolved'])
                     st.info(f"📊 **Total:** {total} | ✅ **Resolved:** {resolved} | 🔥 **High Priority:** {high_priority}")
-
-        # --- Always show audio player for latest assistant response below chat history ---
-        if st.session_state.audio_enabled and st.session_state.conversation_history:
-            # Find the last assistant message with audio
-            for i in range(len(st.session_state.conversation_history) - 1, -1, -1):
-                msg = st.session_state.conversation_history[i]
-                if msg["role"] == "assistant" and i in st.session_state.audio_responses:
-                    audio_data = st.session_state.audio_responses[i]
-                    st.markdown('<div class="audio-container">', unsafe_allow_html=True)
-                    st.audio(audio_data, format="audio/mp3", autoplay=False)
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    break
 
 if __name__ == "__main__":
     main()
