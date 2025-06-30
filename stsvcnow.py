@@ -249,7 +249,8 @@ def generate_response_file(user_query: str, context: str, conversation_history: 
         message = project_client.agents.messages.create(
             thread_id=thread.id,
             role="user",
-            content=user_query,  # Message content
+            content=messages,  # Message content
+            instructions="You are a helpful agent and can search information from uploaded files",  # Instructions for the agent
         )
         print(f"Created message, ID: {message['id']}")
         # Create and process an agent run in the thread
@@ -385,7 +386,7 @@ def process_audio_input(audio_data, incident_manager: ServiceNowIncidentManager,
     
     return transcription, response
 
-def process_text_input(user_input: str, incident_manager: ServiceNowIncidentManager, conversation_history: List[Dict]) -> tuple[str, Optional[bytes]]:
+def process_text_input(user_input: str, incident_manager: ServiceNowIncidentManager, conversation_history: List[Dict], selected_voice) -> tuple[str, Optional[bytes]]:
     """Process text input and generate both text and audio response."""
     # Search for relevant incidents
     incidents = incident_manager.search_incidents(user_input)
@@ -399,7 +400,7 @@ def process_text_input(user_input: str, incident_manager: ServiceNowIncidentMana
     audio_response = None
     if st.session_state.get('audio_enabled', False):
         try:
-            audio_response = generate_audio_response_gpt_1(response, "nova")  # Use a professional voice
+            audio_response = generate_audio_response_gpt_1(response, selected_voice=selected_voice)  # Use a professional voice
         except Exception as e:
             st.warning(f"⚠️ Could not generate audio: {str(e)}")
             audio_response = None
@@ -688,6 +689,14 @@ def main():
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+        voices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'nova']
+        
+        selected_voice = st.selectbox(
+            "🗣️ Choose AI Voice", 
+            voices, 
+            help="Select the voice personality for your AI assistant"
+        )
         
         # Quick Actions
         st.markdown('<div class="section-header">🎯 Quick Actions</div>', unsafe_allow_html=True)
@@ -817,7 +826,8 @@ def main():
                 response, audio_response = process_text_input(
                     user_input, 
                     st.session_state.incident_manager, 
-                    st.session_state.conversation_history
+                    st.session_state.conversation_history,
+                    selected_voice
                 )
                 
                 # Add to conversation history
@@ -855,7 +865,7 @@ def main():
                     # Generate audio response for voice input
                     if st.session_state.audio_enabled:
                         with st.spinner("🎵 Generating professional voice response...", show_time=True):
-                            audio_response = generate_audio_response_gpt_1(response, "nova")
+                            audio_response = generate_audio_response_gpt_1(response, selected_voice)
                             if audio_response:
                                 response_id = len(st.session_state.conversation_history) - 1
                                 st.session_state.audio_responses[response_id] = audio_response
