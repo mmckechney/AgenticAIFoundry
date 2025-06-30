@@ -14,8 +14,7 @@ from typing import Optional, Dict, Any, List
 from scipy.signal import resample
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
-from azure.ai.agents.models import FilePurpose
-from azure.ai.agents.models import FileSearchTool
+from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 
 from dotenv import load_dotenv
@@ -289,6 +288,82 @@ def generate_response_file(user_query: str, context: str, conversation_history: 
     except Exception as e:
         st.error(f"❌ AI response generation failed: {e}")
         return "I apologize, but I'm having trouble generating a response right now. Please try again."
+    
+def ai_search_agent(query: str) -> str:
+    returntxt = ""
+
+    # Retrieve the endpoint from environment variables
+    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
+
+    # Initialize the AIProjectClient
+    project_client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),
+        # api_version="latest",
+    )
+    # Define the Azure AI Search connection ID and index name
+    azure_ai_conn_id = "vecdb"
+    index_name = "svcindex"
+
+    # Initialize the Azure AI Search tool
+    ai_search = AzureAISearchTool(
+        index_connection_id=azure_ai_conn_id,
+        index_name=index_name,
+        query_type=AzureAISearchQueryType.SIMPLE,  # Use SIMPLE query type
+        top_k=5,  # Retrieve the top 3 results
+        filter="",  # Optional filter for search results
+    )
+    # Define the model deployment name
+    model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"]
+
+    # Create an agent with the Azure AI Search tool
+    agent = project_client.agents.create_agent(
+        model=model_deployment_name,
+        name="Svcnow-agent",
+        instructions="You are a helpful agent",
+        tools=ai_search.definitions,
+        tool_resources=ai_search.resources,
+    )
+    print(f"Created agent, ID: {agent.id}")
+    # Create a thread for communication
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    # Send a message to the thread
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role=MessageRole.USER,
+        content=query,
+    )
+    print(f"Created message, ID: {message['id']}")
+
+    # Create and process a run with the specified thread and agent
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+    print(f"Run finished with status: {run.status}")
+
+    # Check if the run failed
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    # Fetch and log all messages in the thread
+    messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+    print(str(messages))
+    # for message in messages.data:
+    #     print(f"Role: {message.role}, Content: {message.content}")
+    #     returntxt += f"Role: {message.role}, Content: {message.content}\n"
+    for page in messages.by_page():
+        for item in page:
+            # print(item)
+            #returntxt += f"Role: {item.role}, Content: {item.content[0]['text']['value']}\n"
+            returntxt = f"{item.content[0]['text']['value']}\n"
+
+    # Delete the agent
+    project_client.agents.delete_agent(agent.id)
+    print("Deleted agent")
+    
+
+    return returntxt
 
 def generate_audio_response(text: str) -> Optional[bytes]:
     """Generate professional audio from text using Azure OpenAI TTS with human-like persona."""
@@ -382,7 +457,8 @@ def process_audio_input(audio_data, incident_manager: ServiceNowIncidentManager,
     
     # Generate AI response
     # response = generate_response(transcription, context, conversation_history)
-    response = generate_response_file(transcription, context, conversation_history)
+    # response = generate_response_file(transcription, context, conversation_history)
+    response = ai_search_agent(transcription)
     
     return transcription, response
 
@@ -394,7 +470,8 @@ def process_text_input(user_input: str, incident_manager: ServiceNowIncidentMana
     
     # Generate AI response
     # response = generate_response(user_input, context, conversation_history)
-    response = generate_response_file(user_input, context, conversation_history)
+    # response = generate_response_file(user_input, context, conversation_history)
+    response = ai_search_agent(user_input)
     
     # Generate audio response with better error handling
     audio_response = None
