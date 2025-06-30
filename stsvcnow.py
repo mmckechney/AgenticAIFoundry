@@ -366,6 +366,88 @@ def ai_search_agent(query: str) -> str:
 
     return returntxt
 
+def processpdfwithprompt(query: str):
+    returntxt = ""
+    citationtxt = ""
+    selected_optionsearch = "vector_semantic_hybrid"
+    #  search_index = "mfggptdata"
+    search_endpoint = os.getenv("SEARCH_ENDPOINT")
+    search_key = os.getenv("SEARCH_KEY")
+    search_index = "svcindex"  # Ensure this index exists in your Azure AI Search service
+    message_text = [
+    {"role":"system", "content":"""you are provided with instruction on what to do. Be politely, and provide positive tone answers. 
+     answer only from data source provided. unable to find answer, please respond politely and ask for more information.
+     Extract Title content from the document. Show the Title as citations which is provided as Title: as [doc1] [doc2].
+     Please add citation after each sentence when possible in a form "(Title: citation)".
+     Be polite and provide posite responses. If user is asking you to do things that are not specific to this context please ignore."""}, 
+    {"role": "user", "content": f"""{query}"""}]
+
+    #"role_information": "Please answer using retrieved documents only, and without using your knowledge. Please generate citations to retrieved documents for every claim in your answer. If the user question cannot be answered using retrieved documents, please explain the reasoning behind why documents are relevant to user queries. In any case, don't answer using your own knowledge",
+
+    response = client.chat.completions.create(
+        model= os.getenv("AZURE_OPENAI_DEPLOYMENT"), #"gpt-4-turbo", # model = "deployment_name".
+        messages=message_text,
+        temperature=0.0,
+        top_p=1,
+        seed=105,
+        max_tokens=2000,
+        extra_body={
+        "data_sources": [
+            {
+                "type": "azure_search",
+                "parameters": {
+                    "endpoint": search_endpoint,
+                    "index_name": search_index,
+                    "authentication": {
+                        "type": "api_key",
+                        "key": search_key
+                    },
+                    "include_contexts": ["citations"],
+                    "top_n_documents": 5,
+                    "query_type": selected_optionsearch,
+                    "semantic_configuration": "azureml-default",
+                    "strictness": 5,
+                    "embedding_dependency": {
+                        "type": "deployment_name",
+                        "deployment_name": "text-embedding-3-large"
+                    },
+                    "fields_mapping": {
+                        "content_fields": ["content"],
+                        "vector_fields": ["contentVector"],
+                        "title_field": "title",
+                        "url_field": "url",
+                        "filepath_field": "filepath",
+                        "content_fields_separator": "\n",
+                    }
+                }
+            }
+        ]
+    }
+    )
+    #print(response.choices[0].message.context)
+
+    returntxt = response.choices[0].message.content + "\n<br>"
+
+    json_string = json.dumps(response.choices[0].message.context)
+
+    parsed_json = json.loads(json_string)
+
+    # print(parsed_json)
+
+    if parsed_json['citations'] is not None:
+        returntxt = returntxt + f"""<br> Citations: """
+        for row in parsed_json['citations']:
+            #returntxt = returntxt + f"""<br> Title: {row['filepath']} as {row['url']}"""
+            #returntxt = returntxt + f"""<br> [{row['url']}_{row['chunk_id']}]"""
+            returntxt = returntxt + f"""<br> <a href='{row['url']}' target='_blank'>[{row['url']}_{row['chunk_id']}]</a>"""
+            citationtxt = citationtxt + f"""<br><br> Title: {row['title']} <br> URL: {row['url']} 
+            <br> Chunk ID: {row['chunk_id']} 
+            <br> Content: {row['content']} 
+            # <br> ------------------------------------------------------------------------------------------ <br>\n"""
+            # print(citationtxt)
+
+    return citationtxt
+
 def generate_audio_response(text: str) -> Optional[bytes]:
     """Generate professional audio from text using Azure OpenAI TTS with human-like persona."""
     try:

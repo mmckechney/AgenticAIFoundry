@@ -175,7 +175,7 @@ def msft_generate_chat_response(transcription, context):
         instructions="Generate a response using the MCP API tool.",
     )
     # returntxt = response.choices[0].message.content.strip()
-    retturntxt = response.output_text
+    retturntxt = response.output_text    
     print(f"Response: {retturntxt}")
         
     return retturntxt, None
