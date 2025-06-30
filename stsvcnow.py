@@ -569,6 +569,21 @@ def process_text_input(user_input: str, incident_manager: ServiceNowIncidentMana
     
     return response, audio_response
 
+def hyperlink_sources_in_response(response: str, citations: list) -> str:
+    """Replace source markers in the response with hyperlinks to the chunk URLs."""
+    # Build a mapping from marker to URL
+    marker_to_url = {}
+    for citation in citations:
+        # Example marker: 【3:0†source】
+        marker = f"【{citation.get('chunk_id', '')}†source】"
+        url = citation.get('url', '')
+        if url:
+            marker_to_url[marker] = f"<a href='{url}' target='_blank'>{marker}</a>"
+    # Replace all markers in the response
+    for marker, link in marker_to_url.items():
+        response = response.replace(marker, link)
+    return response
+
 def main():
     """Main Streamlit application for ServiceNow Incident Management."""
     
@@ -1055,6 +1070,8 @@ def main():
                 else:
                     content = message['content'].replace('\n', '<br>')
                     # Render assistant response INSIDE the chat-history-container (text only)
+                    if 'citations' in message:
+                        content = hyperlink_sources_in_response(content, message['citations'])
                     st.markdown(f"<div class='chat-message-assistant'>{content}</div>", unsafe_allow_html=True)
         else:
             st.markdown("""
@@ -1109,13 +1126,6 @@ def main():
             observer.observe(chatContainer, { childList: true, subtree: true });
         }
         </script>
-        """, unsafe_allow_html=True)
-        
-        # Quick actions at bottom of chat
-        st.markdown("""
-        <div class="feature-card" style="margin-top: 1rem;">
-            <h6 style="color: var(--md-sys-color-primary); margin-bottom: 0.5rem;">⚡ Quick Actions</h6>
-        </div>
         """, unsafe_allow_html=True)
         
         col_clear, col_stats = st.columns([1, 1])
