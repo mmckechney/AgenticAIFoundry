@@ -204,12 +204,6 @@ def generate_response_file(user_query: str, context: str, conversation_history: 
         # Add current user query
         messages.append({"role": "user", "content": user_query})
         
-        # response = client.chat.completions.create(
-        #     model=CHAT_DEPLOYMENT_NAME,
-        #     messages=messages,
-        #     max_tokens=1500,
-        #     temperature=0.7
-        # )
         # Define the project endpoint
         project_endpoint = os.environ["PROJECT_ENDPOINT"]  # Ensure the PROJECT_ENDPOINT environment variable is set
 
@@ -384,7 +378,13 @@ def processpdfwithprompt(query: str):
 
     #"role_information": "Please answer using retrieved documents only, and without using your knowledge. Please generate citations to retrieved documents for every claim in your answer. If the user question cannot be answered using retrieved documents, please explain the reasoning behind why documents are relevant to user queries. In any case, don't answer using your own knowledge",
 
-    response = client.chat.completions.create(
+    searchclient = AzureOpenAI(
+        azure_endpoint=AZURE_ENDPOINT,
+        api_key=AZURE_API_KEY,
+        api_version="2024-02-01"  # Adjust API version as needed
+    )
+
+    response = searchclient.chat.completions.create(
         model= os.getenv("AZURE_OPENAI_DEPLOYMENT"), #"gpt-4-turbo", # model = "deployment_name".
         messages=message_text,
         temperature=0.0,
@@ -542,6 +542,7 @@ def process_audio_input(audio_data, incident_manager: ServiceNowIncidentManager,
     # response = generate_response(transcription, context, conversation_history)
     # response = generate_response_file(transcription, context, conversation_history)
     response = ai_search_agent(transcription)
+    # response = processpdfwithprompt(transcription)
     
     return transcription, response
 
@@ -555,6 +556,7 @@ def process_text_input(user_input: str, incident_manager: ServiceNowIncidentMana
     # response = generate_response(user_input, context, conversation_history)
     # response = generate_response_file(user_input, context, conversation_history)
     response = ai_search_agent(user_input)
+    # response = processpdfwithprompt(user_input)
     
     # Generate audio response with better error handling
     audio_response = None
