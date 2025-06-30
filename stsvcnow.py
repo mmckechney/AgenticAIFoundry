@@ -313,6 +313,7 @@ def ai_search_agent(query: str) -> str:
         query_type=AzureAISearchQueryType.SIMPLE,  # Use SIMPLE query type
         top_k=5,  # Retrieve the top 3 results
         filter="",  # Optional filter for search results
+        # vector_search_profile="my-vector-profile",  # Use the default vector search profile
     )
     # Define the model deployment name
     model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"]
