@@ -261,7 +261,8 @@ def generate_response_file(user_query: str, context: str, conversation_history: 
         print("Deleted file")
 
         project_client.agents.delete_agent(agent.id)
-        print("Deleted agent")
+        project_client.agents.threads.delete(thread.id)
+        print("Deleted agent and thread")
 
         # Fetch and log all messages from the thread
         # messages = project_client.agents.messages.list(thread_id=thread.id)
@@ -347,16 +348,29 @@ def ai_search_agent(query: str) -> str:
     # for message in messages.data:
     #     print(f"Role: {message.role}, Content: {message.content}")
     #     returntxt += f"Role: {message.role}, Content: {message.content}\n"
+    # for page in messages.by_page():
+    #     for item in page:
+    #         print(item)
+    #         #returntxt += f"Role: {item.role}, Content: {item.content[0]['text']['value']}\n"
+    #         returntxt = f"{item.content[0]['text']['value']}\n"
     for page in messages.by_page():
         for item in page:
-            # print(item)
-            #returntxt += f"Role: {item.role}, Content: {item.content[0]['text']['value']}\n"
-            returntxt = f"{item.content[0]['text']['value']}\n"
+            print(item)
+            # Get the message content
+            content = item.content[0]['text']['value']
+            # Check for annotations and extract url_citation if available
+            citation = ""
+            for annotation in item.content[0]['text']['annotations']:
+                if annotation['type'] == 'url_citation':
+                    citation = f" [{annotation['url_citation']['url']} - {annotation['url_citation']['title']}]"
+            # Combine content with citation
+            returntxt += f"{content}{citation}\n"
+    # Cleanup resources
 
     # Delete the agent
     project_client.agents.delete_agent(agent.id)
-    print("Deleted agent")
-    
+    project_client.agents.threads.delete(thread.id)
+    print("Deleted agent and thread")
 
     return returntxt
 
@@ -584,6 +598,43 @@ def hyperlink_sources_in_response(response: str, citations: list) -> str:
         response = response.replace(marker, link)
     return response
 
+def sendemail(query: str) -> str:
+    returntxt = ""
+    # Retrieve the endpoint from environment variables
+    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
+
+    # Initialize the AIProjectClient
+    project_client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),
+        # api_version="latest",
+    )
+    agent = project_client.agents.get_agent("asst_g3hRNabXnYHg3mzqBxvgDRG6")
+    thread = project_client.agents.threads.create()
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=query
+    )
+
+    run = project_client.agents.runs.create_and_process(
+        thread_id=thread.id,
+        agent_id=agent.id)
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+    else:
+        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+
+        for message in messages:
+            if message.text_messages:
+                print(f"{message.role}: {message.text_messages[-1].text.value}")
+                returntxt += f"{message.role}: {message.text_messages[-1].text.value}\n"
+
+
+    return returntxt
+
 def main():
     """Main Streamlit application for ServiceNow Incident Management."""
     
@@ -703,9 +754,9 @@ def main():
 
         /* Chat history container: make it fill the right column and always scrollable */
         .chat-history-container {
-            height: 70vh;
-            max-height: 70vh;
-            min-height: 350px;
+            height: 65vh;
+            max-height: 65vh;
+            min-height: 400px;
             overflow-y: auto;
             overflow-x: hidden;
             background: var(--md-sys-color-surface-container);
@@ -749,6 +800,32 @@ def main():
             display: block;
             font-size: 3rem;
             margin-bottom: 1rem;
+        }
+        
+        /* Chat message styling */
+        .chat-message-user {
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            padding: 0.75rem 1rem;
+            border-radius: 16px 16px 4px 16px;
+            margin: 0.5rem 0;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: 0;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+        }
+        
+        .chat-message-assistant {
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            padding: 0.75rem 1rem;
+            border-radius: 16px 16px 16px 4px;
+            margin: 0.5rem 0;
+            max-width: 85%;
+            margin-left: 0;
+            margin-right: auto;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
         /* Audio player styling */
@@ -911,6 +988,35 @@ def main():
         if st.button("🔄 Reload Data"):
             st.session_state.incident_manager.load_data()
             st.rerun()
+        
+        # Email latest response button
+        if st.button("📧 Email Latest Response"):
+            # Check if there's a recent assistant response to send
+            if st.session_state.conversation_history:
+                # Find the latest assistant response
+                latest_assistant_response = None
+                for msg in reversed(st.session_state.conversation_history):
+                    if msg["role"] == "assistant":
+                        latest_assistant_response = msg["content"]
+                        break
+                
+                if latest_assistant_response:
+                    try:
+                        with st.spinner("📧 Sending email via agent...", show_time=True):
+                            # Use the sendemail function to send the response
+                            query = f"Can you send email to bala at babal@microsoft.com with body as {latest_assistant_response}"
+                            email_result = sendemail(query)
+                        
+                        if email_result and "successfully" in email_result.lower():
+                            st.success("✅ Email sent successfully to babal@microsoft.com!")
+                        else:
+                            st.success("📧 Email request processed!")
+                    except Exception as e:
+                        st.error(f"❌ Error sending email: {str(e)}")
+                else:
+                    st.warning("⚠️ No assistant response found to send!")
+            else:
+                st.warning("⚠️ No conversation history available to send!")
     
     # Main content area - Left: Input, Right: Chat History
     col1, col2 = st.columns([1, 2])
@@ -1057,32 +1163,32 @@ def main():
     with col2:
         st.markdown('<div class="section-header">💬 Conversation History</div>', unsafe_allow_html=True)
         
-        # Enhanced chat history display (text only, no audio here)
+        # Create the scrollable chat container
+        chat_history_html = "<div class='chat-history-container'>"
         if st.session_state.conversation_history:
             for i, message in enumerate(st.session_state.conversation_history):
                 if message["role"] == "user":
                     content = message['content'].replace('\n', '<br>')
                     if content.startswith('🎤'):
                         content = content[2:].strip()
-                        st.markdown(f"<div class='chat-message-user'>🎤 {content}</div>", unsafe_allow_html=True)
+                        chat_history_html += f"<div class='chat-message-user'>🎤 {content}</div>"
                     else:
-                        st.markdown(f"<div class='chat-message-user'>{content}</div>", unsafe_allow_html=True)
+                        chat_history_html += f"<div class='chat-message-user'>{content}</div>"
                 else:
                     content = message['content'].replace('\n', '<br>')
-                    # Render assistant response INSIDE the chat-history-container (text only)
                     if 'citations' in message:
                         content = hyperlink_sources_in_response(content, message['citations'])
-                    st.markdown(f"<div class='chat-message-assistant'>{content}</div>", unsafe_allow_html=True)
+                    chat_history_html += f"<div class='chat-message-assistant'>{content}</div>"
         else:
-            st.markdown("""
+            chat_history_html += """
             <div class='chat-empty-state'>
                 <strong>Welcome to ServiceNow AI Assistant!</strong><br>
                 Ask me about incidents, search for specific issues, or get help with IT service management.<br>
                 <small>Use text input or voice recording on the left.</small>
             </div>
-            """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        
+            """
+        chat_history_html += "</div>"
+        st.markdown(chat_history_html, unsafe_allow_html=True)
         # --- Only show audio player for the latest assistant response with audio, directly after chat history ---
         if st.session_state.audio_enabled and st.session_state.conversation_history:
             # Find the last assistant message with audio

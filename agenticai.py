@@ -138,7 +138,8 @@ def code_interpreter() -> str:
         
         # Delete the agent when done
         project_client.agents.delete_agent(agent.id)
-        print("Deleted agent")
+        project_client.agents.threads.delete(thread.id)
+        print("Deleted agent and thread")
 
 def eval()-> str:
     returntxt = ""
@@ -538,8 +539,9 @@ def agent_eval() -> str:
 
     # Delete the agent when done
     project_client.agents.delete_agent(agent.id)
-    print("Deleted agent")
-    
+    project_client.agents.threads.delete(thread.id)
+    print("Deleted agent and thread")
+
     return returntxt
 
 def ai_search_agent(query: str) -> str:
@@ -613,8 +615,8 @@ def ai_search_agent(query: str) -> str:
 
     # Delete the agent
     project_client.agents.delete_agent(agent.id)
-    print("Deleted agent")
-    
+    project_client.agents.threads.delete(thread.id)
+    print("Deleted agent and thread")
 
     return returntxt
 
@@ -854,14 +856,15 @@ def connected_agent(query: str) -> str:
     # returntxt = f"{message.content[-1].text.value}"
 
     # Delete the Agent when done
-    # project_client.agents.delete_agent(agent.id)    
+    project_client.agents.delete_agent(agent.id)    
+    project_client.agents.threads.delete(thread.id)
     # print("Deleted agent")
-    # # Delete the connected Agent when done
-    # project_client.agents.delete_agent(stock_price_agent.id)
-    # project_client.agents.delete_agent(rfp_agent.id)
-    # project_client.agents.delete_agent(Emailagent.id)
-    # project_client.agents.delete_agent(Sustainablityagent.id)
-    # print("Deleted connected agent")
+    # Delete the connected Agent when done
+    project_client.agents.delete_agent(stock_price_agent.id)
+    project_client.agents.delete_agent(rfp_agent.id)
+    project_client.agents.delete_agent(Emailagent.id)
+    project_client.agents.delete_agent(Sustainablityagent.id)
+    print("Deleted connected agent")
     # # Cleanup resources
     # project_client.agents.files.delete(file_id=file.id)
     # print("Deleted file")
