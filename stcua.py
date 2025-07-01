@@ -73,31 +73,34 @@ def cuarun(query: str) -> str:
     last_call_id = computer_call.call_id
     action = computer_call.action
 
+    print(f"Last call ID: {last_call_id}")
+    print(f"Action: {action}")
+
     # Your application would now perform the action suggested by the model
     # And create a screenshot of the updated state of the environment before sending another response
 
-    response_2 = cuaclient.responses.create(
-        model="computer-use-preview",
-        previous_response_id=response.id,
-        tools=[{
-            "type": "computer_use_preview",
-            "display_width": 1024,
-            "display_height": 768,
-            "environment": "browser" # other possible values: "mac", "windows", "ubuntu"
-        }],
-        input=[
-            {
-                "call_id": last_call_id,
-                "type": "computer_call_output",
-                "output": {
-                    "type": "input_image",
-                    # Image should be in base64
-                    "image_url": f"data:image/png;base64,{<base64_string>}"
-                }
-            }
-        ],
-        truncation="auto"
-    )
+    # response_2 = cuaclient.responses.create(
+    #     model="computer-use-preview",
+    #     previous_response_id=response.id,
+    #     tools=[{
+    #         "type": "computer_use_preview",
+    #         "display_width": 1024,
+    #         "display_height": 768,
+    #         "environment": "browser" # other possible values: "mac", "windows", "ubuntu"
+    #     }],
+    #     input=[
+    #         {
+    #             "call_id": last_call_id,
+    #             "type": "computer_call_output",
+    #             "output": {
+    #                 "type": "input_image",
+    #                 # Image should be in base64
+    #                 "image_url": f"data:image/png;base64,{<base64_string>}"
+    #             }
+    #         }
+    #     ],
+    #     truncation="auto"
+    # )
 
 if __name__ == "__main__":
     query = "Check the latest AI news on bing.com."

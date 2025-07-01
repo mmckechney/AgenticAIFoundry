@@ -1078,7 +1078,7 @@ def hf_mcp_agent(query: str) -> str:
     returntxt = ""
 
     # Retrieve the endpoint from environment variables
-    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    project_endpoint = os.environ["PROJECT_ENDPOINT_WEST"]
     # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
 
     # Initialize the AIProjectClient
@@ -1138,8 +1138,9 @@ def hf_mcp_agent(query: str) -> str:
             if isinstance(last_message_content, MessageTextContent):
                 print(f"{data_point.role}: {last_message_content.text.value}")
                 returntxt += f"{data_point.role}: {last_message_content.text.value}\n"
-    project_client.agents.delete_agent(agent.id)
-    print(f"Deleted agent, agent ID: {agent.id}")
+        project_client.agents.delete_agent(agent.id)
+        project_client.agents.threads.delete(thread.id)
+        print(f"Deleted agent, agent ID: {agent.id}")
 
     return returntxt
 

@@ -754,9 +754,9 @@ def main():
 
         /* Chat history container: make it fill the right column and always scrollable */
         .chat-history-container {
-            height: 65vh;
-            max-height: 65vh;
-            min-height: 400px;
+            height: 50vh;
+            max-height: 50vh;
+            min-height: 200px;
             overflow-y: auto;
             overflow-x: hidden;
             background: var(--md-sys-color-surface-container);
