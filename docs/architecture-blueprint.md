@@ -873,7 +873,129 @@ def create_multi_agent_team():
     return "Team coordination completed successfully"
 ```
 
-### 6. Agent Tracing and Observability
+### 6. Insurance Quote Assistant Multi-Agent System
+
+```python
+def create_insurance_quote_system():
+    """Example: Insurance Quote Assistant with Connected Agents"""
+    
+    from azure.ai.projects import AIProjectClient
+    from azure.identity import DefaultAzureCredential
+    from azure.ai.agents.models import ConnectedAgentTool, FileSearchTool, FilePurpose
+    
+    # Initialize project client
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+    )
+    
+    with project_client:
+        # Create specialized insurance pricing agent
+        insurance_price_agent = project_client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="insurancepricebot",
+            instructions="""Your job is to get the insurance price of a company. 
+            please ask the user for First Name, Last Name, Date of Birth, and Company Name.
+            Also ask for age and preexisting conditions.
+            Only process the request if the user provides all the information.""",
+            temperature=0.7,
+        )
+        
+        # Create document search agent with vector store
+        file_path = "./data/insurancetc.pdf"
+        file = project_client.agents.files.upload_and_poll(
+            file_path=file_path, 
+            purpose=FilePurpose.AGENTS
+        )
+        
+        vector_store = project_client.agents.vector_stores.create_and_poll(
+            file_ids=[file.id], 
+            name="insurance_vector_store"
+        )
+        
+        file_search = FileSearchTool(vector_store_ids=[vector_store.id])
+        
+        document_agent = project_client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="insdocagent",
+            instructions="You are a Insurance Process agent and can search information from uploaded files",
+            tools=file_search.definitions,
+            tool_resources=file_search.resources,
+        )
+        
+        # Get pre-configured email agent
+        email_agent = project_client.agents.get_agent("asst_g3hRNabXnYHg3mzqBxvgDRG6")
+        
+        # Create connected agent tools
+        insurance_tool = ConnectedAgentTool(
+            id=insurance_price_agent.id, 
+            name="insurancepricebot", 
+            description="Create insurance quote for the user"
+        )
+        
+        document_tool = ConnectedAgentTool(
+            id=document_agent.id, 
+            name="insdocagent", 
+            description="Summarize uploaded files content"
+        )
+        
+        email_tool = ConnectedAgentTool(
+            id=email_agent.id, 
+            name="sendemail", 
+            description="Send quote via email to user"
+        )
+        
+        # Create main orchestrator agent
+        main_agent = project_client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="InsuranceQuoteAssistant",
+            instructions="""
+            You are an insurance quote assistant. Your job is to:
+            1. Use the insurance quote agent to generate quotes
+            2. Use the document agent to get terms and conditions
+            3. Use the email agent to send the complete quote package
+            Return response in format: [QUOTE]\nquote details\n[EMAIL OUTPUT]\nemail confirmation
+            """,
+            tools=[
+                insurance_tool.definitions[0],
+                document_tool.definitions[0],
+                email_tool.definitions[0],
+            ]
+        )
+        
+        # Process insurance request
+        thread = project_client.agents.threads.create()
+        message = project_client.agents.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content="I need an insurance quote for John Smith, DOB 01/15/1985, TechCorp, age 38, diabetes"
+        )
+        
+        run = project_client.agents.runs.create_and_process(
+            thread_id=thread.id, 
+            agent_id=main_agent.id
+        )
+        
+        # Poll for completion
+        while run.status in ["queued", "in_progress", "requires_action"]:
+            time.sleep(1)
+            run = project_client.agents.runs.get(thread_id=thread.id, run_id=run.id)
+        
+        # Get response
+        messages = project_client.agents.messages.list(thread_id=thread.id)
+        response = messages[-1].content[0].text.value
+        
+        # Cleanup
+        project_client.agents.delete_agent(main_agent.id)
+        project_client.agents.delete_agent(insurance_price_agent.id)
+        project_client.agents.delete_agent(document_agent.id)
+        project_client.agents.threads.delete(thread.id)
+        project_client.agents.vector_stores.delete(vector_store.id)
+        
+    return response
+```
+
+### 7. Agent Tracing and Observability
 
 ```python
 def setup_agent_tracing():
