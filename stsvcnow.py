@@ -305,7 +305,7 @@ def ai_search_agent(query: str) -> str:
     ai_search = AzureAISearchTool(
         index_connection_id=azure_ai_conn_id,
         index_name=index_name,
-        query_type=AzureAISearchQueryType.SIMPLE,  # Use SIMPLE query type
+        query_type=AzureAISearchQueryType.VECTOR_SEMANTIC_HYBRID,  # Use SIMPLE query type for compatibility
         top_k=5,  # Retrieve the top 3 results
         filter="",  # Optional filter for search results
         # vector_search_profile="my-vector-profile",  # Use the default vector search profile
