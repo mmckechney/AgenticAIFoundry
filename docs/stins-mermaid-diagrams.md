@@ -45,7 +45,7 @@ graph TB
     TermsRetrieval --> ResultAggregation
     EmailDelivery --> ResultAggregation
     
-    ResultAggregation --> ResponseFormatting[Response Formatting<br/>[QUOTE]<br/>quote details<br/>[EMAIL OUTPUT]<br/>email confirmation]
+    ResultAggregation --> ResponseFormatting[Response Formatting<br/>QUOTE:<br/>quote details<br/>EMAIL OUTPUT:<br/>email confirmation]
     
     ResponseFormatting --> StreamlitUI
     StreamlitUI --> User
