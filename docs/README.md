@@ -145,7 +145,25 @@ This comprehensive documentation suite provides complete guidance for understand
 - Immediate problem resolution
 - Code pattern lookup
 
-### 8. [Web Application Documentation](../WEB_APP_README.md)
+### 8. [ServiceNow AI Assistant Documentation](./stsvcnow-index.md)
+**Primary Purpose**: Comprehensive documentation suite for the ServiceNow AI Assistant multi-agent system
+
+**Target Audience**: Developers, architects, and technical teams working with ServiceNow AI integration
+
+**Key Contents**:
+- **[Complete Documentation](./stsvcnow-documentation.md)**: Full technical documentation with architecture and implementation
+- **[Mermaid Diagrams](./stsvcnow-mermaid-diagrams.md)**: Visual architecture diagrams and multi-agent workflows
+- **[Technical Architecture](./stsvcnow-technical-architecture.md)**: Deep-dive into multi-agent orchestration design
+- **[Quick Reference](./stsvcnow-quick-reference.md)**: Developer-friendly reference and troubleshooting
+- **[API Reference](./stsvcnow-api-reference.md)**: Complete function and class documentation
+
+**When to Use**:
+- ServiceNow AI Assistant implementation and development
+- Understanding multi-agent orchestration with Azure AI Foundry
+- Integrating Connected Agent tools and workflows
+- Voice-enabled IT service management systems
+
+### 9. [Web Application Documentation](../WEB_APP_README.md)
 **Primary Purpose**: Comprehensive guide for the Streamlit web interface
 
 **Target Audience**: End users, developers, and administrators using the web interface
@@ -192,6 +210,13 @@ This comprehensive documentation suite provides complete guidance for understand
 3. **Integration**: [Implementation Guide](./implementation-guide.md) - Azure services setup and configuration
 4. **Production Deployment**: [Audio System Design Document](./audio-system-design-document.md) - Deployment Architecture section
 
+### For ServiceNow AI Assistant Implementation
+1. **Overview**: [ServiceNow AI Assistant Documentation](./stsvcnow-index.md) - Complete documentation index
+2. **Architecture**: [ServiceNow Technical Architecture](./stsvcnow-technical-architecture.md) - Multi-agent orchestration design
+3. **Visual Reference**: [ServiceNow Mermaid Diagrams](./stsvcnow-mermaid-diagrams.md) - Architecture and workflow diagrams
+4. **Implementation**: [ServiceNow Quick Reference](./stsvcnow-quick-reference.md) - Developer guide and examples
+5. **API Details**: [ServiceNow API Reference](./stsvcnow-api-reference.md) - Complete function documentation
+
 ### For Web Application Users
 1. **Start with**: [Web Application Documentation](../WEB_APP_README.md) - Complete web interface guide
 2. **Configuration**: [Quick Reference Guide](./quick-reference.md) - Environment Variables section
@@ -235,6 +260,13 @@ This comprehensive documentation suite provides complete guidance for understand
 - **Framework Details**: [Technical Diagrams](./technical-diagrams.md) → Security Testing Diagrams
 - **Implementation**: [Implementation Guide](./implementation-guide.md) → Security Testing Implementation
 - **Quick Setup**: [Quick Reference Guide](./quick-reference.md) → Security Testing
+
+#### ServiceNow AI Assistant
+- **Documentation Index**: [ServiceNow AI Assistant](./stsvcnow-index.md) → Complete documentation suite
+- **Architecture Overview**: [ServiceNow Technical Architecture](./stsvcnow-technical-architecture.md) → Multi-agent orchestration
+- **Visual Architecture**: [ServiceNow Mermaid Diagrams](./stsvcnow-mermaid-diagrams.md) → System and workflow diagrams
+- **Implementation Guide**: [ServiceNow Quick Reference](./stsvcnow-quick-reference.md) → Setup and development
+- **API Documentation**: [ServiceNow API Reference](./stsvcnow-api-reference.md) → Function and class reference
 
 #### Configuration & Setup
 - **Deployment Architecture**: [Architecture Blueprint](./architecture-blueprint.md) → Deployment Architecture
