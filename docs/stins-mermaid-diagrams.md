@@ -18,7 +18,7 @@ These mermaid diagrams can be viewed in several ways:
 ```mermaid
 graph TB
     %% User Interface Layer
-    User[User Request] --> StreamlitUI[Streamlit Chat Interface<br/>insurance_chat_ui()]
+    User[User Request] --> StreamlitUI[Streamlit Chat Interface<br/>insurance_chat_ui]
     StreamlitUI --> UserInput[User Input Processing]
     
     %% Main Orchestrator
@@ -279,8 +279,8 @@ graph TB
     %% Core Application
     subgraph "Insurance Assistant Application"
         StreamlitApp[Streamlit Application<br/>stins.py]
-        ConnectedAgentFunc[connected_agent() Function]
-        UIFunction[insurance_chat_ui() Function]
+        ConnectedAgentFunc[connected_agent Function]
+        UIFunction[insurance_chat_ui Function]
     end
     
     %% Azure AI Foundry Layer
