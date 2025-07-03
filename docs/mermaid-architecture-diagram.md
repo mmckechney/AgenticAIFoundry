@@ -350,6 +350,157 @@ sequenceDiagram
     Note over TL,TA: All interactions traced with<br/>OpenTelemetry spans and events
 ```
 
+## Insurance Quote Assistant Multi-Agent Architecture
+
+```mermaid
+graph TB
+    %% User Interface
+    User[User] --> StreamlitUI[Streamlit Interface<br/>stins.py]
+    StreamlitUI --> ChatInput[Chat Input Processing]
+    
+    %% Main Orchestrator
+    ChatInput --> MainAgent[Main Orchestrator<br/>InsuranceQuoteAssistant]
+    
+    %% Connected Agents
+    MainAgent --> InsuranceAgent[Insurance Price Agent<br/>insurancepricebot]
+    MainAgent --> DocumentAgent[Document Search Agent<br/>insdocagent]  
+    MainAgent --> EmailAgent[Email Agent<br/>sendemail]
+    
+    %% Agent Capabilities
+    InsuranceAgent --> InfoValidation[Information Validation<br/>• First Name<br/>• Last Name<br/>• Date of Birth<br/>• Company Name<br/>• Age<br/>• Preexisting Conditions]
+    InsuranceAgent --> QuoteCalc[Quote Calculation<br/>• Premium Calculation<br/>• Coverage Analysis<br/>• Risk Assessment]
+    
+    DocumentAgent --> VectorStore[Vector Store<br/>insurance_vector_store]
+    VectorStore --> FileSearch[File Search Tool<br/>insurancetc.pdf]
+    DocumentAgent --> TermsExtraction[Terms Extraction<br/>• Policy Terms<br/>• Conditions<br/>• Legal Requirements]
+    
+    EmailAgent --> EmailFormat[Email Formatting<br/>• Quote Integration<br/>• Terms Attachment<br/>• Professional Layout]
+    EmailAgent --> DeliveryService[Email Delivery<br/>• SMTP Integration<br/>• Confirmation<br/>• Error Handling]
+    
+    %% Response Assembly
+    QuoteCalc --> ResponseAssembly[Response Assembly]
+    TermsExtraction --> ResponseAssembly
+    DeliveryService --> ResponseAssembly
+    
+    ResponseAssembly --> FinalFormat[Final Response<br/>[QUOTE]<br/>quote details<br/>[EMAIL OUTPUT]<br/>confirmation]
+    FinalFormat --> StreamlitUI
+    
+    %% Azure AI Foundry Integration
+    MainAgent --> AzureFoundry[Azure AI Foundry<br/>AIProjectClient]
+    AzureFoundry --> AgentManagement[Agent Management<br/>• Lifecycle<br/>• Threading<br/>• Cleanup]
+    AzureFoundry --> ConnectedTools[Connected Agent Tools<br/>• Tool Definitions<br/>• Communication<br/>• Orchestration]
+    
+    %% Styling
+    classDef userClass fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef agentClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef toolClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef azureClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    
+    class User,StreamlitUI,ChatInput userClass
+    class MainAgent,InsuranceAgent,DocumentAgent,EmailAgent agentClass
+    class InfoValidation,QuoteCalc,TermsExtraction,EmailFormat toolClass
+    class AzureFoundry,AgentManagement,ConnectedTools azureClass
+```
+
+## Insurance Assistant Sequential Processing Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant UI as Streamlit UI
+    participant MA as Main Agent
+    participant IA as Insurance Agent
+    participant DA as Document Agent
+    participant EA as Email Agent
+    participant VS as Vector Store
+    participant AF as Azure Foundry
+    
+    %% Initial Request
+    U->>UI: "I need an insurance quote"
+    UI->>MA: Process request through connected_agent()
+    MA->>AF: Create conversation thread
+    
+    %% Information Collection Phase
+    MA->>IA: Invoke insurance pricing tool
+    IA->>IA: Validate required information
+    IA->>MA: Request missing user details
+    MA->>UI: "Please provide: Name, DOB, Company, Age, Conditions"
+    UI->>U: Display information request
+    
+    U->>UI: Provide complete information
+    UI->>MA: Forward user data
+    MA->>IA: Generate insurance quote with user data
+    IA->>IA: Calculate premium & coverage
+    IA->>MA: Return formatted insurance quote
+    
+    %% Document Search Phase
+    MA->>DA: Invoke document search tool
+    DA->>VS: Semantic search for terms & conditions
+    VS->>DA: Return relevant policy documents
+    DA->>DA: Extract and format terms
+    DA->>MA: Return terms & conditions summary
+    
+    %% Email Delivery Phase
+    MA->>EA: Invoke email delivery tool
+    EA->>EA: Format complete quote package
+    EA->>EA: Send email to user
+    EA->>MA: Return delivery confirmation
+    
+    %% Response Assembly
+    MA->>MA: Assemble final response
+    Note over MA: Format: [QUOTE]\nquote details\n[EMAIL OUTPUT]\nconfirmation
+    MA->>UI: Return structured response
+    UI->>U: Display complete insurance quote & confirmation
+    
+    %% Cleanup
+    MA->>AF: Delete agents and resources
+    AF->>AF: Clean up threads, vector store, agents
+```
+
+## Insurance Assistant Resource Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Initialize: User starts session
+    Initialize --> CreateProject: Setup AIProjectClient
+    CreateProject --> CreateAgents: Create specialized agents
+    
+    CreateAgents --> SetupInsuranceAgent: Create Insurance Price Agent
+    SetupInsuranceAgent --> SetupDocumentAgent: Create Document Agent
+    SetupDocumentAgent --> SetupEmailAgent: Get Email Agent Reference
+    SetupEmailAgent --> CreateVectorStore: Upload & process documents
+    
+    CreateVectorStore --> CreateMainAgent: Setup orchestrator with tools
+    CreateMainAgent --> ProcessRequest: Ready to handle requests
+    
+    ProcessRequest --> ValidateInfo: Check user information
+    ValidateInfo --> IncompleteInfo: Missing required fields
+    ValidateInfo --> CompleteInfo: All fields provided
+    
+    IncompleteInfo --> ProcessRequest: Request missing information
+    
+    CompleteInfo --> GenerateQuote: Create insurance quote
+    GenerateQuote --> SearchDocuments: Find terms & conditions
+    SearchDocuments --> SendEmail: Deliver quote package
+    SendEmail --> AssembleResponse: Format final response
+    AssembleResponse --> Cleanup: Clean up resources
+    
+    Cleanup --> DeleteAgents: Remove created agents
+    DeleteAgents --> DeleteVectorStore: Remove document storage
+    DeleteVectorStore --> DeleteThreads: Clean up conversations
+    DeleteThreads --> [*]: Session complete
+    
+    %% Error Handling
+    CreateProject --> ErrorState: Azure connection failed
+    CreateAgents --> ErrorState: Agent creation failed
+    GenerateQuote --> ErrorState: Quote generation failed
+    SearchDocuments --> ErrorState: Document search failed
+    SendEmail --> ErrorState: Email delivery failed
+    
+    ErrorState --> Cleanup: Clean up partial resources
+```
+```
+
 ## Agent Interaction Flow Diagram
 
 ```mermaid
