@@ -36,10 +36,10 @@ client = AzureOpenAI(
 )
 
 os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true" 
-
+project_endpoint = os.environ["PROJECT_ENDPOINT"]
 # Create the project client (Foundry project and credentials)
 project_client = AIProjectClient(
-    endpoint=AZURE_ENDPOINT,
+    endpoint=project_endpoint,
     credential=DefaultAzureCredential(),
 )
 
