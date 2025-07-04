@@ -5,6 +5,8 @@ import os
 import time
 from datetime import datetime
 from typing import Optional, Dict, Any
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
 
 # Import the main functions from agenticai.py
 # Handle missing dependencies gracefully for demo purposes
@@ -24,6 +26,31 @@ except ImportError as e:
     st.warning(f"⚠️ Some Azure AI dependencies are not installed: {e}")
     st.info("Running in demo mode with simulated responses.")
     DEPENDENCIES_AVAILABLE = False
+
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true" 
+project_endpoint = os.environ["PROJECT_ENDPOINT"]
+# Create the project client (Foundry project and credentials)
+project_client = AIProjectClient(
+    endpoint=project_endpoint,
+    credential=DefaultAzureCredential(),
+)
+
+
+from azure.monitor.opentelemetry import configure_azure_monitor
+connection_string = project_client.telemetry.get_connection_string()
+
+if not connection_string:
+    print("Application Insights is not enabled. Enable by going to Tracing in your Azure AI Foundry project.")
+    exit()
+
+configure_azure_monitor(connection_string=connection_string) #enable telemetry collection
+from opentelemetry import trace
+tracer = trace.get_tracer(__name__)
 
 from bbmcp import main
 
@@ -741,4 +768,5 @@ def mcp_audio_chat_interface():
         st.error(f"❌ Error in MCP Audio Chat: {str(e)}")
 
 if __name__ == "__main__":
-    main()
+    with tracer.start_as_current_span("AzureAIFoundrye2eAgent-tracing"):
+        main()
