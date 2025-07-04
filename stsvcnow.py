@@ -35,6 +35,26 @@ client = AzureOpenAI(
     api_version="2024-06-01"  # Adjust API version as needed
 )
 
+os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true" 
+
+# Create the project client (Foundry project and credentials)
+project_client = AIProjectClient(
+    endpoint=AZURE_ENDPOINT,
+    credential=DefaultAzureCredential(),
+)
+
+
+from azure.monitor.opentelemetry import configure_azure_monitor
+connection_string = project_client.telemetry.get_connection_string()
+
+if not connection_string:
+    print("Application Insights is not enabled. Enable by going to Tracing in your Azure AI Foundry project.")
+    exit()
+
+configure_azure_monitor(connection_string=connection_string) #enable telemetry collection
+from opentelemetry import trace
+tracer = trace.get_tracer(__name__)
+
 class ServiceNowIncidentManager:
     """Manager for ServiceNow incident data and AI interactions."""
     
@@ -1253,4 +1273,5 @@ def main():
                     st.info(f"📊 **Total:** {total} | ✅ **Resolved:** {resolved} | 🔥 **High Priority:** {high_priority}")
 
 if __name__ == "__main__":
-    main()
+    with tracer.start_as_current_span("ServiceNowAgent-tracing"):
+        main()
