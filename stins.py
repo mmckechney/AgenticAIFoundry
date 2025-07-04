@@ -10,14 +10,18 @@ import json
 import soundfile as sf
 import numpy as np
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Any, Callable, Set, Dict, List, Optional
 from scipy.signal import resample
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
+from azure.ai.agents.models import FunctionTool
+
 
 from dotenv import load_dotenv
+
+from agentutils.user_functions_with_traces import fetch_weather
 
 # Load environment variables
 load_dotenv()
@@ -34,6 +38,45 @@ client = AzureOpenAI(
     api_key=AZURE_API_KEY,
     api_version="2024-06-01"  # Adjust API version as needed
 )
+
+def fetch_insurance(firstname: str, lastname: str, dob: str, company: str, age: int, preexisting_conditions: str) -> str:
+    """
+    Fetches the insurance information for the specified user.
+
+    :param firstname: The first name of the user.
+    :param lastname: The last name of the user.
+    :param dob: The date of birth of the user.
+    :param company: The name of the insurance company.
+    :param age: The age of the user.
+    :param preexisting_conditions: A list of pre-existing conditions the user has.
+    :return: Insurance information as a JSON string.
+    """
+    returntxt = ""
+    # Mock insurance data for demonstration purposes
+    # Get the data from parameter passed to the function
+    if not firstname or not lastname or not dob or not company or age is None or not preexisting_conditions:
+        return json.dumps({"error": "Missing required information. Please provide all details."})
+
+    user_info = {
+        "firstname": firstname,
+        "lastname": lastname,
+        "dob": dob,
+        "company": company,
+        "age": age,
+        "preexisting_conditions": preexisting_conditions
+    }
+
+    if user_info.age < 18:
+        returntxt = "Cost is $400 per month for minors."
+    elif user_info.age < 30:
+        returntxt = "Cost is $600 per month for young adults."
+    elif user_info.age < 50:
+        returntxt = "Cost is $800 per month for adults."
+    else:
+        returntxt = "Cost is $1000 per month for seniors."
+
+    return returntxt
+
 
 def connected_agent(query: str) -> str:
     returntxt = ""
@@ -65,6 +108,11 @@ def connected_agent(query: str) -> str:
     sendemail_connected_agent = ConnectedAgentTool(
         id=sendemail_connected_agent.id, name=sendemail_connected_agent_name, description="Get the quote and Sends an email to the user"
     )
+
+    # Define user functions
+    user_functions = {fetch_insurance}
+    # Initialize the FunctionTool with user-defined functions
+    functions = FunctionTool(functions=user_functions)
 
     # File search agent
     # Define the path to the file to be uploaded
