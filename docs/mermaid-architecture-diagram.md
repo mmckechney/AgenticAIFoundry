@@ -382,7 +382,7 @@ graph TB
     TermsExtraction --> ResponseAssembly
     DeliveryService --> ResponseAssembly
     
-    ResponseAssembly --> FinalFormat[Final Response<br/>QUOTE<br/>quote details<br/>[EMAIL OUTPUT]<br/>confirmation]
+    ResponseAssembly --> FinalFormat[Final Response<br/>QUOTE<br/>quote details<br/>EMAIL OUTPUT<br/>confirmation]
     FinalFormat --> StreamlitUI
     
     %% Azure AI Foundry Integration
