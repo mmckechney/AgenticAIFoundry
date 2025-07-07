@@ -18,3 +18,4 @@ pydub
 azure-mgmt-logic
 gtts
 aiortc
+plotly.express

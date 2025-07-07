@@ -1,0 +1,184 @@
+{
+  "assessment_sections": [
+    {
+      "section_id": "strategy_governance",
+      "section_name": "Strategy & Governance",
+      "questions": [
+        {
+          "question_id": "sg_001",
+          "question": "Does the organization have a documented AI strategy?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No" },
+            { "value": 2, "label": "Partially documented" },
+            { "value": 3, "label": "Fully documented but not aligned with business goals" },
+            { "value": 4, "label": "Fully documented and partially aligned with business goals" },
+            { "value": 5, "label": "Fully documented and aligned with business goals" }
+          ]
+        },
+        {
+          "question_id": "sg_002",
+          "question": "Are AI initiatives tied to specific business outcomes (e.g., cost reduction, revenue growth, customer experience)?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No alignment" },
+            { "value": 2, "label": "Some alignment" },
+            { "value": 3, "label": "Partial alignment" },
+            { "value": 4, "label": "Mostly aligned" },
+            { "value": 5, "label": "Fully aligned" }
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "data_infrastructure",
+      "section_name": "Data & Infrastructure",
+      "questions": [
+        {
+          "question_id": "di_001",
+          "question": "How would you rate the quality of your data for AI use cases?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "Poor quality" },
+            { "value": 2, "label": "Moderate quality" },
+            { "value": 3, "label": "Good quality" },
+            { "value": 4, "label": "Very good quality" },
+            { "value": 5, "label": "High-quality and relevant" }
+          ]
+        },
+        {
+          "question_id": "di_002",
+          "question": "Are data governance policies in place?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No policies" },
+            { "value": 2, "label": "Some policies" },
+            { "value": 3, "label": "Partial policies" },
+            { "value": 4, "label": "Most policies" },
+            { "value": 5, "label": "Comprehensive policies" }
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "technology_tools",
+      "section_name": "Technology & Tools",
+      "questions": [
+        {
+          "question_id": "tt_001",
+          "question": "Are AI/ML tools and platforms being used?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No tools or platforms" },
+            { "value": 2, "label": "Basic tools" },
+            { "value": 3, "label": "Intermediate tools" },
+            { "value": 4, "label": "Advanced tools" },
+            { "value": 5, "label": "Leading-edge tools" }
+          ]
+        },
+        {
+          "question_id": "tt_002",
+          "question": "Are AI models currently deployed?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No models" },
+            { "value": 2, "label": "Some models" },
+            { "value": 3, "label": "Several models" },
+            { "value": 4, "label": "Most models" },
+            { "value": 5, "label": "All models" }
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "skills_culture",
+      "section_name": "Skills & Culture",
+      "questions": [
+        {
+          "question_id": "sc_001",
+          "question": "How would you rate the AI/ML skills of your team?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No skills" },
+            { "value": 2, "label": "Basic skills" },
+            { "value": 3, "label": "Intermediate skills" },
+            { "value": 4, "label": "Advanced skills" },
+            { "value": 5, "label": "Expert skills" }
+          ]
+        },
+        {
+          "question_id": "sc_002",
+          "question": "Is there a culture of innovation and experimentation around AI?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No culture" },
+            { "value": 2, "label": "Some culture" },
+            { "value": 3, "label": "Partial culture" },
+            { "value": 4, "label": "Strong culture" },
+            { "value": 5, "label": "Very strong culture" }
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "results_impact",
+      "section_name": "Results & Impact",
+      "questions": [
+        {
+          "question_id": "ri_001",
+          "question": "What business outcomes have been achieved through AI?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No outcomes" },
+            { "value": 2, "label": "Minor outcomes" },
+            { "value": 3, "label": "Moderate outcomes" },
+            { "value": 4, "label": "Significant outcomes" },
+            { "value": 5, "label": "Extraordinary outcomes" }
+          ]
+        },
+        {
+          "question_id": "ri_002",
+          "question": "Are AI initiatives generating measurable ROI?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No ROI" },
+            { "value": 2, "label": "Some ROI" },
+            { "value": 3, "label": "Partial ROI" },
+            { "value": 4, "label": "Most ROI" },
+            { "value": 5, "label": "Full ROI" }
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "responsible_ai",
+      "section_name": "Responsible AI & Trustworthiness",
+      "questions": [
+        {
+          "question_id": "rai_001",
+          "question": "Are AI systems being monitored for bias?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No monitoring" },
+            { "value": 2, "label": "Some monitoring" },
+            { "value": 3, "label": "Partial monitoring" },
+            { "value": 4, "label": "Most monitoring" },
+            { "value": 5, "label": "Comprehensive monitoring" }
+          ]
+        },
+        {
+          "question_id": "rai_002",
+          "question": "Are AI initiatives compliant with regulations?",
+          "type": "Likert",
+          "answers": [
+            { "value": 1, "label": "No compliance" },
+            { "value": 2, "label": "Some compliance" },
+            { "value": 3, "label": "Partial compliance" },
+            { "value": 4, "label": "Most compliance" },
+            { "value": 5, "label": "Full compliance" }
+          ]
+        }
+      ]
+    }
+  ]
+}
