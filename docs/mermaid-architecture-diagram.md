@@ -382,7 +382,7 @@ graph TB
     TermsExtraction --> ResponseAssembly
     DeliveryService --> ResponseAssembly
     
-    ResponseAssembly --> FinalFormat[Final Response<br/>[QUOTE]<br/>quote details<br/>[EMAIL OUTPUT]<br/>confirmation]
+    ResponseAssembly --> FinalFormat[Final Response<br/>(QUOTE)<br/>quote details<br/>(EMAIL OUTPUT)<br/>confirmation]
     FinalFormat --> StreamlitUI
     
     %% Azure AI Foundry Integration
@@ -448,7 +448,7 @@ sequenceDiagram
     
     %% Response Assembly
     MA->>MA: Assemble final response
-    Note over MA: Format: [QUOTE]\nquote details\n[EMAIL OUTPUT]\nconfirmation
+    Note over MA: Format: (QUOTE)\nquote details\n(EMAIL OUTPUT)\nconfirmation
     MA->>UI: Return structured response
     UI->>U: Display complete insurance quote & confirmation
     
