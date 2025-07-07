@@ -145,7 +145,24 @@ This comprehensive documentation suite provides complete guidance for understand
 - Immediate problem resolution
 - Code pattern lookup
 
-### 8. [ServiceNow AI Assistant Documentation](./stsvcnow-index.md)
+### 8. [AI Maturity Assessment Tool Documentation](./stasses-ai-maturity-assessment.md)
+**Primary Purpose**: Comprehensive documentation suite for the AI Maturity Assessment Tool (stasses.py)
+
+**Target Audience**: Business leaders, AI strategists, developers, and organizations evaluating AI readiness
+
+**Key Contents**:
+- **[Main Documentation](./stasses-ai-maturity-assessment.md)**: Complete tool overview, features, and usage guide
+- **[Technical Architecture](./stasses-technical-architecture.md)**: System architecture, components, and integration patterns
+- **[Mermaid Diagrams](./stasses-mermaid-diagrams.md)**: Visual architecture diagrams and assessment workflows
+- **[Quick Reference](./stasses-quick-reference.md)**: Developer-friendly setup guide and troubleshooting
+
+**When to Use**:
+- AI maturity evaluation and strategic planning
+- Understanding assessment methodology and scoring
+- Technical implementation and customization
+- Organizational AI transformation guidance
+
+### 9. [ServiceNow AI Assistant Documentation](./stsvcnow-index.md)
 **Primary Purpose**: Comprehensive documentation suite for the ServiceNow AI Assistant multi-agent system
 
 **Target Audience**: Developers, architects, and technical teams working with ServiceNow AI integration
@@ -163,7 +180,7 @@ This comprehensive documentation suite provides complete guidance for understand
 - Integrating Connected Agent tools and workflows
 - Voice-enabled IT service management systems
 
-### 9. [Web Application Documentation](../WEB_APP_README.md)
+### 10. [Web Application Documentation](../WEB_APP_README.md)
 **Primary Purpose**: Comprehensive guide for the Streamlit web interface
 
 **Target Audience**: End users, developers, and administrators using the web interface
@@ -209,6 +226,13 @@ This comprehensive documentation suite provides complete guidance for understand
 2. **Technical Planning**: [Audio System Design Document](./audio-system-design-document.md) - Architecture and implementation details
 3. **Integration**: [Implementation Guide](./implementation-guide.md) - Azure services setup and configuration
 4. **Production Deployment**: [Audio System Design Document](./audio-system-design-document.md) - Deployment Architecture section
+
+### For AI Maturity Assessment & Strategic Planning
+1. **Business Planning**: [AI Maturity Assessment Tool Documentation](./stasses-ai-maturity-assessment.md) - Complete assessment methodology and business value
+2. **Technical Implementation**: [AI Maturity Assessment Technical Architecture](./stasses-technical-architecture.md) - System architecture and Azure integration
+3. **Visual Overview**: [AI Maturity Assessment Mermaid Diagrams](./stasses-mermaid-diagrams.md) - Assessment workflows and system diagrams
+4. **Quick Setup**: [AI Maturity Assessment Quick Reference](./stasses-quick-reference.md) - Setup guide and troubleshooting
+5. **Azure Configuration**: [Implementation Guide](./implementation-guide.md) - Azure AI Foundry setup
 
 ### For ServiceNow AI Assistant Implementation
 1. **Overview**: [ServiceNow AI Assistant Documentation](./stsvcnow-index.md) - Complete documentation index
@@ -260,6 +284,13 @@ This comprehensive documentation suite provides complete guidance for understand
 - **Framework Details**: [Technical Diagrams](./technical-diagrams.md) → Security Testing Diagrams
 - **Implementation**: [Implementation Guide](./implementation-guide.md) → Security Testing Implementation
 - **Quick Setup**: [Quick Reference Guide](./quick-reference.md) → Security Testing
+
+#### AI Maturity Assessment
+- **Assessment Overview**: [AI Maturity Assessment Tool Documentation](./stasses-ai-maturity-assessment.md) → Complete assessment methodology
+- **System Architecture**: [AI Maturity Assessment Technical Architecture](./stasses-technical-architecture.md) → Component design and Azure integration
+- **Visual Workflows**: [AI Maturity Assessment Mermaid Diagrams](./stasses-mermaid-diagrams.md) → Assessment flows and system diagrams
+- **Quick Setup**: [AI Maturity Assessment Quick Reference](./stasses-quick-reference.md) → Setup guide and troubleshooting
+- **Business Value**: [AI Maturity Assessment Tool Documentation](./stasses-ai-maturity-assessment.md) → Quadrant model and strategic guidance
 
 #### ServiceNow AI Assistant
 - **Documentation Index**: [ServiceNow AI Assistant](./stsvcnow-index.md) → Complete documentation suite
