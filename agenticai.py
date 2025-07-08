@@ -916,13 +916,15 @@ def existing_connected_agent(query: str) -> str:
 
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
+        returntxt = f"Run failed: {run.last_error}\n"
     else:
         messages = project.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
-
         for message in messages:
-            if message.text_messages:
-                print(f"{message.role}: {message.text_messages[-1].text.value}")
-                returntxt += f"{message.text_messages[-1].text.value}\n"
+            if message.role == MessageRole.AGENT:
+                print(f"Role: {message.role}, Content: {message.content}")
+                # returntxt += f"Role: {message.role}, Content: {message.content}\n"
+                # returntxt += f"Source: {message.content[0]['text']['value']}\n"
+                returntxt += f"Source: {message.content[0].text.value}\n"
 
     return returntxt
 
