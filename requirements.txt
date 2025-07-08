@@ -19,3 +19,4 @@ azure-mgmt-logic
 gtts
 aiortc
 plotly.express
+semantic-kernel
