@@ -19,7 +19,8 @@ try:
         connected_agent,
         ai_search_agent,
         delete_agent,
-        process_message_reasoning
+        process_message_reasoning,
+        existing_connected_agent
     )
     DEPENDENCIES_AVAILABLE = True
 except ImportError as e:
@@ -456,6 +457,15 @@ def main():
                             connected_agentrs = connected_agent(query)
                             st.write("**Agent Response:**")
                             st.info(connected_agentrs)
+                        else:
+                            time.sleep(2)
+                            st.info(f"**Agent Response:** The current stock price of Microsoft (MSFT) is $425.67 (Demo response for: '{query}')")
+                if st.button("🚀 Connect to Existing Agent", key="connected_agent_existing"):
+                    with st.spinner("🔄 Connecting to agent...", show_time=True):
+                        if DEPENDENCIES_AVAILABLE:
+                            ex_connected_agentrs = existing_connected_agent(query)
+                            st.write("**Agent Response:**")
+                            st.info(ex_connected_agentrs)
                         else:
                             time.sleep(2)
                             st.info(f"**Agent Response:** The current stock price of Microsoft (MSFT) is $425.67 (Demo response for: '{query}')")

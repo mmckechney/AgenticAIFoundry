@@ -892,6 +892,40 @@ def connected_agent(query: str) -> str:
 
     return returntxt
 
+def existing_connected_agent(query: str) -> str:
+    returntxt = ""
+
+    project = AIProjectClient(
+    credential=DefaultAzureCredential(),
+    endpoint=endpoint)
+
+    agent = project.agents.get_agent("asst_CdFYKwzfsO6xIscJEYV30vpE")
+
+    thread = project.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    message = project.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=query
+    )
+
+    run = project.agents.runs.create_and_process(
+        thread_id=thread.id,
+        agent_id=agent.id)
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+    else:
+        messages = project.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+
+        for message in messages:
+            if message.text_messages:
+                print(f"{message.role}: {message.text_messages[-1].text.value}")
+                returntxt += f"{message.text_messages[-1].text.value}\n"
+
+    return returntxt
+
 def delete_agent():
     # Authenticate and create the project client
     project_client = AIProjectClient(
