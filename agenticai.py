@@ -1045,7 +1045,7 @@ def msft_learn_mcp_agent(query: str) -> str:
     returntxt = ""
 
     # Retrieve the endpoint from environment variables
-    project_endpoint = os.environ["PROJECT_ENDPOINT"]
+    project_endpoint = os.environ["PROJECT_ENDPOINT_WEST"]
     # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
 
     # Initialize the AIProjectClient
