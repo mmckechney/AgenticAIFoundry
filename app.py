@@ -330,7 +330,8 @@ def main():
                     with st.spinner("🔄 Running AI evaluation...", show_time=True):
                         if DEPENDENCIES_AVAILABLE:
                             evalrs = ai_eval()
-                            st.json(evalrs)
+                            # st.json(evalrs)
+                            st.write(evalrs)
                         else:
                             time.sleep(3)
                             st.success("✅ AI evaluation completed! (Demo mode)")
@@ -367,7 +368,8 @@ def main():
                 with st.spinner("🔄 Running RedTeam security analysis...", show_time=True):
                     if DEPENDENCIES_AVAILABLE:
                         redteamrs = asyncio.run(redteam())
-                        st.json(redteamrs)
+                        # st.json(redteamrs)
+                        st.write(redteamrs)
                     else:
                         time.sleep(4)
                         st.success("✅ Security testing completed! (Demo mode)")
