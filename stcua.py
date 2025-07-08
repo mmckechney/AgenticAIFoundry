@@ -46,12 +46,12 @@ def cuarun(query: str) -> str:
             "type": "computer_use_preview",
             "display_width": 1024,
             "display_height": 768,
-            "environment": "browser" # other possible values: "mac", "windows", "ubuntu"
+            "environment": "windows" # other possible values: "mac", "windows", "ubuntu", "browser"
         }],
         input=[
             {
                 "role": "user",
-                "content": "Check the latest AI news on bing.com."
+                "content": "Can you open microsoft word."
             }
         ],
         truncation="auto",

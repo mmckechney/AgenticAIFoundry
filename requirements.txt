@@ -19,3 +19,5 @@ azure-mgmt-logic
 gtts
 aiortc
 plotly.express
+pyautogui>=0.9.54
+Pillow>=11.1.0
