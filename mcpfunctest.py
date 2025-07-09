@@ -65,7 +65,7 @@ def mcp_generate_chat_response(context):
             {
                 "type": "mcp",
                 "server_label": "aiagentmcp",
-                "server_url": "https://mcpaiagents.azurewebsites.net/runtime/webhooks/mcp/sse", # "http://localhost:7071/runtime/webhooks/mcp/sse", #"https://mcpaiagents.azurewebsites.net/runtime/webhooks/mcp/sse",
+                "server_url": os.getenv("MCP_FUNCTION_URL"),
                 "require_approval": "never"
             },
         ],
