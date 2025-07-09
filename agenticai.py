@@ -1117,7 +1117,7 @@ def hf_mcp_agent(query: str) -> str:
     # Retrieve the endpoint from environment variables
     project_endpoint = os.environ["PROJECT_ENDPOINT_WEST"]
     # https://learn.microsoft.com/en-us/azure/ai-services/agents/how-to/tools/azure-ai-search-samples?pivots=python
-
+    # https://github.com/Azure/azure-sdk-for-python/blob/glharper/agents-mcp-tool/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp.py
     # Initialize the AIProjectClient
     project_client = AIProjectClient(
         endpoint=project_endpoint,
