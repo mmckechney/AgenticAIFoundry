@@ -64,7 +64,7 @@ def mcp_generate_chat_response(context):
         tools=[
             {
                 "type": "mcp",
-                "server_label": "AzureCustomFunctionMCP",
+                "server_label": "aiagentmcp",
                 "server_url": "https://mcpaiagents.azurewebsites.net/runtime/webhooks/mcp/sse",
                 "require_approval": "never"
             },

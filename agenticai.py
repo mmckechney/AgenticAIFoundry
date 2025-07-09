@@ -61,6 +61,7 @@ from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, Me
 from utils import send_email
 from user_logic_apps import AzureLogicAppTool, create_send_email_function
 from azure.ai.agents.models import MessageTextContent, ListSortOrder
+from azure.ai.agents.models import McpTool, RequiredMcpToolCall, SubmitToolApprovalAction, ToolApproval
 
 from dotenv import load_dotenv
 
@@ -1123,57 +1124,140 @@ def hf_mcp_agent(query: str) -> str:
         credential=DefaultAzureCredential(exclude_interactive_browser_credential=False),
         # api_version="latest",
     )
+    # [START create_agent_with_mcp]
+    # Initialize agent MCP tool
+    mcp_tool = McpTool(
+        server_label="huggingface",
+        server_url="https://hf.co/mcp",
+        allowed_tools=[],  # Optional: specify allowed tools
+    )
+
+    # You can also add or remove allowed tools dynamically
+    # search_api_code = "search_azure_rest_api_code"
+    # mcp_tool.add_allowed_tool(search_api_code)
+    # print(f"Allowed tools: {mcp_tool.allowed_tools}")
 
     with project_client:
         agent = project_client.agents.create_agent(
             model=os.environ["MODEL_DEPLOYMENT_NAME"], 
             name="msftlearnmcp-agent", 
             instructions="You are a helpful assistant. Use the tools provided to answer the user's questions. Be sure to cite your sources.",
-            tools= [
-                {
-                    "type": "mcp",
-                    "server_label": "huggingface",
-                    "server_url": "https://hf.co/mcp",
-                    "require_approval": "never"
-                }
-            ],
+            # tools= [
+            #     {
+            #         "type": "mcp",
+            #         "server_label": "huggingface",
+            #         "server_url": "https://hf.co/mcp",
+            #         "require_approval": "never"
+            #     }
+            # ],
+            tools=mcp_tool.definitions,
             tool_resources=None
         )
         print(f"Created agent, agent ID: {agent.id}")
+        print(f"MCP Server: {mcp_tool.server_label} at {mcp_tool.server_url}")
         thread = project_client.agents.threads.create()
         print(f"Created thread, thread ID: {thread.id}")
 
         message = project_client.agents.messages.create(
-            thread_id=thread.id, role="user", content="<a question for your MCP server>",
+            thread_id=thread.id, role="user", content=query,
         )
         print(f"Created message, message ID: {message.id}")
 
+        # Create and process agent run in thread with MCP tools
+        # mcp_tool.update_headers("SuperSecret", "123456")
+        mcp_tool.update_require_approval("never")
+        print(mcp_tool)
+
         run = project_client.agents.runs.create(thread_id=thread.id, agent_id=agent.id)
+        print(f"Created run, ID: {run.id}")
         
-        # Poll the run as long as run status is queued or in progress
         while run.status in ["queued", "in_progress", "requires_action"]:
-            # Wait for a second
             time.sleep(1)
             run = project_client.agents.runs.get(thread_id=thread.id, run_id=run.id)
-            print(f"Run status: {run.status}")
 
+            if run.status == "requires_action" and isinstance(run.required_action, SubmitToolApprovalAction):
+                tool_calls = run.required_action.submit_tool_approval.tool_calls
+                if not tool_calls:
+                    print("No tool calls provided - cancelling run")
+                    project_client.runs.cancel(thread_id=thread.id, run_id=run.id)
+                    break
+
+                tool_approvals = []
+                for tool_call in tool_calls:
+                    if isinstance(tool_call, RequiredMcpToolCall):
+                        try:
+                            print(f"Approving tool call: {tool_call}")
+                            tool_approvals.append(
+                                ToolApproval(
+                                    tool_call_id=tool_call.id,
+                                    approve=True,
+                                    headers=mcp_tool.headers,
+                                )
+                            )
+                        except Exception as e:
+                            print(f"Error approving tool_call {tool_call.id}: {e}")
+
+                print(f"tool_approvals: {tool_approvals}")
+                if tool_approvals:
+                    project_client.agents.runs.submit_tool_outputs(
+                        thread_id=thread.id, run_id=run.id, tool_approvals=tool_approvals
+                    )
+
+            print(f"Current run status: {run.status}")
+
+        # run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+        # for step in run_steps:
+        #     print(f"Run step: {step.id}, status: {step.status}, type: {step.type}")
+        #     if step.type == "tool_calls":
+        #         print(f"Tool call details:")
+        #         for tool_call in step.step_details.tool_calls:
+        #             print(json.dumps(tool_call.as_dict(), indent=2))
+
+        # messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+        # for data_point in messages:
+        #     last_message_content = data_point.content[-1]
+        #     if isinstance(last_message_content, MessageTextContent):
+        #         print(f"{data_point.role}: {last_message_content.text.value}")
+        #         returntxt += f"{data_point.role}: {last_message_content.text.value}\n"
+        print(f"Run completed with status: {run.status}")
         if run.status == "failed":
-            print(f"Run error: {run.last_error}")
+            print(f"Run failed: {run.last_error}")
 
+        # Display run steps and tool calls
         run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
-        for step in run_steps:
-            print(f"Run step: {step.id}, status: {step.status}, type: {step.type}")
-            if step.type == "tool_calls":
-                print(f"Tool call details:")
-                for tool_call in step.step_details.tool_calls:
-                    print(json.dumps(tool_call.as_dict(), indent=2))
 
-        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
-        for data_point in messages:
-            last_message_content = data_point.content[-1]
-            if isinstance(last_message_content, MessageTextContent):
-                print(f"{data_point.role}: {last_message_content.text.value}")
-                returntxt += f"{data_point.role}: {last_message_content.text.value}\n"
+        # Loop through each step
+        for step in run_steps:
+            print(f"Step {step['id']} status: {step['status']}")
+
+            # Check if there are tool calls in the step details
+            step_details = step.get("step_details", {})
+            tool_calls = step_details.get("tool_calls", [])
+
+            if tool_calls:
+                print("  MCP Tool calls:")
+                for call in tool_calls:
+                    print(f"    Tool Call ID: {call.get('id')}")
+                    print(f"    Type: {call.get('type')}")
+
+                    # Handle MCP tool calls
+                    if call.get("type") == "mcp":
+                        print(call)
+            print()  # add an extra newline between steps
+
+        # Fetch and log all messages
+        messages = project_client.agents.messages.list(thread_id=thread.id)
+        print("\nConversation:")
+        print("-" * 50)
+        for msg in messages:
+            if msg.text_messages:
+                last_text = msg.text_messages[-1]
+                print(f"{msg.role.upper()}: {last_text.text.value}")
+                print("-" * 50)
+
+        # Example of dynamic tool management
+        print(f"\nDemonstrating dynamic tool management:")
+        print(f"Current allowed tools: {mcp_tool.allowed_tools}")
         project_client.agents.delete_agent(agent.id)
         project_client.agents.threads.delete(thread.id)
         print(f"Deleted agent, agent ID: {agent.id}")

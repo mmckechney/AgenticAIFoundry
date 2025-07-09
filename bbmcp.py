@@ -250,6 +250,7 @@ def bbgithub_generate_chat_response(transcription, context):
 def hf_generate_chat_response(transcription, context):
     """Generate a chat response using Azure OpenAI with tool calls."""
     returntxt = ""
+    # https://github.com/Azure/azure-sdk-for-python/blob/glharper/agents-mcp-tool/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp.py
 
     prompt = f"""
     You are a helpful assistant. Use the following context and tools to answer the user's query.
