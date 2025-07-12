@@ -11,21 +11,12 @@ import io
 import os
 import time
 import json
-import soundfile as sf
 import numpy as np
 from datetime import datetime
 from typing import Any, Callable, Set, Dict, List, Optional
-from scipy.signal import resample
-from azure.ai.projects import AIProjectClient
-from azure.identity import DefaultAzureCredential
-from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
-from azure.ai.agents.models import ConnectedAgentTool, MessageRole
-from azure.ai.agents.models import FunctionTool
 
 
 from dotenv import load_dotenv
-
-from agentutils.user_functions_with_traces import fetch_weather
 
 # Load environment variables
 load_dotenv()
@@ -42,26 +33,6 @@ client = AzureOpenAI(
     api_key=AZURE_API_KEY,
     api_version="2024-06-01"  # Adjust API version as needed
 )
-
-os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true" 
-project_endpoint = os.environ["PROJECT_ENDPOINT"]
-# Create the project client (Foundry project and credentials)
-project_client = AIProjectClient(
-    endpoint=project_endpoint,
-    credential=DefaultAzureCredential(),
-)
-
-
-from azure.monitor.opentelemetry import configure_azure_monitor
-connection_string = project_client.telemetry.get_connection_string()
-
-if not connection_string:
-    print("Application Insights is not enabled. Enable by going to Tracing in your Azure AI Foundry project.")
-    exit()
-
-configure_azure_monitor(connection_string=connection_string) #enable telemetry collection
-from opentelemetry import trace
-tracer = trace.get_tracer(__name__)
 
 # --- Load Assessment Configuration from JSON ---
 import json
@@ -90,6 +61,7 @@ def aoai_callback(query: str) -> str:
         """You are a AI Assesment assistant, Process the user query and provide a detailed response.
         Based on the scores between 1 to 5 where 1 is the lowest and 5 is the highest.
         Provide detail recommendation on a strategy to improve the AI maturity of the organization.
+        Provide a section on what use cases to start with based on the assesment output provided.
         Provide Step by step on guidance to implement the recommendations.
         """
     )
