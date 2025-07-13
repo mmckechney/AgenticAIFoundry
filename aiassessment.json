@@ -59,5 +59,41 @@
       {"text": "Are AI initiatives compliant with regulations?", "desc": "1 = No, 5 = Fully compliant."},
       {"text": "Are there policies for AI fairness, transparency, and accountability?", "desc": "1 = No, 5 = Yes, well established."}
     ]
+  },
+  {
+    "name": "Generative AI Use Cases",
+    "weight": 0.1,
+    "questions": [
+      {"text": "Is the organization exploring or implementing generative AI for content creation (e.g., text, images, or code)?", "desc": "1 = No, 5 = Actively implemented with measurable outcomes."},
+      {"text": "How effective is the organization at identifying generative AI use cases (e.g., chatbots, automated reports, or creative content)?", "desc": "1 = Not effective, 5 = Highly effective with clear use cases."},
+      {"text": "Are there processes to evaluate the quality and ethical implications of generative AI outputs?", "desc": "1 = No process, 5 = Robust evaluation and ethical guidelines in place."}
+    ]
+  },
+  {
+    "name": "Vision-Based Use Cases",
+    "weight": 0.1,
+    "questions": [
+      {"text": "Is the organization utilizing vision-based AI for tasks like image recognition, object detection, or video analysis?", "desc": "1 = No, 5 = Actively deployed with strong results."},
+      {"text": "How well does the organization identify opportunities for vision-based AI applications (e.g., quality control, surveillance, or medical imaging)?", "desc": "1 = No process, 5 = Systematic identification process."},
+      {"text": "Are there sufficient data and infrastructure to support vision-based AI models?", "desc": "1 = No, 5 = Fully equipped with high-quality data and infrastructure."}
+    ]
+  },
+  {
+    "name": "Traditional Deep Learning & ML Use Cases",
+    "weight": 0.1,
+    "questions": [
+      {"text": "Is the organization implementing traditional ML or deep learning models for tasks like predictive analytics, classification, or regression?", "desc": "1 = No, 5 = Actively deployed with measurable success."},
+      {"text": "How effective is the organization at identifying traditional ML use cases (e.g., customer segmentation, fraud detection, or demand forecasting)?", "desc": "1 = Not effective, 5 = Highly effective with clear use cases."},
+      {"text": "Are there adequate tools and expertise to develop and maintain traditional ML models?", "desc": "1 = No, 5 = Advanced tools and skilled teams in place."}
+    ]
+  },
+  {
+    "name": "Audio-Based Use Cases",
+    "weight": 0.1,
+    "questions": [
+      {"text": "Is the organization leveraging audio-based AI for applications like speech recognition, voice assistants, or audio analysis?", "desc": "1 = No, 5 = Actively deployed with strong outcomes."},
+      {"text": "How effective is the organization at identifying audio-based AI use cases (e.g., call center analytics, voice authentication, or audio event detection)?", "desc": "1 = Not effective, 5 = Highly effective with clear use cases."},
+      {"text": "Are there sufficient data and infrastructure to support audio-based AI models?", "desc": "1 = No, 5 = Fully equipped with high-quality data and infrastructure."}
+    ]
   }
 ]
