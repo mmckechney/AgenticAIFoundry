@@ -20,13 +20,16 @@ try:
         ai_search_agent,
         delete_agent,
         process_message_reasoning,
-        existing_connected_agent
+        existing_connected_agent,
     )
     DEPENDENCIES_AVAILABLE = True
 except ImportError as e:
     st.warning(f"⚠️ Some Azure AI dependencies are not installed: {e}")
     st.info("Running in demo mode with simulated responses.")
     DEPENDENCIES_AVAILABLE = False
+
+from stasses import assesmentmain
+from stfinetuneasses import finetuneassesment
 
 from dotenv import load_dotenv
 
@@ -258,6 +261,10 @@ def main():
         st.session_state.show_mcp_chat = False
     if "mcp_messages" not in st.session_state:
         st.session_state.mcp_messages = []
+    if "show_ai_assessment" not in st.session_state:
+        st.session_state.show_ai_assessment = False
+    if "show_finetune_assessment" not in st.session_state:
+        st.session_state.show_finetune_assessment = False
     
     # Main header with gradient background
     st.markdown("""
@@ -294,7 +301,76 @@ def main():
 
     with col1:
         st.markdown("### 🚀 Agent Operations")
-        
+
+        # Assessment Phase
+        with st.expander("📝 Assessment Phase", expanded=True):
+            # Create a scrollable container for the assessment content
+            st.markdown("""
+            <div style="
+                max-height: 600px; 
+                overflow-y: auto; 
+                padding: 15px; 
+                border: 1px solid var(--md-sys-color-outline-variant); 
+                border-radius: 12px;
+                background: var(--md-sys-color-surface);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                margin: 10px 0;
+            ">
+            """, unsafe_allow_html=True)
+            
+            col_eval1, col_eval2 = st.columns(2)
+
+            with col_eval1:
+                st.markdown("### 🎯 AI Maturity Assessment")
+                st.write("Evaluate your organization's AI maturity across key dimensions")
+                
+                if st.button("📊 Start AI Maturity Assessment", key="start_assessment"):
+                    st.session_state.show_ai_assessment = True
+                    st.session_state.show_finetune_assessment = False
+                    st.rerun()
+
+            with col_eval2:
+                st.markdown("### 🔧 Fine-Tuning Assessment")
+                st.write("Get personalized guidance for AI model fine-tuning")
+                
+                if st.button("📊 Start Fine Tuning Assessment", key="start_finetuneassesment"):
+                    st.session_state.show_finetune_assessment = True
+                    st.session_state.show_ai_assessment = False
+                    st.rerun()
+            
+            # Display the selected assessment
+            if st.session_state.get("show_ai_assessment", False):
+                st.markdown("---")
+                st.markdown("### 🤖 AI Maturity Assessment")
+                try:
+                    assesmentmain()
+                except Exception as e:
+                    st.error(f"Error loading AI assessment: {str(e)}")
+                    if st.button("� Retry AI Assessment", key="retry_ai_assessment"):
+                        st.rerun()
+            
+            elif st.session_state.get("show_finetune_assessment", False):
+                st.markdown("---")
+                st.markdown("### 🔧 Fine-Tuning Assessment")
+                try:
+                    finetuneassesment()
+                except Exception as e:
+                    st.error(f"Error loading fine-tuning assessment: {str(e)}")
+                    if st.button("🔄 Retry Fine-Tuning Assessment", key="retry_finetune_assessment"):
+                        st.rerun()
+            
+            # Close assessment buttons
+            if st.session_state.get("show_ai_assessment", False) or st.session_state.get("show_finetune_assessment", False):
+                st.markdown("---")
+                col_close1, col_close2, col_close3 = st.columns([1, 1, 1])
+                with col_close2:
+                    if st.button("❌ Close Assessment", key="close_assessment"):
+                        st.session_state.show_ai_assessment = False
+                        st.session_state.show_finetune_assessment = False
+                        st.rerun()
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+
         # Development Phase
         with st.expander("🔧 Development Phase", expanded=True):
             st.markdown("""
@@ -678,7 +754,7 @@ def mcp_audio_chat_interface():
             if st.button("🗑️ Clear MCP Chat", key="clear_mcp_chat"):
                 st.session_state.mcp_messages = []
                 st.success("✅ MCP chat history cleared!")
-                st.experimental_rerun()
+                st.rerun()
 
         # Audio input
         st.markdown("""

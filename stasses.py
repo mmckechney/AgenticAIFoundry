@@ -88,7 +88,8 @@ def aoai_callback(query: str) -> str:
 
 def assesmentmain():
     # --- Streamlit App ---
-    st.set_page_config(page_title="AI Maturity Assessment", layout="wide")
+    # Remove page config when called from main app
+    # st.set_page_config(page_title="AI Maturity Assessment", layout="wide")
     st.title("🤖 AI Maturity Assessment Tool")
     st.write("Evaluate your organization's AI maturity across key dimensions and get tailored recommendations.")
 
@@ -209,11 +210,7 @@ def assesmentmain():
                     st.markdown("### AI Assistant Recommendations")
                     st.write(resultrs)
 
-
-
             st.success("Assessment complete! Use this roadmap to guide your AI journey. You can adjust your answers and see how your quadrant and recommendations change.")
-
-    
 
 if __name__ == "__main__":
     assesmentmain()

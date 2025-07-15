@@ -223,140 +223,145 @@ def get_ai_guidance(task_description, responses):
         return retturntxt
     except Exception as e:
         return f"Error getting AI guidance: {str(e)}"
-
+    
 questionnaire = load_questionnaire()
 
-# Check Azure OpenAI configuration
-if not AZURE_ENDPOINT or not AZURE_API_KEY:
-    st.error("Azure OpenAI configuration is missing. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY environment variables.")
-    st.stop()
+def finetuneassesment():
+    # Check Azure OpenAI configuration (simplified for embedded use)
+    if not AZURE_ENDPOINT or not AZURE_API_KEY:
+        st.warning("⚠️ Azure OpenAI configuration is incomplete. Some features may not work.")
+        st.info("Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY environment variables.")
 
-# Streamlit app
-st.title("🤖 AI Fine-Tuning Guidance Tool")
-st.write("Describe your task and answer the questions below to get personalized fine-tuning guidance from Azure OpenAI GPT-4.")
+    # Streamlit app
+    st.title("🤖 AI Fine-Tuning Guidance Tool")
+    st.write("Describe your task and answer the questions below to get personalized fine-tuning guidance from Azure OpenAI GPT-4.")
 
-# Task description input
-st.header("Step 1: Describe Your Task")
-task_description = st.text_area(
-    "Please describe the specific task you want to fine-tune a model for:",
-    placeholder="e.g., I want to create a chatbot that can answer questions about my company's HR policies and procedures...",
-    height=100
-)
+    # Task description input
+    st.header("Step 1: Describe Your Task")
+    task_description = st.text_area(
+        "Please describe the specific task you want to fine-tune a model for:",
+        placeholder="e.g., I want to create a chatbot that can answer questions about my company's HR policies and procedures...",
+        height=100
+    )
 
-# Initialize session state
-if "responses" not in st.session_state:
-    st.session_state.responses = {}
-if "timestamp" not in st.session_state:
-    from datetime import datetime
-    st.session_state.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Initialize session state
+    if "responses" not in st.session_state:
+        st.session_state.responses = {}
+    if "timestamp" not in st.session_state:
+        from datetime import datetime
+        st.session_state.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# Display all questions in a form
-if questionnaire and "sections" in questionnaire:
-    st.header("Step 2: Answer All Questions")
-    
-    with st.form("fine_tuning_questionnaire"):
-        responses = {}
+    # Display all questions in a form
+    if questionnaire and "sections" in questionnaire:
+        st.header("Step 2: Answer All Questions")
         
-        for section in questionnaire["sections"]:
-            # Handle missing title key
-            section_title = section.get("title", "Questions")
-            st.subheader(section_title)
+        with st.form("fine_tuning_questionnaire"):
+            responses = {}
             
-            # Skip sections without questions
-            if "questions" not in section:
-                continue
-            
-            for question in section["questions"]:
-                # Skip questions without required fields
-                if "id" not in question or "text" not in question or "type" not in question:
+            for section in questionnaire["sections"]:
+                # Handle missing title key
+                section_title = section.get("title", "Questions")
+                st.subheader(section_title)
+                
+                # Skip sections without questions
+                if "questions" not in section:
                     continue
-                    
-                if question["type"] == "boolean":
-                    options = question.get("options", ["Yes", "No"])
-                    response = st.radio(
-                        question["text"],
-                        options,
-                        key=question["id"]
-                    )
-                elif question["type"] == "multiple_choice":
-                    options = question.get("options", [])
-                    if not options:
-                        st.warning(f"No options provided for question: {question['text']}")
+                
+                for question in section["questions"]:
+                    # Skip questions without required fields
+                    if "id" not in question or "text" not in question or "type" not in question:
                         continue
                         
-                    if len(options) <= 4:
+                    if question["type"] == "boolean":
+                        options = question.get("options", ["Yes", "No"])
                         response = st.radio(
                             question["text"],
                             options,
                             key=question["id"]
                         )
-                    else:
-                        response = st.multiselect(
-                            question["text"],
-                            options,
-                            key=question["id"]
-                        )
+                    elif question["type"] == "multiple_choice":
+                        options = question.get("options", [])
+                        if not options:
+                            st.warning(f"No options provided for question: {question['text']}")
+                            continue
+                            
+                        if len(options) <= 4:
+                            response = st.radio(
+                                question["text"],
+                                options,
+                                key=question["id"]
+                            )
+                        else:
+                            response = st.multiselect(
+                                question["text"],
+                                options,
+                                key=question["id"]
+                            )
+                    
+                    responses[question["id"]] = response
+            
+            submitted = st.form_submit_button("Get AI Guidance")
+        
+        # Handle form submission outside the form
+        if submitted:
+            if not task_description.strip():
+                st.error("Please describe your task before submitting.")
+            else:
+                st.session_state.responses = responses
+                st.session_state.task_description = task_description
                 
-                responses[question["id"]] = response
+                # Get AI guidance
+                with st.spinner("Getting personalized fine-tuning guidance from Azure OpenAI..."):
+                    guidance = get_ai_guidance(task_description, responses)
+                
+                st.session_state.guidance = guidance
+                returntxt = guidance
         
-        submitted = st.form_submit_button("Get AI Guidance")
-    
-    # Handle form submission outside the form
-    if submitted:
-        if not task_description.strip():
-            st.error("Please describe your task before submitting.")
-        else:
-            st.session_state.responses = responses
-            st.session_state.task_description = task_description
+        # Display results outside the form
+        if hasattr(st.session_state, 'guidance') and st.session_state.guidance:
+            st.header("Step 3: Personalized Fine-Tuning Guidance")
+            st.markdown(st.session_state.guidance)
             
-            # Get AI guidance
-            with st.spinner("Getting personalized fine-tuning guidance from Azure OpenAI..."):
-                guidance = get_ai_guidance(task_description, responses)
+            # Save responses and guidance
+            col1, col2 = st.columns(2)
+            with col1:
+                responses_data = {
+                    "task_description": st.session_state.task_description,
+                    "responses": st.session_state.responses,
+                    "timestamp": st.session_state.get("timestamp", "")
+                }
+                responses_json = json.dumps(responses_data, indent=2)
+                st.download_button(
+                    label="Download Responses",
+                    data=responses_json,
+                    file_name="fine_tuning_responses.json",
+                    mime="application/json"
+                )
             
-            st.session_state.guidance = guidance
-    
-    # Display results outside the form
-    if hasattr(st.session_state, 'guidance') and st.session_state.guidance:
-        st.header("Step 3: Personalized Fine-Tuning Guidance")
-        st.markdown(st.session_state.guidance)
-        
-        # Save responses and guidance
-        col1, col2 = st.columns(2)
-        with col1:
-            responses_data = {
-                "task_description": st.session_state.task_description,
-                "responses": st.session_state.responses,
-                "timestamp": st.session_state.get("timestamp", "")
-            }
-            responses_json = json.dumps(responses_data, indent=2)
-            st.download_button(
-                label="Download Responses",
-                data=responses_json,
-                file_name="fine_tuning_responses.json",
-                mime="application/json"
-            )
-        
-        with col2:
-            guidance_data = {
-                "task_description": st.session_state.task_description,
-                "guidance": st.session_state.guidance,
-                "timestamp": st.session_state.get("timestamp", "")
-            }
-            guidance_json = json.dumps(guidance_data, indent=2)
-            st.download_button(
-                label="Download Guidance",
-                data=guidance_json,
-                file_name="fine_tuning_guidance.json",
-                mime="application/json"
-            )
-        
-        # Reset option
-        if st.button("Start Over"):
-            st.session_state.responses = {}
-            st.session_state.task_description = ""
-            if hasattr(st.session_state, 'guidance'):
-                del st.session_state.guidance
-            st.rerun()
+            with col2:
+                guidance_data = {
+                    "task_description": st.session_state.task_description,
+                    "guidance": st.session_state.guidance,
+                    "timestamp": st.session_state.get("timestamp", "")
+                }
+                guidance_json = json.dumps(guidance_data, indent=2)
+                st.download_button(
+                    label="Download Guidance",
+                    data=guidance_json,
+                    file_name="fine_tuning_guidance.json",
+                    mime="application/json"
+                )
+            
+            # Reset option
+            if st.button("Start Over"):
+                st.session_state.responses = {}
+                st.session_state.task_description = ""
+                if hasattr(st.session_state, 'guidance'):
+                    del st.session_state.guidance
+                st.rerun()
 
-else:
-    st.error("Could not load questionnaire. Please check the configuration.")
+    else:
+        st.error("Could not load questionnaire. Please check the configuration.")
+
+if __name__ == "__main__":
+    finetuneassesment()
