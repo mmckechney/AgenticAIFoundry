@@ -28,7 +28,7 @@ async def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--instructions", dest="instructions",
-        default="Open Word and type Hello world.",
+        default="Open Word and Then convert Hello world from english to tamil language and then type the translation.",
         help="Instructions to follow")
     parser.add_argument("--model", dest="model",
         default="computer-use-preview")
