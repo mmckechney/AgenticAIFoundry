@@ -17,6 +17,9 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 from azure.ai.agents.models import FilePurpose, FileSearchTool
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import SystemMessage, UserMessage
+from azure.core.credentials import AzureKeyCredential
 import pandas as pd
 
 from dotenv import load_dotenv
@@ -65,7 +68,6 @@ def get_model_list():
         
         # Try to get deployments first (more reliable)
         try:
-            st.info("🔄 Fetching deployed models...")
             deployments = list(project_client.deployments.list())
             
             for deployment in deployments:
@@ -74,46 +76,40 @@ def get_model_list():
                     model_name = getattr(deployment, 'model_name', getattr(deployment, 'name', 'Unknown'))
                     deployment_name = getattr(deployment, 'name', getattr(deployment, 'deployment_name', model_name))
                     status = getattr(deployment, 'status', 'Active')
+                    inference_url = f"{project_endpoint}/models/{deployment_name}/chat/completions"
+                    print(f"Deployment: {deployment_name}, Endpoint URL: {inference_url}")
                     
                     deployed_model_info = {
                         'name': model_name,
                         'deployment_name': deployment_name,
                         'status': status,
                         'endpoint': getattr(deployment, 'endpoint', AZURE_ENDPOINT),
-                        'created_at': getattr(deployment, 'created_at', 'N/A')
+                        'created_at': getattr(deployment, 'created_at', 'N/A'),
+                        'inferenceurl': inference_url
                     }
                     
                     deployed_models.append(deployed_model_info)
                     deployed_model_names.append(deployment_name)  # Use deployment name for selection
                     
                 except Exception as e:
-                    st.warning(f"⚠️ Error processing deployment: {str(e)}")
                     continue
-                    
-            st.success(f"✅ Found {len(deployed_models)} deployed models")
             
         except AttributeError:
-            st.warning("⚠️ deployments.list() not available, using fallback deployed models")
             # Fallback to known deployments
             deployed_models = get_fallback_deployed_models_simple()
             deployed_model_names = [model['deployment_name'] for model in deployed_models]
         except Exception as e:
-            st.error(f"❌ Error fetching deployments: {str(e)}")
             deployed_models = get_fallback_deployed_models_simple()
             deployed_model_names = [model['deployment_name'] for model in deployed_models]
         
         # Try to get catalog models
         try:
-            st.info("🔄 Fetching catalog models...")
             models_iter = project_client.models.list()
             catalog_models = list(models_iter)
-            st.success(f"✅ Found {len(catalog_models)} catalog models")
             
         except AttributeError:
-            st.warning("⚠️ models.list() not available, using fallback catalog")
             catalog_models = get_fallback_catalog_models_simple()
         except Exception as e:
-            st.warning(f"⚠️ Error fetching catalog models: {str(e)}")
             catalog_models = get_fallback_catalog_models_simple()
         
         # Create comprehensive model list
@@ -143,7 +139,6 @@ def get_model_list():
         
         # If no models found, use fallback
         if not all_models:
-            st.warning("⚠️ No models found from API, using fallback models")
             deployed_models = get_fallback_deployed_models_simple()
             deployed_model_names = [model['deployment_name'] for model in deployed_models]
             
@@ -162,7 +157,6 @@ def get_model_list():
         return model_df, deployed_model_names, deployed_models
         
     except Exception as e:
-        st.error(f"❌ Critical error in get_model_list: {str(e)}")
         # Return fallback data
         deployed_models = get_fallback_deployed_models_simple()
         deployed_model_names = [model['deployment_name'] for model in deployed_models]
@@ -258,6 +252,29 @@ def get_inference_client(deployment_name, deployed_models_list):
     except Exception as e:
         st.error(f"❌ Error initializing inference client for '{deployment_name}': {str(e)}")
         return None
+    
+# Function to get inference client for a deployed model
+def get_ai_inference_client(query, model_name):
+    returntxt = ""
+    endpoint = "https://agentnew-resource.eastus2.models.ai.azure.com"
+    aiclient = ChatCompletionsClient(endpoint=endpoint, 
+                                     credential=AzureKeyCredential(AZURE_API_KEY))
+
+    response = aiclient.complete(
+        messages=[
+            SystemMessage("You are a Multiple AI model helpful assistant."),
+            UserMessage(query),
+        ],
+        model=model_name,
+        max_tokens=2500,
+    )
+
+    print(response.choices[0].message.content)
+    print(f"\nToken usage: {response.usage}")
+
+
+    return returntxt
+
     
 def modelcatalogmain():
     st.set_page_config(
@@ -359,8 +376,43 @@ def modelcatalogmain():
     """, unsafe_allow_html=True)
 
     # Load model data with loading indicator
-    with st.spinner("🔄 Loading model catalog..."):
+    with st.spinner("🔄 Loading model catalog...", show_time=True):
+        # Create a compact container for status messages
+        status_container = st.empty()
+        with status_container.container():
+            st.markdown("""
+            <style>
+            .status-messages-container {
+                max-height: 80px;
+                overflow-y: auto;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 10px;
+                background: #f8f9fa;
+                margin: 10px 0;
+                font-size: 0.9em;
+            }
+            .status-messages-container::-webkit-scrollbar {
+                width: 6px;
+            }
+            .status-messages-container::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+            .status-messages-container::-webkit-scrollbar-thumb {
+                background: #007acc;
+                border-radius: 3px;
+            }
+            </style>
+            <div class="status-messages-container">
+                <div>📊 Initializing model catalog...</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         model_df, deployed_model_names, deployed_models_list = get_model_list()
+        
+        # Clear the status container after loading
+        status_container.empty()
 
     # Create two-column layout
     left_col, right_col = st.columns([1, 1])
@@ -601,7 +653,7 @@ setTimeout(function() {
                         messages.append({"role": msg["role"], "content": msg["content"]})
                     
                     # Get response from model
-                    with st.spinner(f"🧠 {st.session_state.selected_deployment} is thinking..."):
+                    with st.spinner(f"🧠 {st.session_state.selected_deployment} is thinking...", show_time=True):
                         try:
                             response = client_instance.chat.completions.create(
                                 model=st.session_state.selected_deployment,
@@ -612,6 +664,9 @@ setTimeout(function() {
                             )
                             
                             assistant_response = response.choices[0].message.content
+
+                            # result = get_ai_inference_client(prompt, st.session_state.selected_deployment)
+                            # assistant_response = result
                             
                             # Add assistant response to chat history
                             st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
