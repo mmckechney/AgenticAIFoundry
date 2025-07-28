@@ -53,13 +53,27 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 - **Latest API support**: Compatible with 2024-12-01-preview API version
 
 ### 🌐 Web Application Interface
-- **Comprehensive Streamlit dashboard**: Full-featured web interface for all capabilities
+- **Comprehensive Streamlit dashboard**: Full-featured web interface for all capabilities (app.py)
 - **Multi-tab navigation**: Organized access to agents, evaluation, and testing
 - **Real-time progress tracking**: Live feedback during long-running operations
 - **File upload support**: Images, audio, video, and document processing
 - **Speech input capability**: Voice-to-text integration (configurable)
 - **Interactive configuration**: Environment status checking and settings management
 - **Debug mode**: Detailed execution information for development and troubleshooting
+
+#### Specialized Streamlit Applications
+- **AI Maturity Assessment** (stasses.py): Comprehensive organizational AI readiness evaluation
+- **Fine-Tuning Assessment** (stfinetuneasses.py): Personalized AI model fine-tuning guidance
+- **Insurance Assistant** (stins.py): Specialized insurance domain AI agent with voice capabilities
+- **ServiceNow Integration** (stsvcnow.py): ServiceNow incident management and AI assistance
+- **Technical Drawing Analysis** (stdrawing.py): Advanced image analysis for engineering drawings
+- **Audio Conversation System** (staudio_conversation.py): Real-time audio chat with AI
+- **Research Assistant** (stresearch.py): Deep research capabilities with AI agents
+- **Model Catalog** (stmodelcatalog.py): Azure AI model exploration and management
+- **Agent Routing** (strouter.py): Intelligent agent selection and task routing
+- **Tariffs Analysis** (sttariffs.py): Trade tariffs and economic analysis
+- **Customer Understanding Assistant** (stcua.py): Customer service and support AI
+- **O3 Model Interface** (sto3.py): Advanced reasoning with O3 model capabilities
 
 ### 🎤 MCP Servers Integration
 - **Voice Chat Interface**: Audio recording and transcription using Azure OpenAI Whisper
@@ -79,12 +93,39 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 
 For detailed architecture and implementation information, see the comprehensive documentation in the `docs/` directory:
 
+### Core Platform Documentation
 - **[Architecture Blueprint](docs/architecture-blueprint.md)** - Complete system design and architecture overview
 - **[Mermaid Architecture Diagrams](docs/mermaid-architecture-diagram.md)** - Interactive visual diagrams showing agent connections and data flows
 - **[Technical Diagrams](docs/technical-diagrams.md)** - Detailed ASCII component diagrams
 - **[Implementation Guide](docs/implementation-guide.md)** - Agent implementation patterns and examples
 - **[Quick Reference](docs/quick-reference.md)** - Quick reference for common tasks
 - **[Web Application Guide](WEB_APP_README.md)** - Comprehensive web interface documentation
+
+### Specialized Application Documentation
+
+#### Overview & Quick Start
+- **[Specialized Applications Overview](docs/specialized-applications-overview.md)** - Comprehensive overview of all Streamlit applications
+
+#### Assessment & Analysis Tools
+- **[AI Maturity Assessment](docs/stasses-ai-maturity-assessment.md)** - AI maturity assessment and organizational readiness evaluation
+- **[Fine-Tuning Assessment](docs/stfinetuneasses-guide.md)** - Model optimization guidance and recommendations
+
+#### Domain-Specific Assistants
+- **[Insurance Assistant](docs/stins-insurance-assistant.md)** - Insurance domain AI agent with voice capabilities
+- **[ServiceNow Integration](docs/stsvcnow-documentation.md)** - IT service management and automation platform
+- **[Customer Understanding Assistant](docs/stcua-customer-service.md)** - Customer service AI assistant guide
+
+#### Research & Analysis Tools
+- **[Research Assistant](docs/stresearch-deep-research.md)** - Deep research capabilities and AI-powered analysis
+- **[Technical Drawing Analysis](docs/stdrawing-vision-analysis.md)** - Engineering drawing analysis with vision models
+- **[Tariffs Analysis](docs/sttariffs-economic-analysis.md)** - Trade and economic analysis tools
+
+#### Advanced AI Interfaces
+- **[Audio Conversation System](docs/staudio-conversation-guide.md)** - Real-time voice chat and interaction
+- **[Model Catalog](docs/stmodelcatalog-azure-models.md)** - Azure AI model exploration and management
+- **[Agent Routing](docs/strouter-task-distribution.md)** - Intelligent agent coordination system
+- **[Customer Understanding](docs/stcua-customer-service.md)** - Customer service AI assistant guide
+- **[O3 Model Interface](docs/sto3-advanced-reasoning.md)** - Advanced reasoning capabilities documentation
 
 ## Prerequisites
 
@@ -196,7 +237,9 @@ GITHUB_PAT_TOKEN=<your_github_personal_access_token>
 
 ## Usage
 
-### 🌐 Web Application (Recommended)
+### 🌐 Web Applications
+
+#### Main Dashboard (Recommended)
 
 Launch the comprehensive Streamlit web interface to interact with all features:
 
@@ -206,18 +249,73 @@ chmod +x run_app.sh
 ./run_app.sh
 
 # Or run directly
-streamlit run streamlit_app.py
+streamlit run app.py
 ```
 
-**Web Interface Features:**
-- 🏠 **Interactive Dashboard**: Visual overview of all capabilities
-- 🎯 **Easy Navigation**: Tab-based interface for all agents and tools
-- 📊 **Real-time Progress**: Visual feedback during execution
-- 🎤 **Multiple Input Types**: Text, file uploads, speech-to-text
-- ⚙️ **Configuration Management**: Environment status and settings
-- 📱 **Responsive Design**: Optimized for various screen sizes
+**Main Dashboard Features:**
+- 🏠 **Interactive Dashboard**: Visual overview of all capabilities with Material Design 3 theme
+- 🎯 **Assessment Phase**: AI maturity assessment and fine-tuning guidance
+- 🔧 **Development Phase**: Code interpreter and agent development tools
+- 📊 **Evaluation Phase**: Comprehensive AI and agent evaluation metrics
+- 🛡️ **Security Testing**: Advanced RedTeam security analysis
+- 🔗 **MCP Integration**: Model Context Protocol server connections
+- 🌐 **Production Operations**: Live agent interaction and resource management
+- 🇺🇸 **AI Action Plan Agent**: Americas AI Action Plan query assistant with voice support
+- 🎤 **Audio Chat Interface**: Voice-enabled MCP server interactions
 
-Access the application at: **http://localhost:8501**
+Access the main dashboard at: **http://localhost:8501**
+
+#### Specialized Applications
+
+Launch specific Streamlit applications for focused functionality:
+
+##### 📊 AI Assessment Tools
+```bash
+# AI Maturity Assessment - Organizational readiness evaluation
+streamlit run stasses.py
+
+# Fine-Tuning Assessment - Model optimization guidance  
+streamlit run stfinetuneasses.py
+```
+
+##### 🏢 Domain-Specific Assistants
+```bash
+# Insurance Assistant - Industry-specific AI support
+streamlit run stins.py
+
+# ServiceNow Integration - IT service management
+streamlit run stsvcnow.py
+
+# Customer Understanding Assistant - Customer service AI
+streamlit run stcua.py
+```
+
+##### 🔬 Research & Analysis Tools
+```bash
+# Research Assistant - Deep research capabilities
+streamlit run stresearch.py
+
+# Technical Drawing Analysis - Engineering drawing interpretation
+streamlit run stdrawing.py
+
+# Tariffs Analysis - Trade and economic analysis
+streamlit run sttariffs.py
+```
+
+##### 🤖 Advanced AI Interfaces
+```bash
+# Audio Conversation System - Real-time voice chat
+streamlit run staudio_conversation.py
+
+# Model Catalog - Azure AI model exploration
+streamlit run stmodelcatalog.py
+
+# Agent Routing - Intelligent task distribution
+streamlit run strouter.py
+
+# O3 Model Interface - Advanced reasoning capabilities
+streamlit run sto3.py
+```
 
 See [WEB_APP_README.md](WEB_APP_README.md) for detailed web interface documentation.
 
@@ -384,7 +482,8 @@ For detailed setup instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 AgenticAIFoundry/
 │
 ├── agenticai.py              # Main application with all agent examples
-├── streamlit_app.py          # Web interface for all functionality
+├── app.py                   # Main Streamlit dashboard with comprehensive features
+├── streamlit_app.py          # Alternative web interface for all functionality
 ├── bbmcp.py                  # MCP Servers voice chat interface
 ├── stdrawing.py              # Technical drawing analysis with vision models
 ├── utils.py                  # Utility functions (email sending, etc.)
@@ -394,6 +493,19 @@ AgenticAIFoundry/
 ├── run_app.sh               # Web application launcher script
 ├── .env                     # Environment variables (create from template)
 ├── .env.example             # Environment variables template
+│
+├── Specialized Streamlit Applications/
+├── stasses.py               # AI Maturity Assessment - organizational readiness evaluation
+├── stfinetuneasses.py       # Fine-Tuning Assessment - model optimization guidance
+├── stins.py                 # Insurance Assistant - industry-specific AI support
+├── stsvcnow.py              # ServiceNow Integration - IT service management
+├── stcua.py                 # Customer Understanding Assistant - customer service AI
+├── stresearch.py            # Research Assistant - deep research capabilities
+├── staudio_conversation.py  # Audio Conversation System - real-time voice chat
+├── stmodelcatalog.py        # Model Catalog - Azure AI model exploration
+├── strouter.py              # Agent Routing - intelligent task distribution
+├── sttariffs.py             # Tariffs Analysis - trade and economic analysis
+├── sto3.py                  # O3 Model Interface - advanced reasoning capabilities
 │
 ├── agentutils/              # Multi-agent framework utilities
 │   ├── agent_team.py        # Multi-agent team coordination framework
@@ -414,6 +526,8 @@ AgenticAIFoundry/
 ├── datarfp.jsonl            # Evaluation dataset
 ├── datarfpagent.jsonl       # Agent evaluation dataset
 ├── evaluation_input_data.jsonl # Input data for evaluations
+├── aiassessment.json        # AI maturity assessment configuration
+├── fine_tuning_questionnaire.json # Fine-tuning assessment questions
 │
 └── Output Files/
 ├── myevalresults.json       # Evaluation results
@@ -422,6 +536,8 @@ AgenticAIFoundry/
 ```
 
 ## Key Functions
+
+### Core Agent Functions
 
 | Function | Description | Use Case |
 |----------|-------------|----------|
@@ -433,6 +549,50 @@ AgenticAIFoundry/
 | `connected_agent()` | External service integration with email capabilities | API integration, external data, and email notifications |
 | `process_message_reasoning()` | O1 model reasoning | Complex reasoning tasks |
 | `send_email()` (utils.py) | Email sending functionality | Automated email notifications and communications |
+
+### Main Dashboard Functions (app.py)
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `main()` | Comprehensive dashboard interface | Central hub for all AI capabilities |
+| `mcp_audio_chat_interface()` | Embedded MCP audio chat | Voice-powered MCP server interactions |
+| Material Design 3 UI | Modern, responsive interface | Enhanced user experience |
+| Assessment Phase | AI maturity and fine-tuning evaluation | Organizational AI readiness |
+| Development Phase | Code interpreter and agent tools | AI development workflow |
+| Evaluation Phase | AI and agent performance metrics | Quality assurance |
+| Security Testing | RedTeam vulnerability assessment | AI security validation |
+| MCP Integration | Model Context Protocol connections | External service integration |
+| Production Operations | Live agent interaction | Real-world AI deployment |
+
+### Specialized Application Functions
+
+#### Assessment Applications
+| Function | File | Description | Use Case |
+|----------|------|-------------|----------|
+| `assesmentmain()` | stasses.py | AI maturity assessment | Organizational readiness evaluation |
+| `finetuneassesment()` | stfinetuneasses.py | Fine-tuning guidance | Model optimization recommendations |
+
+#### Domain-Specific Applications
+| Function | File | Description | Use Case |
+|----------|------|-------------|----------|
+| Insurance Assistant | stins.py | Insurance domain AI agent | Policy analysis, claims processing |
+| ServiceNow Integration | stsvcnow.py | IT service management | Incident management, automation |
+| Customer Assistant | stcua.py | Customer service AI | Support ticket analysis, customer insights |
+
+#### Research & Analysis Applications
+| Function | File | Description | Use Case |
+|----------|------|-------------|----------|
+| Research Assistant | stresearch.py | Deep research capabilities | Academic research, data analysis |
+| Technical Drawing Analysis | stdrawing.py | Engineering drawing interpretation | CAD analysis, technical documentation |
+| Tariffs Analysis | sttariffs.py | Trade and economic analysis | Import/export analysis, policy impact |
+
+#### Advanced AI Applications
+| Function | File | Description | Use Case |
+|----------|------|-------------|----------|
+| Audio Conversation | staudio_conversation.py | Real-time voice chat | Voice-based AI interaction |
+| Model Catalog | stmodelcatalog.py | Azure AI model exploration | Model selection, capabilities review |
+| Agent Routing | strouter.py | Intelligent task distribution | Multi-agent coordination |
+| O3 Interface | sto3.py | Advanced reasoning capabilities | Complex problem solving |
 
 ### MCP Servers Functions
 
