@@ -3,6 +3,7 @@ import asyncio
 import io
 import os
 import time
+import base64
 from datetime import datetime
 from typing import Optional, Dict, Any
 from azure.ai.projects import AIProjectClient
@@ -21,6 +22,7 @@ try:
         delete_agent,
         process_message_reasoning,
         existing_connected_agent,
+        aiactionplat_agent,
     )
     DEPENDENCIES_AVAILABLE = True
 except ImportError as e:
@@ -564,6 +566,234 @@ def main():
                             time.sleep(2)
                             st.success("✅ Agent successfully deleted! (Demo mode)")
 
+        # AI Action Plan Agent
+        with st.expander("🇺🇸 Americas AI Action Plan Agent", expanded=False):
+            st.markdown("""
+            <div class="feature-card">
+                <span class="feature-icon">🇺🇸</span>
+                <div class="feature-title">AI Action Plan Query Agent</div>
+                <div class="feature-description">Ask questions about the Americas AI Action Plan using voice or text input</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Initialize AI Action Plan chat history
+            if 'ai_action_plan_messages' not in st.session_state:
+                st.session_state.ai_action_plan_messages = []
+            
+            # Chat history display
+            if st.session_state.ai_action_plan_messages:
+                st.markdown("### 💬 AI Action Plan Chat History")
+                
+                # Create scrollable chat container
+                chat_container_html = """
+                <div style="
+                    height: 300px;
+                    overflow-y: auto;
+                    border: 2px solid var(--md-sys-color-outline-variant);
+                    border-radius: 12px;
+                    padding: 15px;
+                    background: var(--md-sys-color-surface);
+                    margin: 10px 0;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                ">
+                """
+                
+                for i, message in enumerate(st.session_state.ai_action_plan_messages):
+                    role_icon = "🧑‍💻" if message["role"] == "user" else "🇺🇸"
+                    role_name = "You" if message["role"] == "user" else "AI Action Plan Agent"
+                    message_class = "user-message" if message["role"] == "user" else "assistant-message"
+                    bg_color = "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)" if message["role"] == "user" else "linear-gradient(135deg, #fff3e0 0%, #ffcc02 30%)"
+                    border_color = "#2196f3" if message["role"] == "user" else "#ff6f00"
+                    
+                    escaped_content = message["content"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#x27;")
+                    
+                    chat_container_html += f"""
+                    <div style="
+                        margin: 10px 0;
+                        padding: 12px;
+                        border-radius: 10px;
+                        background: {bg_color};
+                        border-left: 4px solid {border_color};
+                        word-wrap: break-word;
+                    ">
+                        <div style="font-weight: bold; color: #333; margin-bottom: 8px;">
+                            {role_icon} {role_name}
+                        </div>
+                        <div style="color: #555; line-height: 1.5; white-space: pre-wrap;">
+                            {escaped_content}
+                        </div>
+                    </div>
+                    """
+                
+                chat_container_html += "</div>"
+                st.markdown(chat_container_html, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="
+                    height: 150px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 2px dashed #ddd;
+                    border-radius: 15px;
+                    background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 30%);
+                    margin: 15px 0;
+                    text-align: center;
+                    color: #333;
+                ">
+                    <div>
+                        <h5>🇺🇸 Ready to explore the AI Action Plan!</h5>
+                        <p>Ask questions using voice or text input below.</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Input options
+            col_ai_action1, col_ai_action2 = st.columns([2, 1])
+            
+            with col_ai_action1:
+                # Text input
+                ai_action_query = st.text_input(
+                    "💬 Ask about the AI Action Plan:", 
+                    value="What are the key priorities in the Americas AI Action Plan?",
+                    key="ai_action_plan_query"
+                )
+                
+                # Voice input
+                st.markdown("**🎤 Voice Input:**")
+                ai_action_audio = st.audio_input("Record your question about the AI Action Plan", key="ai_action_plan_audio")
+            
+            with col_ai_action2:
+                # Action buttons
+                if st.button("💬 Ask via Text", key="ai_action_plan_text"):
+                    if ai_action_query.strip():
+                        with st.spinner("🔄 Querying AI Action Plan agent...", show_time=True):
+                            # Add user message
+                            st.session_state.ai_action_plan_messages.append({"role": "user", "content": ai_action_query})
+                            
+                            if DEPENDENCIES_AVAILABLE:
+                                try:
+                                    ai_action_response = aiactionplat_agent(ai_action_query)
+                                    # Add assistant response
+                                    st.session_state.ai_action_plan_messages.append({"role": "assistant", "content": ai_action_response})
+                                    st.success("✅ Response received!")
+                                    st.rerun()
+                                except Exception as e:
+                                    error_msg = f"❌ Error querying AI Action Plan agent: {str(e)}"
+                                    st.error(error_msg)
+                                    st.session_state.ai_action_plan_messages.append({"role": "assistant", "content": f"I apologize, but I encountered an error: {str(e)}"})
+                                    st.rerun()
+                            else:
+                                time.sleep(2)
+                                demo_response = f"The Americas AI Action Plan focuses on responsible AI development, ensuring ethical guidelines, promoting innovation while maintaining security standards, and fostering international cooperation. (Demo response for: '{ai_action_query}')"
+                                st.session_state.ai_action_plan_messages.append({"role": "assistant", "content": demo_response})
+                                st.success("✅ Response received! (Demo mode)")
+                                st.rerun()
+                    else:
+                        st.warning("⚠️ Please enter a question first.")
+                
+                if st.button("🗑️ Clear Chat", key="clear_ai_action_chat"):
+                    st.session_state.ai_action_plan_messages = []
+                    st.success("✅ Chat history cleared!")
+                    st.rerun()
+            
+            # Process voice input
+            if ai_action_audio:
+                with st.spinner("🔄 Processing voice input...", show_time=True):
+                    try:
+                        # Import audio processing functions from bbmcp
+                        from bbmcp import save_audio_file, transcribe_audio, generate_audio_response_gpt
+                        
+                        # Save and transcribe audio
+                        audio_file_path = save_audio_file(ai_action_audio.getvalue())
+                        transcription = transcribe_audio(audio_file_path)
+                        
+                        st.markdown(f"""
+                        <div class="feature-card" style="border-left-color: var(--md-sys-color-tertiary);">
+                            <h5 style="color: var(--md-sys-color-tertiary);">🎤 Voice Input Transcribed:</h5>
+                            <p style="font-style: italic;">{transcription}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Add user message
+                        st.session_state.ai_action_plan_messages.append({"role": "user", "content": f"[Voice] {transcription}"})
+                        
+                        if DEPENDENCIES_AVAILABLE:
+                            try:
+                                # Get response from AI Action Plan agent
+                                ai_action_response = aiactionplat_agent(transcription)
+                                
+                                # Generate audio response
+                                response_audio_path = generate_audio_response_gpt(ai_action_response)
+                                
+                                # Display text response
+                                st.markdown("""
+                                <div class="feature-card" style="border-left-color: #ff6f00;">
+                                    <h5 style="color: #ff6f00;">🇺🇸 AI Action Plan Agent Response:</h5>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                st.info(ai_action_response)
+                                
+                                # Display audio response
+                                import base64
+                                with open(response_audio_path, "rb") as f:
+                                    audio_bytes = f.read()
+                                    audio_base64 = base64.b64encode(audio_bytes).decode()
+                                    audio_html = f"""
+                                    <div class="feature-card">
+                                        <h5 style="color: #ff6f00;">🔊 Audio Response:</h5>
+                                        <audio controls autoplay style="width: 100%;">
+                                            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                                        </audio>
+                                    </div>
+                                    """
+                                    st.markdown(audio_html, unsafe_allow_html=True)
+                                
+                                # Add assistant response to chat history
+                                st.session_state.ai_action_plan_messages.append({"role": "assistant", "content": ai_action_response})
+                                
+                                # Clean up audio files
+                                if os.path.exists(audio_file_path):
+                                    os.remove(audio_file_path)
+                                if os.path.exists(response_audio_path):
+                                    os.remove(response_audio_path)
+                                
+                                st.success("✅ Voice input processed successfully!")
+                                
+                            except Exception as e:
+                                error_msg = f"❌ Error processing voice query: {str(e)}"
+                                st.error(error_msg)
+                                st.session_state.ai_action_plan_messages.append({"role": "assistant", "content": f"I apologize, but I encountered an error processing your voice input: {str(e)}"})
+                        else:
+                            time.sleep(3)
+                            demo_response = f"The Americas AI Action Plan emphasizes collaborative governance and responsible AI deployment across member nations. (Demo voice response for: '{transcription}')"
+                            st.session_state.ai_action_plan_messages.append({"role": "assistant", "content": demo_response})
+                            st.success("✅ Voice input processed! (Demo mode)")
+                        
+                    except ImportError as e:
+                        st.error(f"❌ Error importing audio processing functions: {e}")
+                    except Exception as e:
+                        st.error(f"❌ Error processing voice input: {str(e)}")
+            
+            # Information section
+            with st.expander("ℹ️ About the AI Action Plan Agent", expanded=False):
+                st.markdown("""
+                **🇺🇸 Americas AI Action Plan Agent** provides insights and answers questions about:
+                
+                - **Policy Framework**: Key policies and regulations in the Americas AI Action Plan
+                - **Strategic Priorities**: Main focus areas and objectives
+                - **Implementation**: How the plan is being executed across member nations
+                - **Collaboration**: Inter-country cooperation initiatives
+                - **Ethical Guidelines**: AI ethics and responsible development practices
+                - **Security Measures**: AI safety and security protocols
+                
+                💡 **Tips**: 
+                - Use specific questions for better responses
+                - Try both text and voice input modes
+                - Voice responses include audio playback
+                - Chat history is maintained during your session
+                """)
+
     with col2:
         st.markdown("### 📊 System Status")
         
@@ -835,7 +1065,6 @@ def mcp_audio_chat_interface():
                         })
 
                     # Clean up temporary files
-                    import os
                     if os.path.exists(audio_file_path):
                         os.remove(audio_file_path)
                     if os.path.exists(response_audio_path):

@@ -1264,6 +1264,76 @@ def hf_mcp_agent(query: str) -> str:
 
     return returntxt
 
+def aiactionplat_agent(query: str) -> str:
+    returntxt = ""
+
+       # File search agent
+    # Define the path to the file to be uploaded
+    file_path = "./data/Americas-AI-Action-Plan.pdf"
+
+    # Upload the file
+    file = project_client.agents.files.upload_and_poll(file_path=file_path, purpose=FilePurpose.AGENTS)
+    print(f"Uploaded file, file ID: {file.id}")
+
+    # Create a vector store with the uploaded file
+    vector_store = project_client.agents.vector_stores.create_and_poll(file_ids=[file.id], name="aiactionplanstore")
+    print(f"Created vector store, vector store ID: {vector_store.id}")
+    # Create a file search tool
+    file_search = FileSearchTool(vector_store_ids=[vector_store.id])
+
+    # Create an agent with the file search tool
+    agent = project_client.agents.create_agent(
+        model=os.environ["MODEL_DEPLOYMENT_NAME"],  # Model deployment name
+        name="AIActionPlan-agent",  # Name of the agent
+        instructions="You are a helpful agent and can search information from uploaded files, which has new Americas AI Action plan from whitehouse.",  # Instructions for the agent
+        tools=file_search.definitions,  # Tools available to the agent
+        tool_resources=file_search.resources,  # Resources for the tools
+    )
+    print(f"Created agent, ID: {agent.id}")
+    # Create a thread
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    # Send a message to the thread
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=query,  # Message content
+    )
+    print(f"Created message, ID: {message['id']}")
+    # Create and process an agent run in the thread
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+    print(f"Run finished with status: {run.status}")
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    # Cleanup resources
+    project_client.agents.vector_stores.delete(vector_store.id)
+    print("Deleted vector store")
+
+    project_client.agents.files.delete(file_id=file.id)
+    print("Deleted file")
+
+    project_client.agents.delete_agent(agent.id)
+    print("Deleted agent")
+
+    # Fetch and log all messages from the thread
+    messages = project_client.agents.messages.list(thread_id=thread.id)
+    file_name = os.path.split(file_path)[-1]
+    for msg in messages:
+        if msg.text_messages:
+            last_text = msg.text_messages[-1].text.value
+            for annotation in msg.text_messages[-1].text.annotations:
+                citation = (
+                    file_name if annotation.file_citation.file_id == file.id else annotation.file_citation.file_id
+                )
+                last_text = last_text.replace(annotation.text, f" [{citation}]")
+            
+            returntxt += last_text
+            print(f"{msg.role}: {last_text}")
+
+    return returntxt
 
 def main():
     with tracer.start_as_current_span("azureaifoundryagent-tracing"):
