@@ -158,7 +158,6 @@ def research_agent(query: str) -> str:
                     thread_id=thread.id,
                     role="user",
                     content=query
-                    ),
                 )
                 print(f"Created message, ID: {message.id}")
 

@@ -93,6 +93,7 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 
 For detailed architecture and implementation information, see the comprehensive documentation in the `docs/` directory:
 
+### Core Platform Documentation
 - **[Architecture Blueprint](docs/architecture-blueprint.md)** - Complete system design and architecture overview
 - **[Mermaid Architecture Diagrams](docs/mermaid-architecture-diagram.md)** - Interactive visual diagrams showing agent connections and data flows
 - **[Technical Diagrams](docs/technical-diagrams.md)** - Detailed ASCII component diagrams
@@ -102,17 +103,29 @@ For detailed architecture and implementation information, see the comprehensive 
 
 ### Specialized Application Documentation
 
-- **[AI Assessment Tools](docs/stasses-ai-maturity-assessment.md)** - AI maturity assessment and fine-tuning guidance
-- **[Insurance Assistant](docs/stins-insurance-assistant.md)** - Insurance domain AI agent documentation
-- **[ServiceNow Integration](docs/stsvcnow-documentation.md)** - IT service management integration guide
-- **[Technical Drawing Analysis](docs/stdrawing-vision-analysis.md)** - Engineering drawing analysis capabilities
-- **[Audio Conversation System](docs/staudio-conversation-guide.md)** - Real-time voice chat documentation
-- **[Research Assistant](docs/stresearch-deep-research.md)** - Research capabilities and usage guide
-- **[Model Catalog](docs/stmodelcatalog-azure-models.md)** - Azure AI model exploration interface
+#### Overview & Quick Start
+- **[Specialized Applications Overview](docs/specialized-applications-overview.md)** - Comprehensive overview of all Streamlit applications
+
+#### Assessment & Analysis Tools
+- **[AI Maturity Assessment](docs/stasses-ai-maturity-assessment.md)** - AI maturity assessment and organizational readiness evaluation
+- **[Fine-Tuning Assessment](docs/stfinetuneasses-guide.md)** - Model optimization guidance and recommendations
+
+#### Domain-Specific Assistants
+- **[Insurance Assistant](docs/stins-insurance-assistant.md)** - Insurance domain AI agent with voice capabilities
+- **[ServiceNow Integration](docs/stsvcnow-documentation.md)** - IT service management and automation platform
+- **[Customer Understanding Assistant](docs/stcua-customer-service.md)** - Customer service AI assistant guide
+
+#### Research & Analysis Tools
+- **[Research Assistant](docs/stresearch-deep-research.md)** - Deep research capabilities and AI-powered analysis
+- **[Technical Drawing Analysis](docs/stdrawing-vision-analysis.md)** - Engineering drawing analysis with vision models
+- **[Tariffs Analysis](docs/sttariffs-economic-analysis.md)** - Trade and economic analysis tools
+
+#### Advanced AI Interfaces
+- **[Audio Conversation System](docs/staudio-conversation-guide.md)** - Real-time voice chat and interaction
+- **[Model Catalog](docs/stmodelcatalog-azure-models.md)** - Azure AI model exploration and management
 - **[Agent Routing](docs/strouter-task-distribution.md)** - Intelligent agent coordination system
 - **[Customer Understanding](docs/stcua-customer-service.md)** - Customer service AI assistant guide
 - **[O3 Model Interface](docs/sto3-advanced-reasoning.md)** - Advanced reasoning capabilities documentation
-- **[Tariffs Analysis](docs/sttariffs-economic-analysis.md)** - Trade and economic analysis tools
 
 ## Prerequisites
 
