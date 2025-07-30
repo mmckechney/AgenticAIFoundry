@@ -254,6 +254,25 @@ def get_inference_client(deployment_name, deployed_models_list):
         return None
     
 # Function to get inference client for a deployed model
+def get_ai_inference_client_openai(model_name, messages):
+    returntxt = ""
+
+    response = client.chat.completions.create(
+                            model=model_name,
+                            messages=messages,
+                            max_tokens=2000,
+                            temperature=0.7,
+                            top_p=0.95
+                        )
+
+    print(response.choices[0].message.content)
+    print(f"\nToken usage: {response.usage}")
+
+    returntxt = response.choices[0].message.content
+
+    return returntxt
+
+# Function to get inference client for a deployed model
 def get_ai_inference_client(query, model_name):
     returntxt = ""
     endpoint = "https://agentnew-resource.eastus2.models.ai.azure.com"
@@ -655,15 +674,17 @@ setTimeout(function() {
                     # Get response from model
                     with st.spinner(f"🧠 {st.session_state.selected_deployment} is thinking...", show_time=True):
                         try:
-                            response = client_instance.chat.completions.create(
-                                model=st.session_state.selected_deployment,
-                                messages=messages,
-                                max_tokens=1000,
-                                temperature=0.7,
-                                top_p=0.95
-                            )
+                            # response = client_instance.chat.completions.create(
+                            #     model=st.session_state.selected_deployment,
+                            #     messages=messages,
+                            #     max_tokens=1000,
+                            #     temperature=0.7,
+                            #     top_p=0.95
+                            # )
                             
-                            assistant_response = response.choices[0].message.content
+                            # assistant_response = response.choices[0].message.content
+
+                            assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages)
 
                             # result = get_ai_inference_client(prompt, st.session_state.selected_deployment)
                             # assistant_response = result
