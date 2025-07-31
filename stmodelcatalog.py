@@ -273,8 +273,7 @@ def get_ai_inference_client_openai(model_name, messages, modelname):
     return returntxt
 
 # Function to get inference client for a deployed model
-def get_ai_inference_client(model_name, query), modelname:
-    returntxt = ""
+def get_ai_inference_client(model_name, query, modelname):
     # endpoint = "https://agentnew-resource.eastus2.models.ai.azure.com"
     #endpoint = f"https://{model_name}.eastus2.models.ai.azure.com"
     endpoint = f"https://agentnew-resource.eastus2.models.ai.azure.com"
@@ -711,13 +710,7 @@ setTimeout(function() {
 
                             # st.session_state.selected_model_name
                             model_name = st.session_state.selected_model_name
-                            if 'gpt' in model_name or 'openai' in model_name or 'ada' in model_name:
-                                messages.append({"role": "user", "content": prompt})
-                                assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages, model_name)
-                                # assistant_response = get_ai_inference_client(st.session_state.selected_deployment, messages, model_name)
-                            else:
-                                assistant_response = get_ai_inference_client(st.session_state.selected_deployment, messages, model_name)
-
+                            assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages, model_name)
                             # assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages)
 
                             # result = get_ai_inference_client(prompt, st.session_state.selected_deployment)
