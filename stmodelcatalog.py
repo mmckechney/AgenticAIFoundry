@@ -77,7 +77,7 @@ def get_model_list():
                     deployment_name = getattr(deployment, 'name', getattr(deployment, 'deployment_name', model_name))
                     status = getattr(deployment, 'status', 'Active')
                     inference_url = f"{project_endpoint}/models/{deployment_name}/chat/completions"
-                    print(f"Deployment: {deployment_name}, Endpoint URL: {inference_url}")
+                    # print(f"Deployment: {deployment_name}, Endpoint URL: {inference_url}")
                     
                     deployed_model_info = {
                         'name': model_name,
@@ -254,7 +254,7 @@ def get_inference_client(deployment_name, deployed_models_list):
         return None
     
 # Function to get inference client for a deployed model
-def get_ai_inference_client_openai(model_name, messages):
+def get_ai_inference_client_openai(model_name, messages, modelname):
     returntxt = ""
 
     response = client.chat.completions.create(
@@ -273,22 +273,45 @@ def get_ai_inference_client_openai(model_name, messages):
     return returntxt
 
 # Function to get inference client for a deployed model
-def get_ai_inference_client(query, model_name):
+def get_ai_inference_client(model_name, query), modelname:
     returntxt = ""
-    endpoint = "https://agentnew-resource.eastus2.models.ai.azure.com"
+    # endpoint = "https://agentnew-resource.eastus2.models.ai.azure.com"
+    #endpoint = f"https://{model_name}.eastus2.models.ai.azure.com"
+    endpoint = f"https://agentnew-resource.eastus2.models.ai.azure.com"
+    # endpoint = f"https://agentnew-resource.services.ai.azure.com/api/projects/agentnew"
+
+
+    if 'gpt' in model_name or 'openai' in model_name or 'ada' in model_name:
+        endpoint = f"https://{model_name}.eastus2.models.ai.azure.com"
+    else:
+        endpoint = f"https://agentnew-resource.eastus2.models.ai.azure.com"
+
     aiclient = ChatCompletionsClient(endpoint=endpoint, 
                                      credential=AzureKeyCredential(AZURE_API_KEY))
+    
+    # Prepare messages with context
+    messages = [
+        SystemMessage(content="You are a helpful AI assistant. Provide clear, accurate, and helpful responses.")
+    ]
+
+    # Add chat history to context
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "system":
+            messages.append(SystemMessage(content=msg["content"]))
+        elif msg["role"] == "user":
+            messages.append(UserMessage(content=msg["content"]))
 
     response = aiclient.complete(
-        messages=[
-            SystemMessage("You are a Multiple AI model helpful assistant."),
-            UserMessage(query),
-        ],
+        # messages=[
+        #     SystemMessage("You are a Multiple AI model helpful assistant."),
+        #     UserMessage(query),
+        # ],
+        messages=messages,
         model=model_name,
         max_tokens=2500,
     )
 
-    print(response.choices[0].message.content)
+    print('Output from model: ', response.choices[0].message.content)
     print(f"\nToken usage: {response.usage}")
 
 
@@ -520,8 +543,10 @@ def modelcatalogmain():
             if selected_option:
                 # Parse selection to get deployment name
                 deployment_name = selected_option.split('(')[1].split(')')[0]
+                model_name = selected_option.split('(')[0].strip()  # Add this line
                 st.session_state.selected_model_option = selected_option
                 st.session_state.selected_deployment = deployment_name
+                st.session_state.selected_model_name = model_name
                 
                 # Find the selected model info
                 selected_model_info = next(
@@ -684,7 +709,16 @@ setTimeout(function() {
                             
                             # assistant_response = response.choices[0].message.content
 
-                            assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages)
+                            # st.session_state.selected_model_name
+                            model_name = st.session_state.selected_model_name
+                            if 'gpt' in model_name or 'openai' in model_name or 'ada' in model_name:
+                                messages.append({"role": "user", "content": prompt})
+                                assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages, model_name)
+                                # assistant_response = get_ai_inference_client(st.session_state.selected_deployment, messages, model_name)
+                            else:
+                                assistant_response = get_ai_inference_client(st.session_state.selected_deployment, messages, model_name)
+
+                            # assistant_response = get_ai_inference_client_openai(st.session_state.selected_deployment, messages)
 
                             # result = get_ai_inference_client(prompt, st.session_state.selected_deployment)
                             # assistant_response = result
