@@ -257,7 +257,17 @@ def get_inference_client(deployment_name, deployed_models_list):
 def get_ai_inference_client_openai(model_name, messages, modelname):
     returntxt = ""
 
-    response = client.chat.completions.create(
+    api_version = "2024-12-01-preview"
+    api_base = AZURE_ENDPOINT
+    api_key = AZURE_API_KEY
+
+    infclient = AzureOpenAI(
+        azure_endpoint=AZURE_ENDPOINT,
+        api_key=AZURE_API_KEY,
+        api_version=api_version  # Adjust API version as needed
+    )
+
+    response = infclient.chat.completions.create(
                             model=model_name,
                             messages=messages,
                             max_tokens=2000,
