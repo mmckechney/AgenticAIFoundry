@@ -448,6 +448,32 @@ def connected_agent_brainstorm(query: str) -> str:
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
 
+    # Capture token usage information
+    token_usage = {}
+    if hasattr(run, 'usage') and run.usage:
+        token_usage = {
+            'prompt_tokens': getattr(run.usage, 'prompt_tokens', 0),
+            'completion_tokens': getattr(run.usage, 'completion_tokens', 0),
+            'total_tokens': getattr(run.usage, 'total_tokens', 0)
+        }
+        print(f"Token usage - Prompt: {token_usage['prompt_tokens']}, Completion: {token_usage['completion_tokens']}, Total: {token_usage['total_tokens']}")
+    else:
+        # Try to get usage from run steps if not available in run object
+        total_prompt_tokens = 0
+        total_completion_tokens = 0
+        run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+        for step in run_steps:
+            if hasattr(step, 'usage') and step.usage:
+                total_prompt_tokens += getattr(step.usage, 'prompt_tokens', 0)
+                total_completion_tokens += getattr(step.usage, 'completion_tokens', 0)
+        
+        token_usage = {
+            'prompt_tokens': total_prompt_tokens,
+            'completion_tokens': total_completion_tokens,
+            'total_tokens': total_prompt_tokens + total_completion_tokens
+        }
+        print(f"Token usage from steps - Prompt: {token_usage['prompt_tokens']}, Completion: {token_usage['completion_tokens']}, Total: {token_usage['total_tokens']}")
+
     # Fetch run steps to get the details of the agent run
     run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
     
@@ -499,7 +525,7 @@ def connected_agent_brainstorm(query: str) -> str:
     # # Cleanup resources
     
 
-    return returntxt, agent_outputs
+    return returntxt, agent_outputs, token_usage
 
 def parse_agent_outputs(run_steps):
     """Parse agent outputs from run steps to extract individual agent responses."""
@@ -764,91 +790,7 @@ def brainstormmain():
         -moz-user-select: text;
         -ms-user-select: text;
     }
-    .copy-selection-btn {
-        position: fixed;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1000;
-        display: none;
-    }
-    .copy-selection-btn:hover {
-        background: #1d4ed8;
-    }
-    .selection-highlight {
-        background-color: #dbeafe !important;
-        border-left: 3px solid #3b82f6 !important;
-        padding: 2px 4px !important;
-        border-radius: 3px !important;
-    }
     </style>
-    
-    <script>
-    let selectedText = '';
-    let copyButton = null;
-    
-    function createCopyButton() {
-        if (copyButton) return copyButton;
-        
-        copyButton = document.createElement('button');
-        copyButton.className = 'copy-selection-btn';
-        copyButton.innerHTML = '📋 Copy to Accumulator';
-        copyButton.onclick = function() {
-            if (selectedText) {
-                // Send the selected text to Streamlit
-                window.parent.postMessage({
-                    type: 'copyToAccumulator',
-                    text: selectedText
-                }, '*');
-                hideCopyButton();
-            }
-        };
-        document.body.appendChild(copyButton);
-        return copyButton;
-    }
-    
-    function showCopyButton(x, y) {
-        const btn = createCopyButton();
-        btn.style.display = 'block';
-        btn.style.left = x + 'px';
-        btn.style.top = (y - 40) + 'px';
-    }
-    
-    function hideCopyButton() {
-        if (copyButton) {
-            copyButton.style.display = 'none';
-        }
-        selectedText = '';
-    }
-    
-    function handleTextSelection() {
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0 && selection.toString().trim().length > 0) {
-            selectedText = selection.toString().trim();
-            const range = selection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
-            showCopyButton(rect.left + rect.width / 2 - 75, rect.top + window.scrollY);
-        } else {
-            hideCopyButton();
-        }
-    }
-    
-    document.addEventListener('mouseup', handleTextSelection);
-    document.addEventListener('keyup', handleTextSelection);
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.copy-selection-btn')) {
-            const selection = window.getSelection();
-            if (selection.toString().trim().length === 0) {
-                hideCopyButton();
-            }
-        }
-    });
-    </script>
     """, unsafe_allow_html=True)
     
     # Header
@@ -876,6 +818,14 @@ def brainstormmain():
         st.session_state.selected_content = ""
     if 'pending_copy_text' not in st.session_state:
         st.session_state.pending_copy_text = ""
+    if 'token_usage' not in st.session_state:
+        st.session_state.token_usage = {}
+    if 'total_session_tokens' not in st.session_state:
+        st.session_state.total_session_tokens = {
+            'prompt_tokens': 0,
+            'completion_tokens': 0,
+            'total_tokens': 0
+        }
     
     # Create main layout
     main_col1, main_col2 = st.columns([3, 2])
@@ -924,13 +874,13 @@ def brainstormmain():
             chat_html += '</div>'
             st.markdown(chat_html, unsafe_allow_html=True)
             
-            # Add manual copy buttons for chat messages
+            # Add simple copy buttons for chat messages
             if st.session_state.chat_history:
                 st.markdown("#### 📋 Copy Chat Content")
                 chat_col1, chat_col2 = st.columns(2)
                 
                 with chat_col1:
-                    if st.button("📋 Copy Last Response"):
+                    if st.button("📋 Copy Last Response", key="chat_copy_last"):
                         if st.session_state.chat_history:
                             # Get the last assistant response
                             last_response = None
@@ -944,11 +894,11 @@ def brainstormmain():
                                     st.session_state.accumulator_content += f"\n\n--- Last Chat Response ({datetime.now().strftime('%H:%M:%S')}) ---\n{last_response}"
                                 else:
                                     st.session_state.accumulator_content = f"--- Last Chat Response ({datetime.now().strftime('%H:%M:%S')}) ---\n{last_response}"
-                                st.success("✅ Last chat response copied to accumulator!")
+                                st.success("✅ Copied to accumulator!")
                                 st.rerun()
                 
                 with chat_col2:
-                    if st.button("📋 Copy All Chat"):
+                    if st.button("📋 Copy All Chat", key="chat_copy_all"):
                         if st.session_state.chat_history:
                             full_chat = f"--- Full Chat History ({datetime.now().strftime('%H:%M:%S')}) ---\n"
                             for msg in st.session_state.chat_history:
@@ -959,7 +909,7 @@ def brainstormmain():
                                 st.session_state.accumulator_content += f"\n\n{full_chat}"
                             else:
                                 st.session_state.accumulator_content = full_chat
-                            st.success("✅ Full chat history copied to accumulator!")
+                            st.success("✅ Copied to accumulator!")
                             st.rerun()
             
             # Audio Response Player
@@ -990,6 +940,12 @@ def brainstormmain():
                         st.session_state.chat_history = []
                         st.session_state.agent_outputs = {}
                         st.session_state.current_audio = None
+                        st.session_state.token_usage = {}
+                        st.session_state.total_session_tokens = {
+                            'prompt_tokens': 0,
+                            'completion_tokens': 0,
+                            'total_tokens': 0
+                        }
                         st.rerun()
             
             with input_tab2:
@@ -1020,116 +976,92 @@ def brainstormmain():
                 st.markdown('</div>', unsafe_allow_html=True)
         
         with accumulator_tab:
-            # Content Accumulator Tab - moved from right column
+            # Content Accumulator Tab - simplified and streamlined
             st.markdown("### 📝 Content Accumulator & Editor")
             st.markdown("*Collect, edit, and organize insights from conversations and agent outputs*")
             
-            # Manual text selection area
-            st.markdown("#### ✂️ Manual Text Selection")
+            # Quick action buttons at the top
+            col_quick1, col_quick2, col_quick3, col_quick4 = st.columns(4)
             
-            # Help expander
-            with st.expander("ℹ️ How to Copy Text", expanded=False):
-                st.markdown("""
-                **Multiple ways to copy content to your accumulator:**
-                
-                1. **Chat Messages**: Use the copy buttons in the Chat tab to copy responses
-                2. **Agent Outputs**: Each agent in the right panel has 'Add Full' and 'Add Selected' options
-                3. **Manual Selection**: Copy any text from anywhere and paste it below
-                4. **Text Selection**: Select text with your mouse and use Ctrl+C, then paste here
-                
-                **Tips:**
-                - Use the text area in each agent output for selective copying
-                - The accumulator preserves all your collected insights
-                - Export your accumulator content when done
-                """)
-            
-            st.markdown("*Copy any text from chat or agent outputs and paste it here to add to your accumulator*")
-            
-            manual_text = st.text_area(
-                "Paste selected text here:",
-                value="",
-                height=80,
-                key="manual_text_input",
-                help="Copy text from anywhere in the app and paste it here, then click 'Add to Accumulator'"
-            )
-            
-            col_manual1, col_manual2 = st.columns([1, 1])
-            with col_manual1:
-                if st.button("➕ Add Pasted Text"):
-                    if manual_text.strip():
-                        if st.session_state.accumulator_content:
-                            st.session_state.accumulator_content += f"\n\n--- Manual Selection ({datetime.now().strftime('%H:%M:%S')}) ---\n{manual_text.strip()}"
-                        else:
-                            st.session_state.accumulator_content = f"--- Manual Selection ({datetime.now().strftime('%H:%M:%S')}) ---\n{manual_text.strip()}"
-                        st.success("✅ Manual selection added to accumulator!")
-                        # Clear the manual text area
-                        st.session_state.manual_text_input = ""
-                        st.rerun()
-                    else:
-                        st.warning("Please paste some text first.")
-            
-            with col_manual2:
-                if st.button("🧹 Clear Input"):
-                    st.session_state.manual_text_input = ""
-                    st.rerun()
-            
-            st.divider()
-            
-            # Quick action buttons
-            col_acc1, col_acc2, col_acc3 = st.columns(3)
-            
-            with col_acc1:
-                if st.button("📋 Copy Current Chat"):
+            with col_quick1:
+                if st.button("📋 Copy Last Response", key="acc_copy_last"):
                     if st.session_state.chat_history:
-                        # Get the current conversation
-                        current_convo = ""
-                        for msg in st.session_state.chat_history[-2:]:  # Last 2 messages (user + assistant)
-                            role = "User" if msg["role"] == "user" else "AI Team"
-                            current_convo += f"{role}: {msg['content']}\n\n"
+                        # Get the last assistant response
+                        last_response = None
+                        for msg in reversed(st.session_state.chat_history):
+                            if msg["role"] == "assistant":
+                                last_response = msg["content"]
+                                break
                         
-                        if current_convo:
+                        if last_response:
                             if st.session_state.accumulator_content:
-                                st.session_state.accumulator_content += f"\n\n--- Current Conversation ({datetime.now().strftime('%H:%M:%S')}) ---\n{current_convo}"
+                                st.session_state.accumulator_content += f"\n\n--- Last Chat Response ({datetime.now().strftime('%H:%M:%S')}) ---\n{last_response}"
                             else:
-                                st.session_state.accumulator_content = f"--- Current Conversation ({datetime.now().strftime('%H:%M:%S')}) ---\n{current_convo}"
-                            st.success("✅ Current conversation added to accumulator!")
+                                st.session_state.accumulator_content = f"--- Last Chat Response ({datetime.now().strftime('%H:%M:%S')}) ---\n{last_response}"
+                            st.success("✅ Added to accumulator!")
                             st.rerun()
             
-            with col_acc2:
-                if st.button("🗑️ Clear Accumulator"):
+            with col_quick2:
+                if st.button("📋 Copy Full Chat", key="acc_copy_full"):
+                    if st.session_state.chat_history:
+                        full_chat = f"--- Full Chat History ({datetime.now().strftime('%H:%M:%S')}) ---\n"
+                        for msg in st.session_state.chat_history:
+                            role = "User" if msg["role"] == "user" else "AI Team"
+                            full_chat += f"\n{role} ({msg.get('timestamp', '')}):\n{msg['content']}\n"
+                        
+                        if st.session_state.accumulator_content:
+                            st.session_state.accumulator_content += f"\n\n{full_chat}"
+                        else:
+                            st.session_state.accumulator_content = full_chat
+                        st.success("✅ Added to accumulator!")
+                        st.rerun()
+            
+            with col_quick3:
+                if st.button("🗑️ Clear Accumulator", key="acc_clear"):
                     st.session_state.accumulator_content = ""
                     st.success("✅ Accumulator cleared!")
                     st.rerun()
             
-            with col_acc3:
-                if st.button("📤 Export Accumulator"):
-                    if st.session_state.accumulator_content:
-                        st.download_button(
-                            label="💾 Download Content",
-                            data=st.session_state.accumulator_content,
-                            file_name=f"accumulated_insights_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                            mime="text/plain",
-                            key="download_accumulator"
-                        )
+            with col_quick4:
+                if st.session_state.accumulator_content:
+                    st.download_button(
+                        label="💾 Download",
+                        data=st.session_state.accumulator_content,
+                        file_name=f"accumulated_insights_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain",
+                        key="download_accumulator"
+                    )
             
-            # Content editor
+            st.divider()
+            
+            # Main content editor - larger and more prominent
+            st.markdown("#### ✏️ Edit Your Accumulated Content")
             edited_content = st.text_area(
-                "Edit and accumulate content:",
+                "Your accumulated insights and notes:",
                 value=st.session_state.accumulator_content,
-                height=400,
-                help="Paste responses, edit content, and build your consolidated insights here."
+                height=500,
+                placeholder="Your collected insights will appear here. You can edit this content directly or use the copy buttons from chat and agent outputs to add content.",
+                help="Edit this content directly, or use the copy buttons from chat messages and agent outputs to add content here."
             )
             
             # Update session state if content changed
             if edited_content != st.session_state.accumulator_content:
                 st.session_state.accumulator_content = edited_content
             
+            # Simple statistics
+            if st.session_state.accumulator_content:
+                word_count = len(st.session_state.accumulator_content.split())
+                char_count = len(st.session_state.accumulator_content)
+                st.caption(f"📊 **{word_count}** words • **{char_count}** characters")
+            else:
+                st.caption("📝 Start accumulating content using the copy buttons above")
+            
             # Template suggestions
             st.markdown("#### 📋 Quick Templates")
             template_col1, template_col2 = st.columns(2)
             
             with template_col1:
-                if st.button("📊 Analysis Template"):
+                if st.button("📊 Analysis Template", key="template_analysis"):
                     template = """--- STRATEGIC ANALYSIS ---
 
 ## Executive Summary
@@ -1157,7 +1089,7 @@ def brainstormmain():
                     st.rerun()
             
             with template_col2:
-                if st.button("💡 Ideas Template"):
+                if st.button("💡 Ideas Template", key="template_ideas"):
                     template = """--- BRAINSTORMING SESSION ---
 
 ## Challenge/Opportunity
@@ -1193,7 +1125,7 @@ def brainstormmain():
         st.markdown("### 🤖 AI Agent Insights")
         
         # Status and Metrics
-        col_stat1, col_stat2 = st.columns(2)
+        col_stat1, col_stat2, col_stat3 = st.columns(3)
         with col_stat1:
             st.markdown(f'''
             <div class="metric-card">
@@ -1210,6 +1142,15 @@ def brainstormmain():
                 <p style="margin: 5px 0 0 0; font-size: 0.9em;">Voice Interactions</p>
             </div>
             ''', unsafe_allow_html=True)
+            
+        with col_stat3:
+            total_tokens = st.session_state.total_session_tokens.get('total_tokens', 0)
+            st.markdown(f'''
+            <div class="metric-card">
+                <h3 style="color: #f59e0b; margin: 0;">{total_tokens:,}</h3>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;">Total Tokens</p>
+            </div>
+            ''', unsafe_allow_html=True)
         
         # Processing Status
         if st.session_state.processing:
@@ -1217,6 +1158,46 @@ def brainstormmain():
             <div class="status-container">
                 <h4>🔄 AI Team is Processing...</h4>
                 <p>Multiple AI agents are collaborating on your request</p>
+            </div>
+            ''', unsafe_allow_html=True)
+        
+        # Token Usage Details
+        if st.session_state.token_usage:
+            st.markdown("#### 🔢 Current Request Token Usage")
+            token_col1, token_col2, token_col3 = st.columns(3)
+            
+            with token_col1:
+                st.markdown(f'''
+                <div class="metric-card">
+                    <h4 style="color: #6366f1; margin: 0;">{st.session_state.token_usage.get('prompt_tokens', 0):,}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8em;">Prompt Tokens</p>
+                </div>
+                ''', unsafe_allow_html=True)
+            
+            with token_col2:
+                st.markdown(f'''
+                <div class="metric-card">
+                    <h4 style="color: #10b981; margin: 0;">{st.session_state.token_usage.get('completion_tokens', 0):,}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8em;">Completion Tokens</p>
+                </div>
+                ''', unsafe_allow_html=True)
+            
+            with token_col3:
+                st.markdown(f'''
+                <div class="metric-card">
+                    <h4 style="color: #f59e0b; margin: 0;">{st.session_state.token_usage.get('total_tokens', 0):,}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8em;">Total Tokens</p>
+                </div>
+                ''', unsafe_allow_html=True)
+        
+        # Session Token Summary
+        if st.session_state.total_session_tokens.get('total_tokens', 0) > 0:
+            st.markdown("#### 📈 Session Token Summary")
+            st.markdown(f'''
+            <div class="status-container">
+                <p><strong>Total Session Tokens:</strong> {st.session_state.total_session_tokens.get('total_tokens', 0):,}</p>
+                <p><strong>Prompt Tokens:</strong> {st.session_state.total_session_tokens.get('prompt_tokens', 0):,} | 
+                   <strong>Completion Tokens:</strong> {st.session_state.total_session_tokens.get('completion_tokens', 0):,}</p>
             </div>
             ''', unsafe_allow_html=True)
         
@@ -1263,14 +1244,19 @@ def brainstormmain():
                         # Clean and format output for display
                         clean_output = output.replace("**", "").replace("##", "").replace("###", "")
                         
-                        # Display content in a selectable format
-                        st.markdown(f'<div class="selectable-content" style="background: #f8fafc; padding: 10px; border-radius: 5px; border: 1px solid #e2e8f0;">{clean_output}</div>', unsafe_allow_html=True)
+                        # Display content in a text area for easy copying
+                        st.text_area(
+                            f"📄 {name} Output (Copy any part you need):",
+                            value=clean_output,
+                            height=150,
+                            key=f"output_{agent_id}",
+                            help="Select any text from this output and copy it to your clipboard"
+                        )
                         
-                        # Add buttons for copying content
-                        col1, col2, col3 = st.columns([1, 1, 2])
-                        
+                        # Simple copy button
+                        col1, col2 = st.columns([1, 1])
                         with col1:
-                            if st.button(f"➕ Add Full", key=f"add_full_{agent_id}"):
+                            if st.button(f"📋 Copy All to Accumulator", key=f"copy_all_{agent_id}"):
                                 if st.session_state.accumulator_content:
                                     st.session_state.accumulator_content += f"\n\n--- {name} Insights ---\n{clean_output}"
                                 else:
@@ -1279,26 +1265,9 @@ def brainstormmain():
                                 st.rerun()
                         
                         with col2:
-                            # Text area for manual selection and copying
-                            selected_text = st.text_area(
-                                "Select & copy text:",
-                                value="",
-                                height=60,
-                                key=f"select_{agent_id}",
-                                help="Copy any text here and click 'Add Selected' to add to accumulator"
-                            )
-                        
-                        with col3:
-                            if st.button(f"➕ Add Selected", key=f"add_selected_{agent_id}"):
-                                if selected_text.strip():
-                                    if st.session_state.accumulator_content:
-                                        st.session_state.accumulator_content += f"\n\n--- {name} (Selected) ---\n{selected_text.strip()}"
-                                    else:
-                                        st.session_state.accumulator_content = f"--- {name} (Selected) ---\n{selected_text.strip()}"
-                                    st.success(f"✅ Added selected text from {name} to accumulator!")
-                                    st.rerun()
-                                else:
-                                    st.warning("Please paste some text to add to accumulator.")
+                            # Show a small preview of what's in the accumulator
+                            accumulator_preview = st.session_state.accumulator_content[-100:] + "..." if len(st.session_state.accumulator_content) > 100 else st.session_state.accumulator_content
+                            st.caption(f"📝 Accumulator has {len(st.session_state.accumulator_content.split())} words")
         else:
             st.info("""
             🤖 **AI Agents Standing By**
@@ -1324,6 +1293,10 @@ def brainstormmain():
             export_data = {
                 "chat_history": st.session_state.chat_history,
                 "agent_outputs": st.session_state.agent_outputs,
+                "token_usage": {
+                    "current_request": st.session_state.token_usage,
+                    "session_total": st.session_state.total_session_tokens
+                },
                 "export_timestamp": datetime.now().isoformat()
             }
             
@@ -1353,17 +1326,26 @@ def process_brainstorm_request(user_input: str, is_voice: bool = False):
     with st.spinner("🧠 AI Brainstorming Team is collaborating on your request...", show_time=True):
         try:
             # Call the multi-agent brainstorm function
-            final_response, agent_outputs = connected_agent_brainstorm(user_input)
+            final_response, agent_outputs, token_usage = connected_agent_brainstorm(user_input)
             
-            # Store agent outputs
+            # Store agent outputs and token usage
             st.session_state.agent_outputs = agent_outputs
+            st.session_state.token_usage = token_usage
             
-            # Add assistant response to chat history
+            # Update total session tokens
+            st.session_state.total_session_tokens['prompt_tokens'] += token_usage.get('prompt_tokens', 0)
+            st.session_state.total_session_tokens['completion_tokens'] += token_usage.get('completion_tokens', 0)
+            st.session_state.total_session_tokens['total_tokens'] += token_usage.get('total_tokens', 0)
+            
+            # Add assistant response to chat history with token information
+            response_with_tokens = f"{final_response}\n\n📊 **Token Usage**: {token_usage.get('total_tokens', 0):,} tokens (Prompt: {token_usage.get('prompt_tokens', 0):,}, Completion: {token_usage.get('completion_tokens', 0):,})"
+            
             st.session_state.chat_history.append({
                 "role": "assistant",
-                "content": final_response,
+                "content": response_with_tokens,
                 "is_voice": False,
-                "timestamp": datetime.now().strftime("%H:%M:%S")
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "token_usage": token_usage
             })
             
             # Generate audio response if enabled
@@ -1390,6 +1372,16 @@ def process_brainstorm_request(user_input: str, is_voice: bool = False):
         except Exception as e:
             st.session_state.processing = False
             st.error(f"❌ Error processing your request: {str(e)}")
+            
+            # Add error message to chat history with empty token usage
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "content": f"❌ Sorry, I encountered an error while processing your request: {str(e)}",
+                "is_voice": False,
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+            })
+            st.rerun()
 
 if __name__ == "__main__":
     brainstormmain()
