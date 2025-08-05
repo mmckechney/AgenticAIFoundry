@@ -284,6 +284,7 @@ def get_ai_inference_client_openai(model_name, messages, modelname):
 
 # Function to get inference client for a deployed model
 def get_ai_inference_client(model_name, query, modelname):
+    returntxt = ""
     # endpoint = "https://agentnew-resource.eastus2.models.ai.azure.com"
     #endpoint = f"https://{model_name}.eastus2.models.ai.azure.com"
     endpoint = f"https://agentnew-resource.eastus2.models.ai.azure.com"
@@ -322,6 +323,7 @@ def get_ai_inference_client(model_name, query, modelname):
 
     print('Output from model: ', response.choices[0].message.content)
     print(f"\nToken usage: {response.usage}")
+    returntxt = response.choices[0].message.content
 
 
     return returntxt
