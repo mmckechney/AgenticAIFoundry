@@ -51,6 +51,7 @@ if not connection_string:
 
 configure_azure_monitor(connection_string=connection_string) #enable telemetry collection
 
+
 from opentelemetry import trace
 tracer = trace.get_tracer(__name__)
 
@@ -1384,4 +1385,5 @@ def process_brainstorm_request(user_input: str, is_voice: bool = False):
             st.rerun()
 
 if __name__ == "__main__":
-    brainstormmain()
+    with tracer.start_as_current_span("BrainStormingMultiAgent-tracing"):
+        brainstormmain()
