@@ -33,13 +33,17 @@ graph TB
     end
     
     subgraph "Application Layer"
-        Main[Main Controller<br/>brainstormmain()]
-        Processor[Request Processor<br/>process_brainstorm_request()]
-        Orchestrator[Agent Orchestrator<br/>connected_agent_brainstorm()]
+        Main["Main Controller
+        brainstormmain()"]
+        Processor["Request Processor
+        process_brainstorm_request()"]
+        Orchestrator["Agent Orchestrator
+        connected_agent_brainstorm()"]
     end
     
     subgraph "AI Agent Layer"
-        OrcAgent[Orchestrator Agent<br/>PresalesAgent]
+        OrcAgent["Orchestrator Agent
+        PresalesAgent"]
         subgraph "Specialized Agents"
             Ideation[💡 Ideation Agent]
             Inquiry[❓ Inquiry Agent]
@@ -110,28 +114,38 @@ graph TB
 ```mermaid
 graph TD
     subgraph "Agent Orchestration Layer"
-        PresalesAgent[Presales Solution Architect<br/>Main Orchestrator]
+        PresalesAgent["Presales Solution Architect
+        Main Orchestrator"]
     end
     
     subgraph "Creative & Analysis Agents"
-        IdeationAgent[💡 Ideation Catalyst<br/>Creative powerhouse for brainstorming]
-        InquiryAgent[❓ Inquiry Specialist<br/>Strategic questioning expert]
+        IdeationAgent["💡 Ideation Catalyst
+        Creative powerhouse for brainstorming"]
+        InquiryAgent["❓ Inquiry Specialist
+        Strategic questioning expert"]
     end
     
     subgraph "Business & Strategy Agents"
-        BusinessAnalyst[💼 Business Analyst<br/>Market & financial analysis]
-        StrategicAnalyst[📊 Strategic Analyst<br/>SWOT & PESTEL analysis]
-        ResourcePlanner[📋 Resource Planner<br/>Implementation planning]
-        MetricsAgent[🎯 Success Metrics Expert<br/>KPI definition & measurement]
+        BusinessAnalyst["💼 Business Analyst
+        Market & financial analysis"]
+        StrategicAnalyst["📊 Strategic Analyst
+        SWOT & PESTEL analysis"]
+        ResourcePlanner["📋 Resource Planner
+        Implementation planning"]
+        MetricsAgent["🎯 Success Metrics Expert
+        KPI definition & measurement"]
     end
     
     subgraph "Technology Agents"
-        TechAdvisor[🚀 Technology Advisor<br/>Emerging tech guidance]
-        TechArchitect[🏗️ Technical Architect<br/>Azure PaaS & AI-first design]
+        TechAdvisor["🚀 Technology Advisor
+        Emerging tech guidance"]
+        TechArchitect["🏗️ Technical Architect
+        Azure PaaS & AI-first design"]
     end
     
     subgraph "Knowledge Agents"
-        SustainabilityAgent[🌱 Sustainability Expert<br/>Document analysis specialist]
+        SustainabilityAgent["🌱 Sustainability Expert
+        Document analysis specialist"]
     end
     
     %% Orchestration Flow
