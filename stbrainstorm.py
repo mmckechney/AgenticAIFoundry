@@ -553,6 +553,164 @@ def extract_mermaid_diagrams(text):
     matches = re.findall(mermaid_pattern, text, re.DOTALL | re.IGNORECASE)
     return matches
 
+def clean_mermaid_code(mermaid_code):
+    """Clean and format Mermaid code for proper rendering."""
+    if not mermaid_code:
+        return ""
+    
+    # Remove any extra whitespace and normalize line endings
+    cleaned = mermaid_code.strip()
+    
+    # Fix common text replacement issues
+    cleaned = cleaned.replace('less thanbr / greater than', '')
+    cleaned = cleaned.replace('less than', '<')
+    cleaned = cleaned.replace('greater than', '>')
+    cleaned = cleaned.replace('&lt;br&gt;', '')
+    cleaned = cleaned.replace('&lt;', '<')
+    cleaned = cleaned.replace('&gt;', '>')
+    cleaned = cleaned.replace('&amp;', '&')
+    
+    # Fix common Mermaid syntax issues
+    lines = cleaned.split('\n')
+    fixed_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Skip comment lines that start with %%
+        if line.startswith('%%'):
+            fixed_lines.append(line)
+            continue
+            
+        # Fix node labels with problematic characters
+        # Replace forward slashes in node labels with safe alternatives
+        if '[' in line and ']' in line:
+            # Find all node labels and clean them
+            # Pattern to match node definitions like NodeName[Label Text]
+            pattern = r'(\w+)\[(.*?)\]'
+            
+            def fix_label(match):
+                node_name = match.group(1)
+                label_text = match.group(2)
+                
+                # Clean up any remaining HTML entities or problematic text
+                label_text = label_text.replace('""', '"')  # Fix double quotes
+                label_text = label_text.replace('less than', '<')
+                label_text = label_text.replace('greater than', '>')
+                
+                # Replace problematic characters in labels
+                label_text = label_text.replace('/', ' / ')  # Add spaces around slashes
+                label_text = label_text.replace('&', 'and')  # Replace ampersands
+                label_text = label_text.replace('<', 'less than')  # Replace less than
+                label_text = label_text.replace('>', 'greater than')  # Replace greater than
+                
+                # Ensure the label is properly quoted if it contains spaces or special chars
+                if any(char in label_text for char in [' ', '/', '(', ')', '-', ':']):
+                    # Use double quotes for labels with special characters
+                    return f'{node_name}["{label_text}"]'
+                else:
+                    return f'{node_name}[{label_text}]'
+            
+            line = re.sub(pattern, fix_label, line)
+        
+        # Clean up arrow syntax and node connections
+        line = re.sub(r'\s*-->\s*', ' --> ', line)  # Normalize arrows
+        line = re.sub(r'\s*\|\s*', '|', line)  # Clean up edge labels
+        
+        fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+def clean_mermaid_simple(mermaid_code):
+    """Simplified Mermaid cleaning that focuses on the most common issues."""
+    if not mermaid_code:
+        return ""
+    
+    # Remove extra whitespace
+    cleaned = mermaid_code.strip()
+    
+    # Simple fixes for the most common issues
+    # Fix labels with forward slashes - wrap them in quotes
+    # This pattern finds [Text with / characters] and wraps them in quotes
+    pattern = r'\[([^\]]*\/[^\]]*)\]'
+    
+    def quote_labels_with_slashes(match):
+        label_content = match.group(1)
+        return f'["{label_content}"]'
+    
+    cleaned = re.sub(pattern, quote_labels_with_slashes, cleaned)
+    
+    # Normalize arrows
+    cleaned = re.sub(r'\s*-->\s*', ' --> ', cleaned)
+    
+    return cleaned
+
+def test_mermaid_cleaning():
+    """Test the Mermaid cleaning function with the provided example."""
+    # Test with the user's specific problematic diagram
+    problematic_diagram = """flowchart TD
+
+subgraph User Interaction WebUI[""Azure App Serviceless thanbr / greater thanWeb UI / Dashboard""] AppAPI[""Azure App Serviceless thanbr / greater thanAPI Backend""] end subgraph Identity Auth[""Azure AD B2C""] end subgraph Email Integration Gmail[""Gmail API""] Outlook[""Microsoft Graph API""] LogicApp[""Azure Logic Appsless thanbr / greater thanEmail Ingestion""] APIM[""Azure API Management""] end subgraph Processing FuncPre[""Azure Functionsless thanbr / greater thanPreprocessing""] NLP[""Azure Cognitive Servicesless thanbr / greater thanText Analytics""] OpenAI[""Azure OpenAI Serviceless thanbr / greater thanPrioritization / NLP Engine""] EventGrid[""Azure Event Grid""] end subgraph Storage CosmosDB[""Azure Cosmos DB""] KeyVault[""Azure Key Vault""] end subgraph Ops&Monitoring Insights[""Azure Monitor andless thanbr / greater thanApp Insights""] end %% User authentication WebUI <-- OAuth --> Auth WebUI <--API calls --> AppAPI AppAPI -->|Mail API calls via|APIM %% Email flows APIM --> LogicApp LogicApp --Gmail OAuth --> Gmail LogicApp --Graph OAuth --> Outlook LogicApp -->|New mail event|EventGrid %% Email Processing EventGrid --> FuncPre FuncPre --> NLP NLP --> FuncPre FuncPre --> OpenAI OpenAI --> FuncPre FuncPre --> CosmosDB %% UI interaction with processed data CosmosDB --> AppAPI AppAPI --> WebUI %% Feedback Loop WebUI -->|User Feedback|AppAPI AppAPI --> FuncPre FuncPre --> OpenAI %% Security APIM -.-> KeyVault LogicApp -.-> KeyVault FuncPre -.-> KeyVault %% Monitoring AppAPI --> Insights LogicApp --> Insights FuncPre --> Insights"""
+    
+    test_diagram = """graph TD
+    subgraph Client Devices
+        WebClient[Web/Mobile Client]
+    end
+
+    subgraph Frontend Tier
+        WebApp[Azure App Service (Frontend)]
+    end
+
+    subgraph Integration Tier
+        API[Azure API Management]
+    end
+
+    subgraph Application Layer
+        APIService[AI Agent API (App Service/Container Apps)]
+        RealTime[Azure SignalR Service (Real-time Collaboration)]
+    end
+
+    subgraph AI Layer
+        OpenAI[Azure OpenAI Service]
+        CognitiveSearch[Azure Cognitive Search]
+    end
+
+    subgraph Data Layer
+        CosmosDB[Azure Cosmos DB (Ideas/Sessions)]
+        KeyVault[Azure Key Vault]
+    end
+
+    subgraph Orchestration
+        LogicApp[Azure Logic Apps/Functions (Workflows & Notifications)]
+    end
+
+    subgraph Monitoring
+        AppInsights[Azure Monitor/App Insights]
+    end
+
+    %% Data Flow
+    WebClient-->|https|WebApp
+    WebApp-->|REST/SignalR|API
+    API-->|Secured API Call|APIService
+    API-->|WebSockets|RealTime
+    APIService-->|AI Prompt|OpenAI
+    APIService-->|Search Query|CognitiveSearch
+    APIService-->|Session/Idea CRUD|CosmosDB
+    APIService-->|Secrets/Config|KeyVault
+    APIService-->|Trigger|LogicApp
+    APIService-->|Telemetry|AppInsights
+    RealTime-->|Update|WebClient
+    LogicApp-->|Follow-up Actions|APIService"""
+    
+    # Clean the problematic diagram first
+    simple_cleaned = clean_mermaid_simple(problematic_diagram)
+    full_cleaned = clean_mermaid_code(problematic_diagram)
+    
+    # Return the cleaned version of the problematic diagram for testing
+    return full_cleaned
+
 def update_mermaid_diagrams():
     """Update session state with Mermaid diagrams from agent outputs and chat history."""
     all_diagrams = []
@@ -561,9 +719,10 @@ def update_mermaid_diagrams():
     for agent_name, output in st.session_state.agent_outputs.items():
         diagrams = extract_mermaid_diagrams(output)
         for i, diagram in enumerate(diagrams):
+            cleaned_diagram = clean_mermaid_code(diagram)
             all_diagrams.append({
                 'source': f"{agent_name} (Agent Output)",
-                'diagram': diagram.strip(),
+                'diagram': cleaned_diagram,
                 'timestamp': datetime.now().strftime("%H:%M:%S")
             })
     
@@ -572,9 +731,10 @@ def update_mermaid_diagrams():
         if msg['role'] == 'assistant':
             diagrams = extract_mermaid_diagrams(msg['content'])
             for i, diagram in enumerate(diagrams):
+                cleaned_diagram = clean_mermaid_code(diagram)
                 all_diagrams.append({
                     'source': "Chat Response",
-                    'diagram': diagram.strip(),
+                    'diagram': cleaned_diagram,
                     'timestamp': msg.get('timestamp', 'Unknown')
                 })
     
@@ -1219,6 +1379,13 @@ def brainstormmain():
             # Display Mermaid diagrams
             if st.session_state.mermaid_diagrams:
                 st.markdown("#### 🎨 Interactive Diagrams")
+                # st.html(f"""
+                #                     <script type="module">
+                #                         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+                #                         mermaid.initialize({{ startOnLoad: true, theme: 'default' }});
+                #                         console.log("Mermaid initialized"); // Debugging
+                #                     </script>
+                #                     """)
                 
                 for i, diagram_info in enumerate(st.session_state.mermaid_diagrams):
                     with st.expander(f"📊 Diagram {i+1}: {diagram_info['source']} (Generated: {diagram_info['timestamp']})", expanded=True):
@@ -1229,33 +1396,53 @@ def brainstormmain():
                         # Display Mermaid diagram
                         try:
                             st.markdown("**Mermaid Diagram:**")
-                            # Use st.markdown with mermaid syntax
+                            
+                            # Clean the diagram code again to ensure it's properly formatted
+                            clean_diagram = clean_mermaid_code(diagram_info['diagram'])
+                            
+                            # Use Streamlit's native markdown with mermaid support
                             st.markdown(f"""
                             ```mermaid
-                            {diagram_info['diagram']}
+                            {clean_diagram}
                             ```
                             """)
-                            
+
+                            # st.html(f"""
+                            #         <div class="mermaid">
+                            #             {clean_diagram}
+                            #         </div>
+                            #         """)
+                            st.html(f"""
+                                <pre class="mermaid">
+                                    {clean_diagram}
+                                </pre>
+                                <script type="module">
+                                    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+                                    mermaid.initialize({{ startOnLoad: true }});
+                                </script>
+                            """)
+
                             # Also provide a text area for editing/copying
                             st.markdown("**Mermaid Code (editable):**")
                             edited_diagram = st.text_area(
                                 f"Edit Diagram {i+1}:",
-                                value=diagram_info['diagram'],
+                                value=clean_diagram,
                                 height=200,
                                 key=f"mermaid_edit_{i}",
                                 help="You can copy this Mermaid code to use in other tools like Mermaid Live Editor"
                             )
                             
                             # Update diagram if edited
-                            if edited_diagram != diagram_info['diagram']:
-                                st.session_state.mermaid_diagrams[i]['diagram'] = edited_diagram
+                            if edited_diagram != clean_diagram:
+                                # Clean the edited diagram too
+                                st.session_state.mermaid_diagrams[i]['diagram'] = clean_mermaid_code(edited_diagram)
                             
                             # Action buttons for individual diagrams
                             col_action1, col_action2, col_action3 = st.columns(3)
                             
                             with col_action1:
                                 if st.button(f"📋 Copy to Accumulator", key=f"copy_mermaid_{i}"):
-                                    mermaid_content = f"\n\n--- Mermaid Diagram from {diagram_info['source']} ---\n```mermaid\n{diagram_info['diagram']}\n```\n"
+                                    mermaid_content = f"\n\n--- Mermaid Diagram from {diagram_info['source']} ---\n```mermaid\n{clean_diagram}\n```\n"
                                     if st.session_state.accumulator_content:
                                         st.session_state.accumulator_content += mermaid_content
                                     else:
@@ -1264,7 +1451,9 @@ def brainstormmain():
                                     st.rerun()
                             
                             with col_action2:
-                                st.markdown(f"[🌐 Open in Mermaid Live](https://mermaid.live/edit#{diagram_info['diagram'].replace(' ', '%20').replace('\n', '%0A')})")
+                                # Use cleaned diagram for the live editor link
+                                encoded_diagram = clean_diagram.replace(' ', '%20').replace('\n', '%0A').replace('#', '%23')
+                                st.markdown(f"[🌐 Open in Mermaid Live](https://mermaid.live/edit#{encoded_diagram})")
                             
                             with col_action3:
                                 if st.button(f"🗑️ Remove", key=f"remove_mermaid_{i}"):
@@ -1292,29 +1481,26 @@ def brainstormmain():
                 """, unsafe_allow_html=True)
                 
                 # Sample Mermaid diagram for demonstration
-                st.markdown("#### 📝 Sample Mermaid Diagram")
-                with st.expander("🔍 View Sample Architecture Diagram", expanded=False):
-                    sample_diagram = """graph TD
-    A[User Request] --> B[AI Brainstorming Hub]
-    B --> C[Multi-Agent System]
-    C --> D[Ideation Agent]
-    C --> E[Business Analyst]
-    C --> F[Technical Architect]
-    C --> G[Strategic Analyst]
-    F --> H[Mermaid Diagram]
-    D --> I[Creative Ideas]
-    E --> J[Business Analysis]
-    G --> K[Strategic Insights]
-    H --> L[Architecture Visualization]
-    I --> M[Final Response]
-    J --> M
-    K --> M
-    L --> M
-    M --> N[User Interface]"""
+                st.markdown("#### 📝 Test Azure Architecture Diagram")
+                with st.expander("🔧 Test Diagram Cleaning (Azure Architecture)", expanded=False):
+                    # Test the problematic Azure diagram
+                    test_cleaned = test_mermaid_cleaning()
                     
-                    st.markdown("```mermaid\n" + sample_diagram + "\n```")
-                    st.text_area("Sample Mermaid Code:", value=sample_diagram, height=200, key="sample_mermaid")
-                    st.info("💡 This is a sample diagram showing how the AI brainstorming system works. Real diagrams will be generated by the Technical Architect agent.")
+                    st.markdown("**Original diagram (had issues with text replacement):**")
+                    st.code("""flowchart TD
+WebUI[""Azure App Serviceless thanbr / greater thanWeb UI / Dashboard""]
+AppAPI[""Azure App Serviceless thanbr / greater thanAPI Backend""]""", language="text")
+                    
+                    st.markdown("**Cleaned diagram (should render properly):**")
+                    st.code(test_cleaned[:300] + "...", language="text")
+                    
+                    # Try to render the cleaned diagram
+                    st.markdown("**Rendered diagram:**")
+                    st.markdown(f"""
+```mermaid
+{test_cleaned}
+```
+""")
     
     
     with main_col2:
