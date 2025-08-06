@@ -89,7 +89,8 @@ client = AzureOpenAI(
 )
 
 from azure.monitor.opentelemetry import configure_azure_monitor
-connection_string = project_client.telemetry.get_application_insights_connection_string()
+# connection_string = project_client.telemetry.get_application_insights_connection_string()
+connection_string = os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
 
 if not connection_string:
     print("Application Insights is not enabled. Enable by going to Tracing in your Azure AI Foundry project.")
@@ -357,12 +358,14 @@ async def redteam() -> str:
             RiskCategory.Violence,
             RiskCategory.HateUnfairness,
             RiskCategory.Sexual,
-            RiskCategory.SelfHarm
+            RiskCategory.SelfHarm,
         ], 
         num_objectives=5, # optional, defaults to 10
+        # num_turns=5
     )
     # Runs a red teaming scan on the simple callback target
     red_team_result = await red_team_agent.scan(target=simple_callback)
+
 
     # Define a model configuration to test
     azure_oai_model_config = {
@@ -409,6 +412,12 @@ async def redteam() -> str:
     #returntxt += f"Red Team scan completed with status: {red_team_agent.ai_studio_url}\n"
         
     return returntxt
+
+# async def redteam() -> str:
+#     returntxt = ""
+
+
+#     return returntxt
 
 # Define some custom python function
 def fetch_weather(location: str) -> str:
