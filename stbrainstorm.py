@@ -546,6 +546,41 @@ def parse_agent_outputs(run_steps):
     
     return agent_outputs
 
+def extract_mermaid_diagrams(text):
+    """Extract Mermaid diagrams from text content."""
+    import re
+    mermaid_pattern = r'```mermaid\s*\n(.*?)\n```'
+    matches = re.findall(mermaid_pattern, text, re.DOTALL | re.IGNORECASE)
+    return matches
+
+def update_mermaid_diagrams():
+    """Update session state with Mermaid diagrams from agent outputs and chat history."""
+    all_diagrams = []
+    
+    # Extract from agent outputs
+    for agent_name, output in st.session_state.agent_outputs.items():
+        diagrams = extract_mermaid_diagrams(output)
+        for i, diagram in enumerate(diagrams):
+            all_diagrams.append({
+                'source': f"{agent_name} (Agent Output)",
+                'diagram': diagram.strip(),
+                'timestamp': datetime.now().strftime("%H:%M:%S")
+            })
+    
+    # Extract from chat history
+    for msg in st.session_state.chat_history:
+        if msg['role'] == 'assistant':
+            diagrams = extract_mermaid_diagrams(msg['content'])
+            for i, diagram in enumerate(diagrams):
+                all_diagrams.append({
+                    'source': "Chat Response",
+                    'diagram': diagram.strip(),
+                    'timestamp': msg.get('timestamp', 'Unknown')
+                })
+    
+    # Update session state
+    st.session_state.mermaid_diagrams = all_diagrams
+
 def transcribe_audio(audio_data) -> str:
     """Transcribe audio using Azure OpenAI Whisper."""
     try:
@@ -791,6 +826,23 @@ def brainstormmain():
         -moz-user-select: text;
         -ms-user-select: text;
     }
+    .mermaid-container {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+        border: 1px solid #0ea5e9;
+        min-height: 400px;
+    }
+    .mermaid-chart {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 10px 0;
+        border: 1px solid #d1d5db;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -827,13 +879,15 @@ def brainstormmain():
             'completion_tokens': 0,
             'total_tokens': 0
         }
+    if 'mermaid_diagrams' not in st.session_state:
+        st.session_state.mermaid_diagrams = []
     
     # Create main layout
     main_col1, main_col2 = st.columns([3, 2])
     
     with main_col1:
-        # Create tabs for the left column - Chat and Content Accumulator
-        chat_tab, accumulator_tab = st.tabs(["💬 Brainstorming Chat", "📝 Content Accumulator"])
+        # Create tabs for the left column - Chat, Content Accumulator, and Mermaid Charts
+        chat_tab, accumulator_tab, mermaid_tab = st.tabs(["💬 Brainstorming Chat", "📝 Content Accumulator", "📊 Mermaid Charts"])
         
         with chat_tab:
             # Chat Interface Section
@@ -947,6 +1001,7 @@ def brainstormmain():
                             'completion_tokens': 0,
                             'total_tokens': 0
                         }
+                        st.session_state.mermaid_diagrams = []
                         st.rerun()
             
             with input_tab2:
@@ -1120,6 +1175,147 @@ def brainstormmain():
                 word_count = len(st.session_state.accumulator_content.split())
                 char_count = len(st.session_state.accumulator_content)
                 st.markdown(f"**Statistics:** {word_count} words, {char_count} characters")
+        
+        with mermaid_tab:
+            # Mermaid Charts Tab
+            st.markdown("### 📊 Mermaid Architecture Diagrams")
+            st.markdown("*Visualize architecture and process diagrams from AI agent responses*")
+            
+            # Update diagrams when tab is accessed
+            update_mermaid_diagrams()
+            
+            # Action buttons
+            col_mermaid1, col_mermaid2, col_mermaid3 = st.columns(3)
+            
+            with col_mermaid1:
+                if st.button("🔄 Refresh Diagrams", key="refresh_mermaid"):
+                    update_mermaid_diagrams()
+                    st.success("✅ Diagrams refreshed!")
+                    st.rerun()
+            
+            with col_mermaid2:
+                total_diagrams = len(st.session_state.mermaid_diagrams)
+                st.metric("📊 Diagrams Found", total_diagrams)
+            
+            with col_mermaid3:
+                if st.session_state.mermaid_diagrams:
+                    # Create downloadable content
+                    mermaid_export = ""
+                    for i, diagram_info in enumerate(st.session_state.mermaid_diagrams):
+                        mermaid_export += f"## Diagram {i+1} - {diagram_info['source']}\n"
+                        mermaid_export += f"Generated: {diagram_info['timestamp']}\n\n"
+                        mermaid_export += f"```mermaid\n{diagram_info['diagram']}\n```\n\n"
+                    
+                    st.download_button(
+                        label="💾 Download",
+                        data=mermaid_export,
+                        file_name=f"mermaid_diagrams_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                        mime="text/markdown",
+                        key="download_mermaid"
+                    )
+            
+            st.divider()
+            
+            # Display Mermaid diagrams
+            if st.session_state.mermaid_diagrams:
+                st.markdown("#### 🎨 Interactive Diagrams")
+                
+                for i, diagram_info in enumerate(st.session_state.mermaid_diagrams):
+                    with st.expander(f"📊 Diagram {i+1}: {diagram_info['source']} (Generated: {diagram_info['timestamp']})", expanded=True):
+                        # Display source information
+                        st.markdown(f"**Source:** {diagram_info['source']}")
+                        st.markdown(f"**Generated:** {diagram_info['timestamp']}")
+                        
+                        # Display Mermaid diagram
+                        try:
+                            st.markdown("**Mermaid Diagram:**")
+                            # Use st.markdown with mermaid syntax
+                            st.markdown(f"""
+                            ```mermaid
+                            {diagram_info['diagram']}
+                            ```
+                            """)
+                            
+                            # Also provide a text area for editing/copying
+                            st.markdown("**Mermaid Code (editable):**")
+                            edited_diagram = st.text_area(
+                                f"Edit Diagram {i+1}:",
+                                value=diagram_info['diagram'],
+                                height=200,
+                                key=f"mermaid_edit_{i}",
+                                help="You can copy this Mermaid code to use in other tools like Mermaid Live Editor"
+                            )
+                            
+                            # Update diagram if edited
+                            if edited_diagram != diagram_info['diagram']:
+                                st.session_state.mermaid_diagrams[i]['diagram'] = edited_diagram
+                            
+                            # Action buttons for individual diagrams
+                            col_action1, col_action2, col_action3 = st.columns(3)
+                            
+                            with col_action1:
+                                if st.button(f"📋 Copy to Accumulator", key=f"copy_mermaid_{i}"):
+                                    mermaid_content = f"\n\n--- Mermaid Diagram from {diagram_info['source']} ---\n```mermaid\n{diagram_info['diagram']}\n```\n"
+                                    if st.session_state.accumulator_content:
+                                        st.session_state.accumulator_content += mermaid_content
+                                    else:
+                                        st.session_state.accumulator_content = mermaid_content
+                                    st.success("✅ Copied to accumulator!")
+                                    st.rerun()
+                            
+                            with col_action2:
+                                st.markdown(f"[🌐 Open in Mermaid Live](https://mermaid.live/edit#{diagram_info['diagram'].replace(' ', '%20').replace('\n', '%0A')})")
+                            
+                            with col_action3:
+                                if st.button(f"🗑️ Remove", key=f"remove_mermaid_{i}"):
+                                    st.session_state.mermaid_diagrams.pop(i)
+                                    st.success("✅ Diagram removed!")
+                                    st.rerun()
+                        
+                        except Exception as e:
+                            st.error(f"❌ Error displaying diagram: {str(e)}")
+                            st.code(diagram_info['diagram'], language="text")
+            else:
+                # No diagrams found
+                st.markdown("""
+                <div class="mermaid-container">
+                    <div style="text-align: center; padding: 50px 20px;">
+                        <h4>📊 No Mermaid Diagrams Found</h4>
+                        <p>Mermaid diagrams will automatically appear here when generated by AI agents.</p>
+                        <p><strong>The Technical Architect agent</strong> typically generates architecture diagrams in Mermaid format.</p>
+                        <br>
+                        <p style="font-size: 0.9em; color: #6b7280;">
+                            💡 <strong>Tip:</strong> Ask questions about system architecture, technical design, or process flows to generate diagrams.
+                        </p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Sample Mermaid diagram for demonstration
+                st.markdown("#### 📝 Sample Mermaid Diagram")
+                with st.expander("🔍 View Sample Architecture Diagram", expanded=False):
+                    sample_diagram = """graph TD
+    A[User Request] --> B[AI Brainstorming Hub]
+    B --> C[Multi-Agent System]
+    C --> D[Ideation Agent]
+    C --> E[Business Analyst]
+    C --> F[Technical Architect]
+    C --> G[Strategic Analyst]
+    F --> H[Mermaid Diagram]
+    D --> I[Creative Ideas]
+    E --> J[Business Analysis]
+    G --> K[Strategic Insights]
+    H --> L[Architecture Visualization]
+    I --> M[Final Response]
+    J --> M
+    K --> M
+    L --> M
+    M --> N[User Interface]"""
+                    
+                    st.markdown("```mermaid\n" + sample_diagram + "\n```")
+                    st.text_area("Sample Mermaid Code:", value=sample_diagram, height=200, key="sample_mermaid")
+                    st.info("💡 This is a sample diagram showing how the AI brainstorming system works. Real diagrams will be generated by the Technical Architect agent.")
+    
     
     with main_col2:
         # Agent Insights Panel - simplified
@@ -1294,6 +1490,7 @@ def brainstormmain():
             export_data = {
                 "chat_history": st.session_state.chat_history,
                 "agent_outputs": st.session_state.agent_outputs,
+                "mermaid_diagrams": st.session_state.mermaid_diagrams,
                 "token_usage": {
                     "current_request": st.session_state.token_usage,
                     "session_total": st.session_state.total_session_tokens
@@ -1332,6 +1529,9 @@ def process_brainstorm_request(user_input: str, is_voice: bool = False):
             # Store agent outputs and token usage
             st.session_state.agent_outputs = agent_outputs
             st.session_state.token_usage = token_usage
+            
+            # Update Mermaid diagrams from new content
+            update_mermaid_diagrams()
             
             # Update total session tokens
             st.session_state.total_session_tokens['prompt_tokens'] += token_usage.get('prompt_tokens', 0)
