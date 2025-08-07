@@ -1399,19 +1399,19 @@ def main():
         # multiagent
 
         # msft learn
-        # starttime = datetime.now()
-        # msft_learn_result = msft_learn_mcp_agent("Show me top 5 AI courses?")
-        # print(msft_learn_result)
-        # endtime = datetime.now()
-        # print(f"MSFT Learn MCP agent example completed in {endtime - starttime} seconds")
+        starttime = datetime.now()
+        msft_learn_result = msft_learn_mcp_agent("Show me top 5 AI courses?")
+        print(msft_learn_result)
+        endtime = datetime.now()
+        print(f"MSFT Learn MCP agent example completed in {endtime - starttime} seconds")
 
         #hf_mcp_agent
         # https://devblogs.microsoft.com/foundry/announcing-model-context-protocol-support-preview-in-azure-ai-foundry-agent-service/
-        starttime = datetime.now()
-        hf_mcp_result = hf_mcp_agent("Show me top 5 latest models with details?")
-        print(hf_mcp_result)
-        endtime = datetime.now()
-        print(f"Hugging Face MCP agent example completed in {endtime - starttime} seconds")
+        # starttime = datetime.now()
+        # hf_mcp_result = hf_mcp_agent("Show me top 5 latest models with details?")
+        # print(hf_mcp_result)
+        # endtime = datetime.now()
+        # print(f"Hugging Face MCP agent example completed in {endtime - starttime} seconds")
 
 if __name__ == "__main__":
     main()
