@@ -1538,31 +1538,46 @@ Workflow Steps:
 ```mermaid
 graph TB
     subgraph "Response Time Metrics"
-        AgentResponse[Agent Response Time]
-        TotalRequest[Total Request Time]
-        UIUpdate[UI Update Time]
+        AgentResponse[Individual Agent Response Time]
+        OrchestrationTime[Multi-Agent Orchestration Time]
+        TotalRequest[Total Request Processing Time]
+        UIUpdate[UI Update and Refresh Time]
         AudioGeneration[Audio Generation Time]
+        MermaidProcessing[Mermaid Extraction & Cleaning Time]
     end
     
     subgraph "Resource Metrics"
-        TokenUsage[Token Consumption]
-        MemoryUsage[Memory Usage]
-        CPUUsage[CPU Usage]
-        NetworkIO[Network I/O]
+        TokenUsage[Token Consumption per Request]
+        SessionTokens[Cumulative Session Tokens]
+        MemoryUsage[Application Memory Usage]
+        CPUUsage[CPU Usage During Processing]
+        NetworkIO[Network I/O for Azure Services]
+        FileProcessing[File Upload & Vector Store Performance]
     end
     
     subgraph "Quality Metrics"
-        AgentAccuracy[Agent Response Accuracy]
-        UserSatisfaction[User Satisfaction]
-        ContentQuality[Content Quality]
-        DiagramQuality[Diagram Quality]
+        AgentAccuracy[Agent Response Relevance]
+        UserSatisfaction[User Engagement Metrics]
+        ContentQuality[Content Accumulator Usage]
+        DiagramQuality[Mermaid Diagram Success Rate]
+        VoiceAccuracy[Voice Transcription Accuracy]
+        AudioQuality[TTS Audio Quality Metrics]
     end
     
     subgraph "Business Metrics"
-        SessionLength[Session Length]
-        UserEngagement[User Engagement]
-        ExportFrequency[Content Export Frequency]
-        VoiceUsage[Voice Usage Rate]
+        SessionLength[Average Session Duration]
+        UserEngagement[Questions per Session]
+        ExportFrequency[Content Export Usage]
+        VoiceUsage[Voice Interaction Rate]
+        AccumulatorUsage[Content Accumulator Adoption]
+        MermaidViews[Diagram Visualization Usage]
+    end
+    
+    subgraph "Technical Efficiency"
+        AgentCleanup[Agent Lifecycle Management]
+        ThreadManagement[Thread Creation/Cleanup Performance]
+        ContentExtraction[Real-time Content Extraction Speed]
+        SessionStateManagement[Session State Update Performance]
     end
 ```
 
@@ -1586,14 +1601,169 @@ with tracer.start_as_current_span("BrainStormingMultiAgent-tracing"):
 
 #### Key Performance Indicators
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Agent Response Time | < 30 seconds | Per agent completion time |
-| Total Request Time | < 60 seconds | End-to-end processing |
-| Token Efficiency | < 10K tokens/request | Token usage optimization |
-| UI Responsiveness | < 2 seconds | UI state update time |
-| Audio Generation | < 10 seconds | TTS processing time |
-| Memory Usage | < 2GB | Application memory footprint |
+| Metric | Target | Measurement | Current Implementation |
+|--------|--------|-------------|----------------------|
+| Multi-Agent Response Time | < 45 seconds | End-to-end agent orchestration | 9 specialist agents + main orchestrator |
+| Individual Agent Time | < 5 seconds | Per specialist agent completion | Parallel processing where possible |
+| Token Efficiency | < 15K tokens/request | Token usage optimization | Real-time tracking with session aggregation |
+| UI Responsiveness | < 2 seconds | UI state update time | Streamlit reactive programming |
+| Audio Generation | < 15 seconds | TTS processing time | Azure TTS with text optimization |
+| Voice Transcription | < 5 seconds | Whisper STT processing | Azure Whisper integration |
+| Memory Usage | < 4GB | Application memory footprint | Session state optimization |
+| Mermaid Processing | < 3 seconds | Diagram extraction & cleaning | Advanced regex + syntax cleaning |
+| Content Accumulation | < 1 second | Content copy operations | Real-time session state updates |
+| File Processing | < 30 seconds | PDF upload to vector store | Azure AI file service integration |
+
+#### Enhanced Monitoring Capabilities
+
+1. **Token Usage Tracking**
+   - Real-time token counting per request
+   - Session-level token aggregation
+   - Breakdown by prompt vs completion tokens
+   - Cost estimation based on usage patterns
+
+2. **Content Management Metrics**
+   - Content accumulator usage patterns
+   - Copy operation frequency and sources
+   - Template utilization statistics
+   - Export frequency and formats
+
+3. **Voice Interaction Analytics**
+   - Voice input success rates
+   - Transcription accuracy metrics
+   - Audio response generation time
+   - Voice vs text interaction ratios
+
+4. **Mermaid Diagram Analytics**
+   - Diagram extraction success rates
+   - Cleaning operation effectiveness
+   - User editing patterns
+   - Export and live editor usage
+
+5. **Multi-Agent Performance**
+   - Individual agent response times
+   - Agent output quality scoring
+   - Orchestration efficiency metrics
+   - Agent cleanup and lifecycle management
+
+### Export and Integration Capabilities
+
+```mermaid
+graph TD
+    subgraph "Export Sources"
+        SessionData[Complete Session Data]
+        AccumulatorContent[Accumulator Content]
+        MermaidDiagrams[Mermaid Diagrams]
+        ChatHistory[Chat Conversation]
+        AgentOutputs[Individual Agent Outputs]
+        TokenMetrics[Token Usage Analytics]
+    end
+    
+    subgraph "Export Formats"
+        JSONReport[JSON Session Report]
+        PlainText[Plain Text Export]
+        MarkdownDiagrams[Markdown with Mermaid]
+        TimestampedContent[Timestamped Content]
+        StructuredData[Structured Analysis Format]
+    end
+    
+    subgraph "Export Features"
+        AutoTimestamp[Automatic Timestamping]
+        MetadataInclusion[Rich Metadata Inclusion]
+        ContentValidation[Export Content Validation]
+        FormatOptimization[Format-specific Optimization]
+        ErrorHandling[Export Error Handling]
+    end
+    
+    subgraph "Integration Options"
+        StreamlitDownload[Streamlit Download Buttons]
+        FileGeneration[Temporary File Generation]
+        MermaidLiveLink[Mermaid Live Editor Links]
+        ExternalTools[External Tool Compatibility]
+    end
+    
+    SessionData --> JSONReport
+    AccumulatorContent --> PlainText
+    AccumulatorContent --> TimestampedContent
+    MermaidDiagrams --> MarkdownDiagrams
+    AgentOutputs --> StructuredData
+    
+    JSONReport --> AutoTimestamp
+    PlainText --> MetadataInclusion
+    MarkdownDiagrams --> ContentValidation
+    
+    AutoTimestamp --> StreamlitDownload
+    MetadataInclusion --> FileGeneration
+    ContentValidation --> MermaidLiveLink
+    FormatOptimization --> ExternalTools
+```
+
+#### Export Types and Use Cases
+
+1. **Session Report Export (JSON)**
+   - **Content**: Complete session data including chat history, agent outputs, token usage, and metadata
+   - **Format**: Structured JSON with timestamps and attribution
+   - **Use Case**: Complete session backup, data analysis, audit trails
+   - **Filename**: `brainstorming_session_YYYYMMDD_HHMMSS.json`
+
+2. **Content Accumulator Export (TXT)**
+   - **Content**: Curated and edited content from accumulator
+   - **Format**: Plain text with optional formatting preservation
+   - **Use Case**: Document creation, report generation, content sharing
+   - **Filename**: `accumulated_insights_YYYYMMDD_HHMMSS.txt`
+
+3. **Mermaid Diagrams Export (MD)**
+   - **Content**: All extracted and cleaned Mermaid diagrams
+   - **Format**: Markdown with proper Mermaid code blocks
+   - **Use Case**: Technical documentation, architecture reviews, presentations
+   - **Filename**: `mermaid_diagrams_YYYYMMDD_HHMMSS.md`
+
+4. **Individual Agent Outputs**
+   - **Content**: Specific agent responses with attribution
+   - **Format**: Copy-to-clipboard functionality
+   - **Use Case**: Focused analysis, agent performance review, selective content use
+
+#### Advanced Export Features
+
+1. **Rich Metadata Inclusion**
+   ```json
+   {
+     "session_metadata": {
+       "session_id": "unique_session_identifier",
+       "start_time": "2024-01-15T10:30:00Z",
+       "end_time": "2024-01-15T11:15:00Z",
+       "total_questions": 5,
+       "voice_interactions": 2,
+       "total_tokens": 12450
+     },
+     "agent_performance": {
+       "agents_used": 9,
+       "response_times": {...},
+       "token_usage_by_agent": {...}
+     },
+     "content_summary": {
+       "mermaid_diagrams_count": 3,
+       "accumulator_word_count": 1250,
+       "export_timestamp": "2024-01-15T11:16:00Z"
+     }
+   }
+   ```
+
+2. **Mermaid Live Editor Integration**
+   - Direct links to Mermaid Live Editor with pre-loaded diagrams
+   - URL encoding for complex diagrams
+   - Automatic diagram validation before link generation
+
+3. **Template-based Exports**
+   - Analysis Template exports with structured sections
+   - Brainstorming Template exports with idea organization
+   - Custom template support for specific use cases
+
+4. **Multi-format Content Preservation**
+   - Markdown formatting preservation in exports
+   - Code block integrity maintenance
+   - Timestamp and attribution preservation
+   - Agent response structure maintenance
 
 ### Error Handling
 
@@ -1763,31 +1933,45 @@ services:
 
 The AI Brainstorming Hub represents a sophisticated multi-agent collaboration platform that demonstrates best practices in:
 
-- **Multi-Agent Orchestration**: Coordinated team of specialized AI agents
-- **Azure AI Integration**: Deep integration with Azure AI Foundry services
-- **User Experience**: Intuitive voice-enabled interface with real-time collaboration
-- **Content Management**: Intelligent content accumulation and export capabilities
-- **Architecture Visualization**: Automatic Mermaid diagram generation and display
-- **Performance Monitoring**: Comprehensive telemetry and usage tracking
+- **Multi-Agent Orchestration**: Coordinated team of 9 specialized AI agents with structured output formats
+- **Azure AI Integration**: Deep integration with Azure AI Foundry services, vector stores, and file processing
+- **Advanced User Experience**: Three-tab interface with voice-enabled interactions, content accumulation, and real-time collaboration
+- **Intelligent Content Management**: Sophisticated content accumulator with templates, live editing, and multi-format exports
+- **Architecture Visualization**: Automatic Mermaid diagram extraction, advanced cleaning, and interactive editing
+- **Comprehensive Monitoring**: Detailed token tracking, session management, and performance analytics
+- **Enterprise Security**: Azure identity integration with file processing and document analysis capabilities
 
 This architecture provides a scalable, maintainable, and extensible foundation for enterprise-grade AI-powered brainstorming and strategic analysis applications.
 
 ### Key Architectural Benefits
 
-1. **Modularity**: Each agent serves a specific purpose and can be independently modified
-2. **Scalability**: Stateless design enables horizontal scaling
-3. **Extensibility**: New agents can be easily added to the ecosystem
-4. **Observability**: Comprehensive monitoring and telemetry integration
-5. **Security**: Enterprise-grade security with Azure identity integration
-6. **Usability**: Voice-enabled interface with intelligent content management
+1. **Modularity**: Each of the 9 specialist agents serves a specific purpose and can be independently modified
+2. **Scalability**: Stateless design with efficient agent lifecycle management enables horizontal scaling
+3. **Extensibility**: New agents and features can be easily added to the ecosystem
+4. **Observability**: Comprehensive monitoring with real-time token tracking and session analytics
+5. **Security**: Enterprise-grade security with Azure identity integration and document processing
+6. **Usability**: Voice-enabled three-tab interface with intelligent content management and export capabilities
+7. **Content Intelligence**: Advanced Mermaid diagram processing and content accumulation workflows
+8. **Performance**: Optimized multi-agent orchestration with token efficiency and error handling
+
+### Technical Excellence Features
+
+1. **Advanced Voice Integration**: Azure Whisper for STT and professional TTS with optimized audio processing
+2. **Sophisticated Content Processing**: Real-time Mermaid extraction, cleaning, and validation
+3. **Intelligent Session Management**: Comprehensive state tracking with multi-format export capabilities  
+4. **Document Intelligence**: Vector store integration for document analysis and knowledge extraction
+5. **Professional UI/UX**: Three-tab workflow with responsive design and professional business styling
+6. **Robust Error Handling**: Graceful degradation and comprehensive error recovery mechanisms
 
 ### Future Enhancement Opportunities
 
-1. **Agent Personalization**: Custom agent personalities and expertise areas
-2. **Collaborative Workspaces**: Multi-user brainstorming sessions
-3. **Advanced Analytics**: Deeper insights into brainstorming patterns
-4. **Integration APIs**: REST/GraphQL APIs for external system integration
-5. **Mobile Support**: Mobile-optimized interface and native apps
-6. **Offline Capabilities**: Local processing for sensitive environments
+1. **Agent Personalization**: Custom agent personalities, expertise fine-tuning, and specialized industry agents
+2. **Collaborative Workspaces**: Multi-user brainstorming sessions with real-time collaboration features
+3. **Advanced Analytics**: Deeper insights into brainstorming patterns, agent performance optimization, and user behavior analytics
+4. **Integration APIs**: REST/GraphQL APIs for external system integration and enterprise workflow automation
+5. **Mobile Support**: Mobile-optimized interface, native apps, and cross-platform synchronization
+6. **Offline Capabilities**: Local processing for sensitive environments and air-gapped deployments
+7. **Advanced Export**: Integration with popular documentation tools, automated report generation, and workflow automation
+8. **Enhanced AI Features**: Custom model fine-tuning, specialized domain knowledge integration, and advanced reasoning capabilities
 
-This documentation serves as a comprehensive guide for developers, architects, and stakeholders working with the AI Brainstorming Hub platform.
+This comprehensive documentation serves as a complete architectural guide for developers, architects, and stakeholders working with the AI Brainstorming Hub platform, reflecting the sophisticated implementation achieved in the current codebase.
