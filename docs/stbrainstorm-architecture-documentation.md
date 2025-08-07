@@ -177,82 +177,200 @@ graph TD
 - **Purpose**: Generate creative and innovative ideas
 - **Capabilities**: 
   - Brainstorm creative solutions
-  - Expand on initial concepts
-  - Ask thought-provoking questions
+  - Expand on initial concepts with fresh perspectives
+  - Ask thought-provoking questions to stimulate creativity
   - Encourage out-of-the-box thinking
-- **Output Format**: Structured creative insights with expansion opportunities
+  - Build upon ideas to create new possibilities
+- **Output Format**: 
+  ```
+  ## 💡 Creative Insights
+  ### Initial Ideas
+  - [List 3-5 innovative ideas]
+  ### Expansion Opportunities
+  - [Ways to expand or modify ideas]
+  ### Provocative Questions
+  - [Questions to spark further creativity]
+  ```
 
 #### ❓ Inquiry Specialist  
 - **Purpose**: Strategic questioning and deep analysis
 - **Capabilities**:
   - Ask strategic follow-up questions
-  - Probe deeper into assumptions
-  - Uncover hidden opportunities
+  - Probe deeper into assumptions and ideas
+  - Uncover hidden opportunities and challenges
   - Challenge thinking to strengthen concepts
-- **Output Format**: Strategic questions and assumptions to validate
+  - Guide discovery through targeted questioning
+- **Output Format**: 
+  ```
+  ## ❓ Strategic Inquiry
+  ### Key Questions to Explore
+  - [5-7 strategic questions]
+  ### Assumptions to Validate
+  - [Critical assumptions that need testing]
+  ### Areas for Deep Dive
+  - [Topics requiring further investigation]
+  ```
 
 #### 💼 Business Analyst
 - **Purpose**: Market and financial analysis
 - **Capabilities**:
   - Analyze market potential and sizing
-  - Evaluate revenue models
+  - Evaluate revenue models and financial viability
   - Assess competitive landscape
   - Identify target customer segments
-- **Output Format**: Comprehensive business analysis with market insights
+  - Evaluate business model feasibility
+- **Output Format**: 
+  ```
+  ## 💼 Business Analysis
+  ### Market Opportunity
+  - Market size and growth potential
+  - Target customer segments
+  ### Revenue Model
+  - Potential revenue streams
+  - Pricing strategies
+  ### Competitive Landscape
+  - Key competitors and differentiation
+  ### Financial Viability
+  - Investment requirements and ROI projections
+  ```
 
 #### 🚀 Technology Advisor
-- **Purpose**: Emerging technology guidance
+- **Purpose**: Emerging technology guidance and implementation
 - **Capabilities**:
   - Recommend relevant emerging technologies
   - Assess technical feasibility
-  - Identify technology trends
+  - Identify technology trends and opportunities
   - Suggest implementation approaches
-- **Output Format**: Technology recommendations and implementation roadmaps
+  - Evaluate technical risks and mitigation strategies
+- **Output Format**: 
+  ```
+  ## 🚀 Technology Recommendations
+  ### Emerging Technologies
+  - [Relevant cutting-edge technologies]
+  ### Implementation Approach
+  - [Technical architecture and approach]
+  ### Technology Stack
+  - [Recommended tools and platforms]
+  ### Innovation Opportunities
+  - [Ways to leverage technology for competitive advantage]
+  ```
 
 #### 📊 Strategic Analyst
 - **Purpose**: Comprehensive strategic analysis
 - **Capabilities**:
-  - Conduct SWOT analysis
-  - Perform PESTEL analysis
+  - Conduct SWOT analysis (Strengths, Weaknesses, Opportunities, Threats)
+  - Perform PESTEL analysis (Political, Economic, Social, Technological, Environmental, Legal)
   - Identify strategic opportunities and risks
+  - Assess market positioning
   - Evaluate strategic alternatives
-- **Output Format**: Structured SWOT/PESTEL analysis with strategic recommendations
+- **Output Format**: 
+  ```
+  ## 📊 Strategic Analysis
+  ### SWOT Analysis
+  - **Strengths**: [Internal advantages]
+  - **Weaknesses**: [Internal challenges]
+  - **Opportunities**: [External possibilities]
+  - **Threats**: [External risks]
+  ### PESTEL Analysis
+  - **Political**: [Political factors]
+  - **Economic**: [Economic conditions]
+  - **Social**: [Social trends]
+  - **Technological**: [Technology impact]
+  - **Environmental**: [Environmental considerations]
+  - **Legal**: [Legal/regulatory factors]
+  ### Strategic Recommendations
+  - [Key strategic priorities and actions]
+  ```
 
 #### 📋 Resource Planner
 - **Purpose**: Practical implementation planning
 - **Capabilities**:
-  - Plan resource requirements
+  - Plan resource requirements (human, financial, technical)
   - Create realistic project timelines
   - Estimate costs and budgets
   - Identify critical dependencies
-- **Output Format**: Detailed resource planning and implementation roadmaps
+  - Suggest team structure and skills needed
+- **Output Format**: 
+  ```
+  ## 📋 Resource Planning
+  ### Team Requirements
+  - [Roles and skills needed]
+  ### Timeline & Milestones
+  - [Project phases and key milestones]
+  ### Budget Estimation
+  - [Cost breakdown and financial requirements]
+  ### Critical Dependencies
+  - [Key dependencies and risk factors]
+  ### Implementation Roadmap
+  - [Step-by-step execution plan]
+  ```
 
 #### 🎯 Success Metrics Expert
 - **Purpose**: Define and measure success
 - **Capabilities**:
-  - Define key performance indicators
+  - Define key performance indicators (KPIs)
   - Create measurement frameworks
   - Establish success criteria
-  - Design monitoring systems
-- **Output Format**: KPI frameworks and success measurement plans
+  - Design monitoring and evaluation systems
+  - Recommend analytics and tracking tools
+- **Output Format**: 
+  ```
+  ## 🎯 Success Metrics Framework
+  ### Key Performance Indicators
+  - [Primary KPIs and metrics]
+  ### Success Criteria
+  - [Clear success definitions]
+  ### Measurement Framework
+  - [How to track and measure progress]
+  ### Monitoring Tools
+  - [Recommended analytics and tracking tools]
+  ### Review & Optimization
+  - [Regular review processes and optimization approaches]
+  ```
 
 #### 🏗️ Technical Architect
 - **Purpose**: Azure PaaS and AI-first architecture design
 - **Capabilities**:
-  - Design scalable Azure cloud architectures
-  - Implement AI-first design principles
-  - Apply Security by Design principles
-  - Create Mermaid architecture diagrams
-- **Output Format**: Technical architecture with Mermaid diagrams
+  - Design scalable, secure Azure cloud architectures using PaaS services
+  - Implement AI-first design principles and patterns
+  - Apply Security by Design and Zero Trust principles
+  - Create comprehensive technical documentation
+  - Design system integrations and data flows
+  - Recommend Azure AI and cognitive services integration
+- **Output Format**: 
+  ```
+  ## 🏗️ Technical Architecture Design
+  ### Azure Services Recommendation
+  - [Core Azure PaaS services for the solution]
+  ### Architecture Patterns
+  - [Recommended architectural patterns and designs]
+  ### Mermaid Architecture Diagram
+  ```mermaid
+  [Include detailed architecture diagram showing components, data flows, and integrations]
+  ```
+  ### Security Architecture
+  - [Security by Design principles and Zero Trust implementation]
+  ### AI Integration Strategy
+  - [Azure AI services integration and AI-first design patterns]
+  ### Implementation Roadmap
+  - [Technical implementation phases and milestones]
+  ### Performance & Scalability
+  - [Scalability patterns and performance optimization strategies]
+  ```
 
 #### 🌱 Sustainability Expert
-- **Purpose**: Document analysis and sustainability insights
+- **Purpose**: Document analysis and sustainability insights  
 - **Capabilities**:
-  - Analyze uploaded documents
-  - Extract sustainability insights
+  - Analyze uploaded documents using vector search
+  - Extract sustainability insights from documents
   - Answer questions about document content
-  - Provide sustainability recommendations
-- **Output Format**: Document-based insights and recommendations
+  - Provide sustainability recommendations based on uploaded materials
+  - Search through document knowledge base
+- **Output Format**: Document-based insights and recommendations with citations
+- **Special Features**: 
+  - Uses Azure AI file search with vector store
+  - Processes PDF documents for knowledge extraction
+  - Provides context-aware responses based on uploaded content
 
 ## 🧩 Component Architecture
 
@@ -264,9 +382,9 @@ graph TB
         ChatInterface[💬 Chat Interface]
         AccumulatorTab[📝 Content Accumulator]
         MermaidTab[📊 Mermaid Charts]
-        VoiceInput[🎤 Voice Input]
-        StatusPanel[📊 Status Panel]
-        AgentOutputs[🤖 Agent Outputs]
+        VoiceInput[🎤 Voice Input System]
+        StatusPanel[📊 Status & Metrics Panel]
+        AgentOutputs[🤖 Agent Insights Panel]
     end
     
     subgraph "Processing Components"
@@ -275,38 +393,51 @@ graph TB
         MermaidProcessor[Mermaid Processor]
         TokenTracker[Token Usage Tracker]
         SessionManager[Session Manager]
+        ContentManager[Content Manager]
+        FileProcessor[File Processor]
     end
     
     subgraph "Agent Management"
-        AgentFactory[Agent Factory]
         AgentOrchestrator[Agent Orchestrator]
-        ConnectedAgentTool[Connected Agent Tool]
+        SpecialistAgents[9 Specialist Agents]
+        MainOrchestrator[Main Presales Agent]
+        ConnectedAgentTools[Connected Agent Tools]
         ThreadManager[Thread Manager]
+        VectorStoreManager[Vector Store Manager]
     end
     
     subgraph "Utility Components"
-        AudioTranscriber[Audio Transcriber]
-        TTSGenerator[TTS Generator]
-        DiagramExtractor[Diagram Extractor]
-        ContentExporter[Content Exporter]
+        AudioTranscriber[Whisper Audio Transcriber]
+        TTSGenerator[Azure TTS Generator]
+        DiagramExtractor[Mermaid Diagram Extractor]
+        DiagramCleaner[Advanced Diagram Cleaner]
+        ContentExporter[Multi-format Exporter]
+        TemplateSystem[Template System]
     end
     
     %% Component Interactions
     ChatInterface --> RequestProcessor
     VoiceInput --> AudioProcessor
     RequestProcessor --> AgentOrchestrator
-    AgentOrchestrator --> AgentFactory
-    AgentFactory --> ConnectedAgentTool
-    ConnectedAgentTool --> ThreadManager
+    AgentOrchestrator --> SpecialistAgents
+    SpecialistAgents --> MainOrchestrator
+    MainOrchestrator --> ConnectedAgentTools
+    ConnectedAgentTools --> ThreadManager
     
     AudioProcessor --> AudioTranscriber
     AudioProcessor --> TTSGenerator
     MermaidTab --> MermaidProcessor
     MermaidProcessor --> DiagramExtractor
+    DiagramExtractor --> DiagramCleaner
     
-    AccumulatorTab --> ContentExporter
+    AccumulatorTab --> ContentManager
+    ContentManager --> TemplateSystem
+    ContentManager --> ContentExporter
     StatusPanel --> TokenTracker
     AgentOutputs --> SessionManager
+    
+    FileProcessor --> VectorStoreManager
+    VectorStoreManager --> SpecialistAgents
 ```
 
 ### Component Details
@@ -314,60 +445,239 @@ graph TB
 #### User Interface Components
 
 1. **Chat Interface** (`💬 Brainstorming Chat`)
-   - Real-time conversation display
-   - Message history management
-   - Voice message indicators
-   - Timestamp tracking
+   - Real-time conversation display with message history
+   - Voice message indicators and timestamps
+   - Chat copy controls for accumulator integration
+   - Audio response player with MP3 support
+   - Dual input system (text and voice tabs)
 
 2. **Content Accumulator** (`📝 Content Accumulator`)
-   - Editable content collection
-   - Template suggestions
-   - Export functionality
-   - Word/character counting
+   - Quick action buttons for copying chat and agent outputs
+   - Large content editor (500px height) with live editing
+   - Template system for analysis and brainstorming formats
+   - Content statistics (word count, character count)
+   - Export controls with timestamped file downloads
 
 3. **Mermaid Charts** (`📊 Mermaid Charts`)
-   - Automatic diagram extraction
-   - Interactive diagram display
-   - Diagram editing capabilities
-   - Export to various formats
+   - Automatic diagram extraction from all agent outputs
+   - Interactive diagram display with expandable containers
+   - Advanced Mermaid code cleaning and validation
+   - Live diagram editor with syntax fixing
+   - Export to Mermaid Live Editor and file downloads
+   - Test section for diagram cleaning verification
 
-4. **Voice Input** (`🎤 Voice Input`)
-   - Audio recording
-   - Real-time transcription
-   - Voice response generation
-   - Audio playback controls
+4. **Voice Input System** (`🎤 Voice Input`)
+   - Audio recording with st.audio_input
+   - Real-time transcription via Azure Whisper
+   - Voice response generation with Azure TTS
+   - Audio settings and controls
+   - Processing indicators and error handling
 
-5. **Agent Outputs** (`🤖 AI Agent Insights`)
-   - Individual agent response display
-   - Expandable agent containers
-   - Copy-to-accumulator functionality
-   - Token usage metrics
+5. **Agent Outputs Panel** (`🤖 AI Agent Insights`)
+   - Scrollable container (600px height) for all agent responses
+   - Expandable containers for each individual agent
+   - Text areas for easy content selection and copying
+   - Copy-to-accumulator buttons for each agent
+   - Agent-specific icons and formatted names
 
 #### Processing Components
 
 1. **Request Processor**
    - Input validation and formatting
-   - Session state management
-   - Error handling and recovery
-   - Response orchestration
+   - Session state management with comprehensive tracking
+   - Error handling and recovery with graceful degradation
+   - Response orchestration and token aggregation
 
 2. **Audio Processor**
-   - Whisper integration for transcription
-   - Azure TTS for response generation
-   - Audio format conversion
-   - Temporary file management
+   - Whisper integration for real-time transcription
+   - Azure TTS for professional voice responses (Nova voice, 0.9 speed)
+   - Audio format conversion and optimization
+   - Temporary file management with UUID-based naming
 
 3. **Mermaid Processor**
-   - Diagram extraction from text
-   - Mermaid code validation
-   - Interactive rendering
-   - Export functionality
+   - Advanced diagram extraction from all content sources
+   - Sophisticated syntax cleaning and validation
+   - Interactive rendering with live editing capabilities
+   - Export functionality to multiple formats
 
-4. **Token Tracker**
-   - Real-time token counting
-   - Session-level aggregation
-   - Usage analytics
-   - Cost estimation
+4. **Content Manager**
+   - Real-time content accumulation from multiple sources
+   - Live editing with immediate state updates
+   - Template system integration for structured content
+   - Word/character counting and statistics
+
+5. **Token Tracker**
+   - Real-time token counting per request
+   - Session-level aggregation and reporting
+   - Usage analytics with prompt/completion breakdown
+   - Cost estimation and optimization insights
+
+6. **File Processor**
+   - PDF document upload and processing
+   - Vector store integration for semantic search
+   - Document analysis capabilities for sustainability expert
+   - File cleanup and management
+
+## 🎯 New Features Architecture
+
+### Content Accumulator System
+
+```mermaid
+graph TD
+    subgraph "Content Sources"
+        ChatMessages[Chat Messages]
+        AgentOutputs[Individual Agent Outputs]
+        MermaidDiagrams[Mermaid Diagrams]
+        UserInput[Direct User Input]
+    end
+    
+    subgraph "Accumulator Core"
+        ContentEditor[Live Content Editor]
+        QuickActions[Quick Copy Actions]
+        Templates[Template System]
+        Statistics[Content Statistics]
+    end
+    
+    subgraph "Content Processing"
+        TextCleaning[Text Cleaning & Formatting]
+        ContentValidation[Content Validation]
+        AutoSave[Auto-save Functionality]
+        VersionTracking[Change Tracking]
+    end
+    
+    subgraph "Export Options"
+        TextExport[Plain Text Export]
+        TimestampedExport[Timestamped Content]
+        StructuredExport[Structured Format Export]
+    end
+    
+    ChatMessages --> QuickActions
+    AgentOutputs --> QuickActions
+    MermaidDiagrams --> QuickActions
+    UserInput --> ContentEditor
+    
+    QuickActions --> TextCleaning
+    ContentEditor --> TextCleaning
+    Templates --> ContentEditor
+    
+    TextCleaning --> ContentValidation
+    ContentValidation --> AutoSave
+    AutoSave --> Statistics
+    
+    ContentEditor --> TextExport
+    ContentEditor --> TimestampedExport
+    ContentEditor --> StructuredExport
+```
+
+### Voice Integration Architecture
+
+```mermaid
+graph TD
+    subgraph "Voice Input Pipeline"
+        AudioCapture[st.audio_input Capture]
+        AudioValidation[Audio Format Validation]
+        WhisperAPI[Azure Whisper Transcription]
+        TextProcessing[Text Cleanup & Validation]
+        VoiceIndicator[Voice Message Indicator]
+    end
+    
+    subgraph "Voice Output Pipeline"
+        ResponseText[AI Response Text]
+        TextOptimization[TTS Text Optimization]
+        AzureTTS[Azure TTS API Call]
+        AudioGeneration[MP3 Audio Generation]
+        AudioStorage[Session Audio Storage]
+        AudioPlayback[Streamlit Audio Player]
+    end
+    
+    subgraph "Audio Management"
+        TempFileManager[UUID-based Temp Files]
+        AudioCleanup[Automatic Cleanup]
+        ErrorHandling[Audio Error Handling]
+        FallbackMode[Text-only Fallback]
+    end
+    
+    AudioCapture --> AudioValidation
+    AudioValidation --> WhisperAPI
+    WhisperAPI --> TextProcessing
+    TextProcessing --> VoiceIndicator
+    VoiceIndicator --> RequestProcessor[Request Processing]
+    
+    RequestProcessor --> ResponseText
+    ResponseText --> TextOptimization
+    TextOptimization --> AzureTTS
+    AzureTTS --> AudioGeneration
+    AudioGeneration --> AudioStorage
+    AudioStorage --> AudioPlayback
+    
+    AudioGeneration --> TempFileManager
+    TempFileManager --> AudioCleanup
+    WhisperAPI --> ErrorHandling
+    AzureTTS --> ErrorHandling
+    ErrorHandling --> FallbackMode
+```
+
+### Advanced Mermaid Support
+
+```mermaid
+graph TD
+    subgraph "Diagram Sources"
+        AgentResponses[Agent Responses]
+        ChatHistory[Chat History]
+        UserInput[Direct User Input]
+    end
+    
+    subgraph "Extraction Engine"
+        RegexExtraction[Regex Pattern Matching]
+        CodeBlockDetection[Mermaid Code Block Detection]
+        ContentScanning[Real-time Content Scanning]
+    end
+    
+    subgraph "Cleaning Pipeline"
+        SyntaxCleaning[Advanced Syntax Cleaning]
+        LabelFixing[Node Label Fixing]
+        EdgePreservation[Edge Label Preservation]
+        HTMLEntityFixing[HTML Entity Resolution]
+        NewlineHandling[Newline Character Handling]
+    end
+    
+    subgraph "Rendering & Editing"
+        LivePreview[Live Diagram Preview]
+        CodeEditor[Interactive Code Editor]
+        SyntaxValidation[Real-time Syntax Validation]
+        ErrorRecovery[Syntax Error Recovery]
+    end
+    
+    subgraph "Export & Integration"
+        MermaidLive[Mermaid Live Editor Integration]
+        MarkdownExport[Markdown Export]
+        AccumulatorIntegration[Accumulator Integration]
+        SessionPersistence[Session Persistence]
+    end
+    
+    AgentResponses --> RegexExtraction
+    ChatHistory --> RegexExtraction
+    UserInput --> CodeBlockDetection
+    
+    RegexExtraction --> SyntaxCleaning
+    CodeBlockDetection --> SyntaxCleaning
+    ContentScanning --> SyntaxCleaning
+    
+    SyntaxCleaning --> LabelFixing
+    LabelFixing --> EdgePreservation
+    EdgePreservation --> HTMLEntityFixing
+    HTMLEntityFixing --> NewlineHandling
+    
+    NewlineHandling --> LivePreview
+    LivePreview --> CodeEditor
+    CodeEditor --> SyntaxValidation
+    SyntaxValidation --> ErrorRecovery
+    
+    CodeEditor --> MermaidLive
+    CodeEditor --> MarkdownExport
+    CodeEditor --> AccumulatorIntegration
+    LivePreview --> SessionPersistence
+```
 
 ## 🔄 Data Flow Architecture
 
@@ -379,36 +689,63 @@ sequenceDiagram
     participant UI as Streamlit UI
     participant Processor as Request Processor
     participant Orchestrator as Agent Orchestrator
-    participant Agents as AI Agents
+    participant MainAgent as Presales Agent
+    participant Specialists as Specialist Agents
     participant Azure as Azure AI Services
     participant Storage as Session Storage
     
-    User->>UI: Submit brainstorming request
+    User->>UI: Submit brainstorming request (text/voice)
+    alt Voice Input
+        UI->>Azure: Whisper transcription
+        Azure-->>UI: Transcribed text
+    end
+    
     UI->>Processor: process_brainstorm_request()
-    Processor->>Storage: Update session state
+    Processor->>Storage: Update session state with user message
     Processor->>Orchestrator: connected_agent_brainstorm()
     
-    Orchestrator->>Azure: Create agent instances
+    Note over Orchestrator: Create 9 specialist agents
+    Orchestrator->>Azure: Create specialist agents
     Azure-->>Orchestrator: Agent IDs
+    
+    Note over Orchestrator: Create main orchestrator
+    Orchestrator->>Azure: Create PresalesAgent with connected tools
+    Azure-->>Orchestrator: Main agent ID
     
     Orchestrator->>Azure: Create thread
     Azure-->>Orchestrator: Thread ID
     
-    Orchestrator->>Azure: Send message to orchestrator agent
-    Azure->>Agents: Delegate to specialist agents
+    Orchestrator->>Azure: Send message to main agent
+    Azure->>MainAgent: Process request
+    
+    Note over MainAgent,Specialists: Multi-agent collaboration
+    MainAgent->>Specialists: Delegate to specialist agents
     
     loop For each specialist agent
-        Agents->>Azure: Process and respond
-        Azure-->>Orchestrator: Agent response
+        Specialists->>Specialists: Process specialized analysis
+        Specialists-->>MainAgent: Specialist response
     end
     
-    Orchestrator->>Orchestrator: parse_agent_outputs()
-    Orchestrator->>Azure: Cleanup agents and threads
+    MainAgent->>MainAgent: Synthesize all responses
+    MainAgent-->>Azure: Final aggregated response
+    Azure-->>Orchestrator: Complete response + agent outputs
     
-    Orchestrator-->>Processor: Final response + agent outputs
+    Orchestrator->>Orchestrator: parse_agent_outputs()
+    Orchestrator->>Azure: Cleanup all agents and threads
+    
+    Orchestrator-->>Processor: Final response + individual outputs + tokens
     Processor->>Storage: Update session with results
+    Processor->>Storage: Update total session tokens
+    Processor->>Processor: update_mermaid_diagrams()
+    
+    alt Audio Response Enabled
+        Processor->>Azure: TTS generation
+        Azure-->>Processor: Audio file
+        Processor->>Storage: Store audio response
+    end
+    
     Processor->>UI: Trigger UI refresh
-    UI-->>User: Display results
+    UI-->>User: Display results in three-tab layout
 ```
 
 ### Voice Processing Flow
@@ -446,35 +783,67 @@ sequenceDiagram
 ```mermaid
 graph LR
     subgraph "Session Data"
-        ChatHistory[Chat History]
-        AgentOutputs[Agent Outputs]
-        TokenUsage[Token Usage]
-        MermaidDiagrams[Mermaid Diagrams]
-        AccumulatorContent[Accumulator Content]
+        ChatHistory[Chat History with Timestamps]
+        AgentOutputs[Individual Agent Outputs]
+        TokenUsage[Current Request Token Usage]
+        TotalTokens[Total Session Tokens]
+        MermaidDiagrams[Extracted Mermaid Diagrams]
+        AccumulatorContent[Editable Accumulator Content]
+        AudioResponses[Audio Response Files]
     end
     
     subgraph "Processing State"
         ProcessingFlag[Processing Flag]
-        CurrentAudio[Current Audio]
-        AudioEnabled[Audio Enabled]
+        CurrentAudio[Current Audio Data]
+        AudioEnabled[Audio Enabled Setting]
         SelectedContent[Selected Content]
+        PendingCopy[Pending Copy Text]
+    end
+    
+    subgraph "Content Management"
+        ChatCopyActions[Chat Copy to Accumulator]
+        AgentCopyActions[Agent Output Copy to Accumulator]
+        ContentEditor[Live Content Editor]
+        TemplateSystem[Template System]
+        ContentStats[Word/Character Counts]
     end
     
     subgraph "Export Formats"
-        JSONExport[JSON Export]
-        TextExport[Text Export]
-        MarkdownExport[Markdown Export]
+        JSONExport[Session Report JSON]
+        TextExport[Accumulator Text Export]
+        MarkdownExport[Mermaid Diagrams MD]
+        AudioExport[MP3 Audio Files]
     end
     
+    %% Data Flow Connections
     ChatHistory --> JSONExport
     AgentOutputs --> JSONExport
     TokenUsage --> JSONExport
+    TotalTokens --> JSONExport
+    MermaidDiagrams --> JSONExport
+    AudioResponses --> JSONExport
+    
+    AgentOutputs --> AgentCopyActions
+    ChatHistory --> ChatCopyActions
+    AgentCopyActions --> AccumulatorContent
+    ChatCopyActions --> AccumulatorContent
+    AccumulatorContent --> ContentEditor
+    ContentEditor --> AccumulatorContent
+    
     MermaidDiagrams --> MarkdownExport
     AccumulatorContent --> TextExport
+    AccumulatorContent --> ContentStats
+    AudioResponses --> AudioExport
     
+    %% UI State Management
     ProcessingFlag --> UI[UI State Management]
     CurrentAudio --> UI
     AudioEnabled --> UI
+    SelectedContent --> UI
+    PendingCopy --> UI
+    
+    %% Template Integration
+    TemplateSystem --> AccumulatorContent
 ```
 
 ## 🔗 Integration Architecture
@@ -485,43 +854,69 @@ graph LR
 graph TB
     subgraph "Application Layer"
         App[stbrainstorm.py]
+        FileUpload[PDF File Upload System]
     end
     
-    subgraph "Azure AI Foundry"
+    subgraph "Azure AI Foundry Services"
         ProjectClient[AI Project Client]
         AgentService[Agent Service]
         ThreadService[Thread Service]
         MessageService[Message Service]
         FileService[File Service]
         VectorStore[Vector Store Service]
+        TelemetryService[Telemetry Service]
     end
     
-    subgraph "Azure OpenAI"
+    subgraph "Specialized Agent Tools"
+        ConnectedAgents[Connected Agent Tools]
+        FileSearchTool[File Search Tool]
+        SustainabilityAgent[Sustainability Agent with Vector Search]
+    end
+    
+    subgraph "Azure OpenAI Services"
         GPTModel[GPT-4o-mini Model]
-        WhisperModel[Whisper Model]
-        TTSModel[TTS Model]
+        WhisperModel[Whisper Model for STT]
+        TTSModel[TTS Model for Audio]
     end
     
-    subgraph "Azure Services"
+    subgraph "Azure Infrastructure"
         Identity[Default Azure Credential]
         Insights[Application Insights]
         Monitor[Azure Monitor]
+        BlobStorage[Azure Blob Storage]
     end
     
+    %% Application connections
     App --> ProjectClient
+    FileUpload --> FileService
+    
+    %% Project Client connections
     ProjectClient --> AgentService
     ProjectClient --> ThreadService
     ProjectClient --> MessageService
     ProjectClient --> FileService
     ProjectClient --> VectorStore
+    ProjectClient --> TelemetryService
     
+    %% File processing flow
+    FileService --> VectorStore
+    VectorStore --> FileSearchTool
+    FileSearchTool --> SustainabilityAgent
+    
+    %% Agent service connections
+    AgentService --> ConnectedAgents
     AgentService --> GPTModel
+    ConnectedAgents --> SustainabilityAgent
+    
+    %% Direct API connections
     App --> WhisperModel
     App --> TTSModel
     
+    %% Infrastructure connections
     ProjectClient --> Identity
-    ProjectClient --> Insights
+    TelemetryService --> Insights
     Insights --> Monitor
+    FileService --> BlobStorage
 ```
 
 ### Environment Configuration
@@ -621,7 +1016,7 @@ graph TB
     end
     
     subgraph "Left Column (3/5)"
-        TabContainer[Tab Container]
+        TabContainer[Tab Container - Three Tabs]
         ChatTab[💬 Brainstorming Chat]
         AccumulatorTab[📝 Content Accumulator]
         MermaidTab[📊 Mermaid Charts]
@@ -635,10 +1030,29 @@ graph TB
     
     subgraph "Chat Tab Components"
         ChatHistory[Chat History Display]
+        ChatControls[Chat Copy Controls]
+        AudioPlayer[🔊 Audio Response Player]
         InputSection[Input Section]
-        TextInput[💬 Text Input]
-        VoiceInput[🎤 Voice Input]
-        AudioControls[🔊 Audio Controls]
+        TextInputTab[💬 Text Input Tab]
+        VoiceInputTab[🎤 Voice Input Tab]
+        AudioTranscribe[🎤 Audio Transcription]
+        AudioSettings[🔊 Audio Settings]
+    end
+    
+    subgraph "Content Accumulator Components"
+        QuickActions[📋 Quick Copy Actions]
+        ContentEditor[✏️ Main Content Editor]
+        Templates[📋 Template System]
+        AccumulatorStats[📊 Content Statistics]
+        AccumulatorExport[💾 Export Controls]
+    end
+    
+    subgraph "Mermaid Tab Components"
+        DiagramControls[🔄 Diagram Controls]
+        DiagramDisplay[🎨 Interactive Diagrams]
+        DiagramEditor[✏️ Diagram Code Editor]
+        DiagramActions[📋 Diagram Actions]
+        TestSection[🔧 Test Section]
     end
     
     Header --> MainColumns
@@ -650,10 +1064,25 @@ graph TB
     TabContainer --> MermaidTab
     
     ChatTab --> ChatHistory
+    ChatTab --> ChatControls
+    ChatTab --> AudioPlayer
     ChatTab --> InputSection
-    InputSection --> TextInput
-    InputSection --> VoiceInput
-    InputSection --> AudioControls
+    InputSection --> TextInputTab
+    InputSection --> VoiceInputTab
+    VoiceInputTab --> AudioTranscribe
+    VoiceInputTab --> AudioSettings
+    
+    AccumulatorTab --> QuickActions
+    AccumulatorTab --> ContentEditor
+    AccumulatorTab --> Templates
+    AccumulatorTab --> AccumulatorStats
+    AccumulatorTab --> AccumulatorExport
+    
+    MermaidTab --> DiagramControls
+    MermaidTab --> DiagramDisplay
+    MermaidTab --> DiagramEditor
+    MermaidTab --> DiagramActions
+    MermaidTab --> TestSection
     
     StatusPanel --> AgentPanel
     AgentPanel --> ExportPanel
@@ -756,16 +1185,23 @@ graph TB
 
 #### `connected_agent_brainstorm(query: str) -> tuple[str, dict, dict]`
 
-Main orchestration function that coordinates all AI agents.
+Main orchestration function that coordinates all AI agents including the sustainability expert.
 
 **Parameters:**
 - `query` (str): User's brainstorming question or challenge
 
 **Returns:**
 - Tuple containing:
-  - `final_response` (str): Aggregated response from all agents
-  - `agent_outputs` (dict): Individual responses from each agent
-  - `token_usage` (dict): Token consumption metrics
+  - `final_response` (str): Aggregated response from the main orchestrator agent
+  - `agent_outputs` (dict): Individual responses from each specialist agent
+  - `token_usage` (dict): Token consumption metrics with prompt, completion, and total tokens
+
+**Agent Flow:**
+1. Creates 9 specialized agents (Ideation, Inquiry, Business, Technology, Strategic, Resource, Success Metrics, Technical Architect, Sustainability)
+2. Creates main orchestrator agent (PresalesAgent) with connected agent tools
+3. Processes request through thread-based conversation
+4. Collects individual agent outputs and aggregated response
+5. Cleans up all agents and threads after processing
 
 **Example:**
 ```python
@@ -776,105 +1212,131 @@ response, outputs, tokens = connected_agent_brainstorm(
 
 #### `brainstormmain()`
 
-Main Streamlit application entry point.
+Main Streamlit application entry point with three-tab UI layout.
 
 **Functionality:**
-- Initializes Streamlit UI
-- Manages session state
-- Handles user interactions
-- Coordinates UI updates
+- Initializes Streamlit UI with custom CSS styling
+- Manages session state for chat history, agent outputs, token usage
+- Coordinates three-tab layout (Chat, Content Accumulator, Mermaid Charts)
+- Handles user interactions and voice input/output
+- Manages content accumulation and export systems
 
 #### `process_brainstorm_request(user_input: str, is_voice: bool = False)`
 
-Processes user requests through the multi-agent system.
+Processes user requests through the multi-agent system with full session management.
 
 **Parameters:**
 - `user_input` (str): User's input text
-- `is_voice` (bool): Whether input came from voice
+- `is_voice` (bool): Whether input came from voice transcription
 
 **Functionality:**
-- Updates session state
-- Calls agent orchestrator
+- Updates session state with user message
+- Calls `connected_agent_brainstorm()` for agent processing
+- Updates total session token counters
 - Generates audio responses if enabled
-- Updates UI with results
+- Updates Mermaid diagram extraction
+- Manages error handling and UI state updates
 
 #### `transcribe_audio(audio_data) -> str`
 
-Transcribes audio input using Azure Whisper.
+Transcribes audio input using Azure OpenAI Whisper.
 
 **Parameters:**
-- `audio_data`: Audio file data
+- `audio_data`: Audio file data from Streamlit audio input
 
 **Returns:**
-- `str`: Transcribed text
+- `str`: Transcribed text from audio
+
+**Technical Details:**
+- Uses Azure OpenAI Whisper deployment
+- Converts audio to BytesIO format for API compatibility
+- Handles transcription errors gracefully
 
 #### `generate_audio_response_gpt(text: str) -> str`
 
-Generates audio response using Azure TTS.
+Generates audio response using Azure OpenAI TTS API with advanced text preprocessing.
 
 **Parameters:**
-- `text` (str): Text to convert to speech
+- `text` (str): Text to convert to speech (max 3000 characters)
 
 **Returns:**
-- `str`: Path to generated audio file
+- `str`: Path to generated MP3 audio file or None on error
+
+**Features:**
+- Text cleaning for optimal TTS quality (removes markdown, limits length)
+- Uses 'nova' voice with 0.9 speed for professional delivery
+- Generates unique temporary files with UUID
+- Comprehensive error handling and logging
 
 #### `extract_mermaid_diagrams(text: str) -> list`
 
-Extracts Mermaid diagrams from text content.
+Extracts Mermaid diagrams from text content using regex pattern matching.
 
 **Parameters:**
-- `text` (str): Text content to search
+- `text` (str): Text content to search for Mermaid code blocks
 
 **Returns:**
-- `list`: List of Mermaid diagram code blocks
+- `list`: List of Mermaid diagram code blocks (without markdown fences)
+
+#### `clean_mermaid_code(mermaid_code: str) -> str`
+
+Advanced Mermaid diagram cleaning for proper rendering, handling complex syntax issues.
+
+**Parameters:**
+- `mermaid_code` (str): Raw Mermaid code that may have formatting issues
+
+**Returns:**
+- `str`: Cleaned and properly formatted Mermaid code
+
+**Cleaning Features:**
+- Fixes problematic text replacements ('less than', 'greater than')
+- Handles HTML entities and special characters
+- Normalizes node labels and removes newlines from labels
+- Preserves edge labels like (OAuth2) while cleaning syntax
+- Fixes arrow formatting and spacing
+- Comprehensive error handling for complex diagrams
 
 #### `parse_agent_outputs(run_steps) -> dict`
 
-Parses individual agent outputs from run steps.
+Parses individual agent outputs from Azure AI agent run steps.
 
 **Parameters:**
-- `run_steps`: Azure AI agent run steps
+- `run_steps`: Azure AI agent run steps from thread execution
 
 **Returns:**
-- `dict`: Dictionary mapping agent names to their outputs
+- `dict`: Dictionary mapping agent names to their specific outputs
 
-### Agent Configurations
+**Usage:**
+- Extracts connected agent tool call results
+- Maps agent IDs to human-readable names
+- Preserves individual agent responses for UI display
 
-#### Agent Creation Pattern
+#### `update_mermaid_diagrams()`
 
-```python
-agent = project_client.agents.create_agent(
-    model=os.environ["MODEL_DEPLOYMENT_NAME"],
-    name="agent_name",
-    instructions="Agent instructions...",
-    tools=[...],  # Optional tools
-    tool_resources={...}  # Optional resources
-)
-```
+Updates session state with Mermaid diagrams from agent outputs and chat history.
 
-#### Connected Agent Tool Pattern
-
-```python
-connected_agent = ConnectedAgentTool(
-    id=agent.id,
-    name="agent_name",
-    description="Agent description"
-)
-```
+**Functionality:**
+- Scans all agent outputs for Mermaid diagrams
+- Scans chat history for diagrams in responses
+- Cleans and formats diagrams for proper rendering
+- Updates session state with structured diagram information
+- Includes source attribution and timestamps
 
 ### Session State Variables
 
 | Variable | Type | Purpose |
 |----------|------|---------|
-| `chat_history` | list | Conversation history |
-| `agent_outputs` | dict | Individual agent responses |
-| `processing` | bool | Processing state flag |
-| `current_audio` | bytes | Current audio response |
-| `audio_enabled` | bool | Audio response setting |
-| `accumulator_content` | str | Accumulated content |
-| `token_usage` | dict | Current request token usage |
-| `total_session_tokens` | dict | Session total tokens |
-| `mermaid_diagrams` | list | Extracted Mermaid diagrams |
+| `chat_history` | list | Full conversation history with timestamps and voice indicators |
+| `agent_outputs` | dict | Individual agent responses mapped by agent name |
+| `processing` | bool | Processing state flag for UI updates |
+| `current_audio` | bytes | Current audio response file data |
+| `audio_enabled` | bool | Audio response generation setting |
+| `accumulator_content` | str | Editable accumulated content |
+| `selected_content` | str | Currently selected content for copying |
+| `pending_copy_text` | str | Text pending copy operation |
+| `token_usage` | dict | Current request token consumption |
+| `total_session_tokens` | dict | Cumulative session token usage |
+| `mermaid_diagrams` | list | Extracted and cleaned Mermaid diagrams with metadata |
 
 ## 📖 Usage Guidelines
 
@@ -889,6 +1351,8 @@ connected_agent = ConnectedAgentTool(
    export MODEL_DEPLOYMENT_NAME="gpt-4o-mini"
    export AZURE_OPENAI_ENDPOINT="https://your-openai.openai.azure.com"
    export AZURE_OPENAI_KEY="your-openai-key"
+   export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+   export AZURE_RESOURCE_GROUP="your-resource-group"
    ```
 
 2. **Launch Application**
@@ -896,93 +1360,175 @@ connected_agent = ConnectedAgentTool(
    streamlit run stbrainstorm.py
    ```
 
+3. **Three-Tab Workflow**
+   - **💬 Brainstorming Chat**: Main conversation interface with voice support
+   - **📝 Content Accumulator**: Collect, edit, and organize insights
+   - **📊 Mermaid Charts**: Visualize and edit architecture diagrams
+
 ### Best Practices
 
 #### Effective Brainstorming Questions
 
 1. **Strategic Questions**
-   - "How can we enter the renewable energy market?"
-   - "What are the key challenges in digital transformation?"
-   - "How do we build a competitive advantage in AI?"
+   - "How can we enter the renewable energy market with AI-powered solutions?"
+   - "What are the key challenges in digital transformation for healthcare?"
+   - "How do we build a competitive advantage in sustainable AI?"
 
 2. **Technical Architecture Questions**
-   - "Design a scalable microservices architecture for e-commerce"
-   - "What's the best cloud-native approach for data analytics?"
-   - "How to implement zero-trust security in Azure?"
+   - "Design a scalable microservices architecture for real-time analytics"
+   - "What's the best cloud-native approach for processing 1M events/second?"
+   - "How to implement zero-trust security in Azure with AI integration?"
 
 3. **Business Analysis Questions**
-   - "Analyze the market opportunity for sustainable packaging"
-   - "What's the ROI of implementing AI in customer service?"
-   - "How to monetize our data assets?"
+   - "Analyze the market opportunity for AI-powered sustainable packaging"
+   - "What's the ROI of implementing generative AI in customer service?"
+   - "How to monetize our data assets while ensuring privacy compliance?"
 
-#### Content Management
+#### Three-Tab Workflow Optimization
 
-1. **Use the Content Accumulator**
-   - Copy important insights from agent responses
-   - Edit and organize content for reports
-   - Export for external use
-
-2. **Leverage Mermaid Diagrams**
-   - Request technical architecture diagrams
-   - Export diagrams for presentations
-   - Edit diagram code for customization
-
-3. **Voice Interactions**
-   - Use voice input for natural conversations
+1. **Start in Chat Tab** 💬
+   - Use text or voice input for natural conversation
    - Enable audio responses for accessibility
-   - Maintain conversation flow with voice
+   - Monitor token usage in the right panel
+   - Ask follow-up questions to deepen analysis
 
-#### Token Optimization
+2. **Accumulate Content** 📝
+   - Copy valuable insights from chat and agent outputs
+   - Use quick copy buttons for efficiency
+   - Edit and structure content with live editor
+   - Apply templates for standardized formats
+   - Track word counts and export regularly
 
-1. **Efficient Questioning**
-   - Be specific and focused in queries
-   - Avoid overly broad questions
-   - Build on previous responses
+3. **Visualize with Mermaid** 📊
+   - Technical Architect agent generates architecture diagrams
+   - Review and edit Mermaid code directly
+   - Export to Mermaid Live Editor for advanced editing
+   - Copy diagrams to accumulator for documentation
 
-2. **Monitor Usage**
-   - Track token consumption per request
-   - Monitor session totals
-   - Optimize based on usage patterns
+#### Voice Interaction Best Practices
 
-### Common Use Cases
+1. **Voice Input**
+   - Speak clearly in a quiet environment
+   - Keep questions concise (under 2 minutes)
+   - Review transcription before processing
+   - Use voice for brainstorming sessions
 
-#### 1. Business Strategy Development
+2. **Audio Responses**
+   - Enable for hands-free operation
+   - Useful during presentations or meetings
+   - Professional Nova voice optimized for business
+   - Fallback to text if audio fails
+
+#### Content Management Strategies
+
+1. **Accumulator Usage**
+   - Start with analysis or brainstorming templates
+   - Copy the most relevant agent insights
+   - Edit content to create cohesive narratives
+   - Export at key milestones for backup
+
+2. **Agent Output Selection**
+   - Focus on actionable insights from Business Analyst
+   - Use Technical Architect for implementation planning
+   - Leverage Strategic Analyst for comprehensive analysis
+   - Include Success Metrics for measurable outcomes
+
+3. **Mermaid Diagram Management**
+   - Request technical diagrams explicitly
+   - Clean and edit diagrams for presentation quality
+   - Export diagrams early in session
+   - Use test section to verify complex diagrams
+
+### Advanced Workflows
+
+#### 1. Comprehensive Business Strategy Development
 
 ```
-Question: "We're a traditional retailer looking to expand into e-commerce. 
-What's our strategy for digital transformation?"
+Workflow Steps:
+1. Chat Tab: "We're a traditional retailer looking to expand into AI-powered e-commerce. 
+   What's our comprehensive digital transformation strategy?"
 
-Expected Agents:
-- Business Analyst: Market analysis and competitive landscape
-- Strategic Analyst: SWOT analysis and strategic recommendations
-- Technology Advisor: E-commerce platform recommendations
-- Technical Architect: System architecture design
-- Resource Planner: Implementation timeline and resources
+2. Review Agent Outputs:
+   - Business Analyst: Market analysis and competitive landscape
+   - Strategic Analyst: SWOT analysis and strategic recommendations
+   - Technology Advisor: E-commerce platform recommendations
+   - Technical Architect: System architecture with Mermaid diagrams
+   - Resource Planner: Implementation timeline and resources
+   - Success Metrics: KPIs and measurement framework
+
+3. Content Accumulator: 
+   - Apply "Analysis Template"
+   - Copy most relevant insights from each agent
+   - Structure as executive summary, analysis, and recommendations
+
+4. Mermaid Tab:
+   - Review architecture diagrams from Technical Architect
+   - Edit and clean diagrams for presentation
+   - Export to Mermaid Live for final polishing
+
+5. Export:
+   - Download session report (JSON)
+   - Download accumulated content (TXT)
+   - Download Mermaid diagrams (MD)
 ```
 
-#### 2. Technical Architecture Design
+#### 2. Technical Architecture Design Session
 
 ```
-Question: "Design a cloud-native architecture for a real-time analytics platform 
-handling 1M events per second."
+Workflow Steps:
+1. Chat Tab: "Design a cloud-native architecture for a real-time analytics platform 
+   handling 1M events per second with AI-powered insights."
 
-Expected Agents:
-- Technical Architect: Detailed architecture with Mermaid diagrams
-- Technology Advisor: Technology stack recommendations
-- Resource Planner: Infrastructure requirements
-- Success Metrics: Performance KPIs
+2. Voice Follow-up: Record detailed requirements and constraints
+
+3. Focus on Technical Outputs:
+   - Technical Architect: Detailed architecture with Mermaid diagrams
+   - Technology Advisor: Technology stack recommendations
+   - Resource Planner: Infrastructure requirements and scaling plan
+   - Success Metrics: Performance KPIs and monitoring strategy
+
+4. Mermaid Tab Priority:
+   - Extract and clean all architecture diagrams
+   - Edit diagrams for technical accuracy
+   - Test diagram rendering for complex components
+   - Export to documentation tools
+
+5. Accumulator Documentation:
+   - Create technical specification document
+   - Include architecture rationale and trade-offs
+   - Add implementation phases and milestones
 ```
 
-#### 3. Innovation Ideation
+#### 3. Innovation Ideation Workshop
 
 ```
-Question: "How can we use AI to revolutionize customer experience in healthcare?"
+Workflow Steps:
+1. Voice Input: "How can we use generative AI to revolutionize customer 
+   experience in healthcare while ensuring privacy and compliance?"
 
-Expected Agents:
-- Ideation Catalyst: Creative AI applications
-- Inquiry Specialist: Critical questions and assumptions
-- Business Analyst: Market opportunity assessment
-- Strategic Analyst: Implementation strategy
+2. Multi-Round Conversation:
+   - Initial brainstorming response
+   - Follow-up: "What are the biggest technical challenges?"
+   - Follow-up: "How do we ensure regulatory compliance?"
+   - Follow-up: "What's the implementation roadmap?"
+
+3. Agent Focus Areas:
+   - Ideation Catalyst: Creative AI applications and scenarios
+   - Inquiry Specialist: Critical questions and assumptions to validate
+   - Business Analyst: Market opportunity and revenue models
+   - Strategic Analyst: Implementation strategy and risk analysis
+   - Technical Architect: AI system architecture and data flows
+
+4. Collaborative Content Building:
+   - Use "Ideas Template" in accumulator
+   - Iteratively add insights from each conversation round
+   - Build comprehensive innovation proposal
+   - Include visual architecture from Mermaid diagrams
+
+5. Presentation Preparation:
+   - Export final content for stakeholder review
+   - Prepare Mermaid diagrams for technical discussions
+   - Generate session report for reference and follow-up
 ```
 
 ## 📊 Performance & Monitoring
