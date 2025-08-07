@@ -555,6 +555,8 @@ def extract_mermaid_diagrams(text):
 
 def clean_mermaid_code(mermaid_code):
     """Clean and format Mermaid code for proper rendering."""
+    import re  # Import at the top of function to avoid scoping issues
+    
     if not mermaid_code:
         return ""
     
@@ -584,16 +586,27 @@ def clean_mermaid_code(mermaid_code):
             fixed_lines.append(line)
             continue
             
-        # Fix node labels with problematic characters
-        # Replace forward slashes in node labels with safe alternatives
+        # Fix node labels with problematic characters, including newlines
         if '[' in line and ']' in line:
-            # Find all node labels and clean them
-            # Pattern to match node definitions like NodeName[Label Text]
+            # Pattern to match various node label formats
+            # This will match: NodeName["Label"] or NodeName[""Label""] or NodeName[Label]
             pattern = r'(\w+)\[(.*?)\]'
             
             def fix_label(match):
                 node_name = match.group(1)
                 label_text = match.group(2)
+                
+                # Remove quotes first to clean the text
+                label_text = label_text.strip('"').strip("'")
+                
+                # Fix newline characters - this is the main issue
+                label_text = label_text.replace('\\n', ' ')  # Replace \n with space
+                label_text = label_text.replace('\n', ' ')   # Replace actual newlines with space
+                
+                # Only remove problematic parentheses content, not all parentheses
+                # Remove parentheses that contain newlines or other problematic syntax
+                label_text = re.sub(r'\([^)]*\\n[^)]*\)', '', label_text)  # Remove parentheses with \n
+                label_text = re.sub(r'\([^)]*\n[^)]*\)', '', label_text)   # Remove parentheses with actual newlines
                 
                 # Clean up any remaining HTML entities or problematic text
                 label_text = label_text.replace('""', '"')  # Fix double quotes
@@ -601,23 +614,33 @@ def clean_mermaid_code(mermaid_code):
                 label_text = label_text.replace('greater than', '>')
                 
                 # Replace problematic characters in labels
-                label_text = label_text.replace('/', ' / ')  # Add spaces around slashes
                 label_text = label_text.replace('&', 'and')  # Replace ampersands
-                label_text = label_text.replace('<', 'less than')  # Replace less than
-                label_text = label_text.replace('>', 'greater than')  # Replace greater than
                 
-                # Ensure the label is properly quoted if it contains spaces or special chars
-                if any(char in label_text for char in [' ', '/', '(', ')', '-', ':']):
-                    # Use double quotes for labels with special characters
-                    return f'{node_name}["{label_text}"]'
-                else:
-                    return f'{node_name}[{label_text}]'
+                # Clean up multiple spaces and trim
+                label_text = ' '.join(label_text.split()).strip()
+                
+                # Always use double quotes for labels to ensure proper escaping
+                return f'{node_name}["{label_text}"]'
             
             line = re.sub(pattern, fix_label, line)
         
         # Clean up arrow syntax and node connections
         line = re.sub(r'\s*-->\s*', ' --> ', line)  # Normalize arrows
-        line = re.sub(r'\s*\|\s*', '|', line)  # Clean up edge labels
+        
+        # Clean up edge labels but preserve useful content like (OAuth2)
+        # Only clean up edge labels that have problematic characters
+        def clean_edge_label(match):
+            full_match = match.group(0)
+            edge_content = match.group(1)
+            
+            # Only remove newlines from edge labels, keep other content
+            edge_content = edge_content.replace('\\n', ' ')
+            edge_content = edge_content.replace('\n', ' ')
+            edge_content = ' '.join(edge_content.split()).strip()
+            
+            return f'|{edge_content}|'
+        
+        line = re.sub(r'\|([^|]*)\|', clean_edge_label, line)
         
         fixed_lines.append(line)
     
@@ -649,67 +672,47 @@ def clean_mermaid_simple(mermaid_code):
 
 def test_mermaid_cleaning():
     """Test the Mermaid cleaning function with the provided example."""
+    # Test with the user's specific OAuth2 example
+    test_diagram = """graph TD
+subgraph Email Integrations
+O365["Outlook 365"]
+Gmail["Gmail"]
+Other["Other Providers"]
+LogicApp["Azure Logic Apps"]
+O365 -->|Webhooks/OAuth|LogicApp
+Gmail -->|API/OAuth|LogicApp
+Other -->|Adapters/OAuth|LogicApp
+end
+subgraph User Access
+UI["Web/Mobile App"]
+UI -->|REST API|APIM["API Management"]
+end
+APIM -->|Secure API Call|AppSvc["Azure App Service/API"]
+LogicApp -->|Trigger/Event|EventGrid["Azure Event Grid"]
+EventGrid -->|Trigger|Function["Azure Function"]
+AppSvc -->|Invoke|OpenAI["Azure OpenAI"]
+AppSvc -->|NLU/AI Analysis|CognService["Cognitive Services"]
+Function -->|Task Workflow|AppSvc
+AppSvc -->|DB Ops|Cosmos["Azure Cosmos DB"]
+AppSvc -->|Store/Read|Storage["Azure Storage Account"]
+AppSvc -->|Secrets|KeyVault["Azure Key Vault"]
+APIM -->|Auth|AAD["Azure AD"]
+UI -->|Auth (OAuth2)|AAD
+AppSvc -->|Logs/Telemetry|AppInsights["App Insights/Monitor"]"""
+    
     # Test with the user's specific problematic diagram
     problematic_diagram = """flowchart TD
 
 subgraph User Interaction WebUI[""Azure App Serviceless thanbr / greater thanWeb UI / Dashboard""] AppAPI[""Azure App Serviceless thanbr / greater thanAPI Backend""] end subgraph Identity Auth[""Azure AD B2C""] end subgraph Email Integration Gmail[""Gmail API""] Outlook[""Microsoft Graph API""] LogicApp[""Azure Logic Appsless thanbr / greater thanEmail Ingestion""] APIM[""Azure API Management""] end subgraph Processing FuncPre[""Azure Functionsless thanbr / greater thanPreprocessing""] NLP[""Azure Cognitive Servicesless thanbr / greater thanText Analytics""] OpenAI[""Azure OpenAI Serviceless thanbr / greater thanPrioritization / NLP Engine""] EventGrid[""Azure Event Grid""] end subgraph Storage CosmosDB[""Azure Cosmos DB""] KeyVault[""Azure Key Vault""] end subgraph Ops&Monitoring Insights[""Azure Monitor andless thanbr / greater thanApp Insights""] end %% User authentication WebUI <-- OAuth --> Auth WebUI <--API calls --> AppAPI AppAPI -->|Mail API calls via|APIM %% Email flows APIM --> LogicApp LogicApp --Gmail OAuth --> Gmail LogicApp --Graph OAuth --> Outlook LogicApp -->|New mail event|EventGrid %% Email Processing EventGrid --> FuncPre FuncPre --> NLP NLP --> FuncPre FuncPre --> OpenAI OpenAI --> FuncPre FuncPre --> CosmosDB %% UI interaction with processed data CosmosDB --> AppAPI AppAPI --> WebUI %% Feedback Loop WebUI -->|User Feedback|AppAPI AppAPI --> FuncPre FuncPre --> OpenAI %% Security APIM -.-> KeyVault LogicApp -.-> KeyVault FuncPre -.-> KeyVault %% Monitoring AppAPI --> Insights LogicApp --> Insights FuncPre --> Insights"""
     
-    test_diagram = """graph TD
-    subgraph Client Devices
-        WebClient[Web/Mobile Client]
-    end
-
-    subgraph Frontend Tier
-        WebApp[Azure App Service (Frontend)]
-    end
-
-    subgraph Integration Tier
-        API[Azure API Management]
-    end
-
-    subgraph Application Layer
-        APIService[AI Agent API (App Service/Container Apps)]
-        RealTime[Azure SignalR Service (Real-time Collaboration)]
-    end
-
-    subgraph AI Layer
-        OpenAI[Azure OpenAI Service]
-        CognitiveSearch[Azure Cognitive Search]
-    end
-
-    subgraph Data Layer
-        CosmosDB[Azure Cosmos DB (Ideas/Sessions)]
-        KeyVault[Azure Key Vault]
-    end
-
-    subgraph Orchestration
-        LogicApp[Azure Logic Apps/Functions (Workflows & Notifications)]
-    end
-
-    subgraph Monitoring
-        AppInsights[Azure Monitor/App Insights]
-    end
-
-    %% Data Flow
-    WebClient-->|https|WebApp
-    WebApp-->|REST/SignalR|API
-    API-->|Secured API Call|APIService
-    API-->|WebSockets|RealTime
-    APIService-->|AI Prompt|OpenAI
-    APIService-->|Search Query|CognitiveSearch
-    APIService-->|Session/Idea CRUD|CosmosDB
-    APIService-->|Secrets/Config|KeyVault
-    APIService-->|Trigger|LogicApp
-    APIService-->|Telemetry|AppInsights
-    RealTime-->|Update|WebClient
-    LogicApp-->|Follow-up Actions|APIService"""
+    # Clean the OAuth2 test diagram
+    cleaned_oauth2 = clean_mermaid_code(test_diagram)
     
-    # Clean the problematic diagram first
-    simple_cleaned = clean_mermaid_simple(problematic_diagram)
-    full_cleaned = clean_mermaid_code(problematic_diagram)
+    # Clean the problematic diagram
+    cleaned_problematic = clean_mermaid_code(problematic_diagram)
     
-    # Return the cleaned version of the problematic diagram for testing
-    return full_cleaned
+    # Return both for testing
+    return cleaned_oauth2, cleaned_problematic
 
 def update_mermaid_diagrams():
     """Update session state with Mermaid diagrams from agent outputs and chat history."""
@@ -805,6 +808,18 @@ def generate_audio_response_gpt(text):
         print(f"Error in generate_audio_response_gpt: {str(e)}")
         st.error(f"❌ Error generating audio response: {str(e)}")
         return None
+    
+@st.cache_resource
+def get_mermaid_html(diagram):
+    return f"""
+    <div class="mermaid">
+        {diagram}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({{ startOnLoad: true, theme: 'default' }});
+    </script>
+    """
 
 def brainstormmain():
     st.set_page_config(
@@ -1412,15 +1427,16 @@ def brainstormmain():
                             #             {clean_diagram}
                             #         </div>
                             #         """)
-                            st.html(f"""
-                                <pre class="mermaid">
-                                    {clean_diagram}
-                                </pre>
-                                <script type="module">
-                                    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-                                    mermaid.initialize({{ startOnLoad: true }});
-                                </script>
-                            """)
+                            # st.html(f"""
+                            #     <pre class="mermaid">
+                            #         {clean_diagram}
+                            #     </pre>
+                            #     <script type="module">
+                            #         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+                            #         mermaid.initialize({{ startOnLoad: true }});
+                            #     </script>
+                            # """)
+                            st.markdown(get_mermaid_html(clean_diagram), unsafe_allow_html=True)
 
                             # Also provide a text area for editing/copying
                             st.markdown("**Mermaid Code (editable):**")
@@ -1484,7 +1500,7 @@ def brainstormmain():
                 st.markdown("#### 📝 Test Azure Architecture Diagram")
                 with st.expander("🔧 Test Diagram Cleaning (Azure Architecture)", expanded=False):
                     # Test the problematic Azure diagram
-                    test_cleaned = test_mermaid_cleaning()
+                    oauth2_cleaned, problematic_cleaned = test_mermaid_cleaning()
                     
                     st.markdown("**Original diagram (had issues with text replacement):**")
                     st.code("""flowchart TD
@@ -1492,13 +1508,35 @@ WebUI[""Azure App Serviceless thanbr / greater thanWeb UI / Dashboard""]
 AppAPI[""Azure App Serviceless thanbr / greater thanAPI Backend""]""", language="text")
                     
                     st.markdown("**Cleaned diagram (should render properly):**")
-                    st.code(test_cleaned[:300] + "...", language="text")
+                    st.code(problematic_cleaned[:300] + "...", language="text")
                     
                     # Try to render the cleaned diagram
                     st.markdown("**Rendered diagram:**")
                     st.markdown(f"""
 ```mermaid
-{test_cleaned}
+{problematic_cleaned}
+```
+""")
+                
+                st.markdown("#### 🔐 Test OAuth2 Edge Label Preservation")
+                with st.expander("🔧 Test OAuth2 Edge Labels", expanded=False):
+                    st.markdown("**Test case: OAuth2 in edge labels should be preserved**")
+                    st.code('UI -->|Auth (OAuth2)|AAD["Azure AD"]', language="text")
+                    
+                    st.markdown("**Cleaned result:**")
+                    st.code(oauth2_cleaned, language="text")
+                    
+                    # Check if OAuth2 is preserved
+                    oauth2_preserved = "(OAuth2)" in oauth2_cleaned
+                    if oauth2_preserved:
+                        st.success("✅ OAuth2 content preserved in edge labels!")
+                    else:
+                        st.error("❌ OAuth2 content was removed from edge labels!")
+                    
+                    st.markdown("**Rendered OAuth2 test:**")
+                    st.markdown(f"""
+```mermaid
+{oauth2_cleaned}
 ```
 """)
     
