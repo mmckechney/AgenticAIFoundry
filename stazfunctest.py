@@ -285,7 +285,7 @@ def connected_azure_function_agent(query: str) -> str:
     return returntxt
 
 if __name__ == "__main__":
-    query = "What is the weather in Ney York City, confirmed city is New York City."
+    query = "What is the Today's weather in Ney York City, confirmed city is New York City."
     # response = azurefunc_test(query)
     response = connected_azure_function_agent(query)
     print(f"Response: {response}")  
