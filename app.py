@@ -1,3 +1,4 @@
+import json
 import streamlit as st
 import asyncio
 import io
@@ -412,6 +413,16 @@ def main():
                             evalrs = ai_eval()
                             # st.json(evalrs)
                             st.write(evalrs)
+                            try:
+                                file_name = "myevalresults.json"
+                                # Load JSON file
+                                with open(file_name, 'r') as file:
+                                    data = json.load(file)
+                                    st.json(data)
+                                
+                            except Exception as e:
+                                st.error(f"Error saving AI evaluation results: {str(e)}")
+                                pass
                         else:
                             time.sleep(3)
                             st.success("✅ AI evaluation completed! (Demo mode)")
@@ -449,7 +460,16 @@ def main():
                     if DEPENDENCIES_AVAILABLE:
                         redteamrs = asyncio.run(redteam())
                         # st.json(redteamrs)
-                        st.write(redteamrs)
+                        # st.write(redteamrs)
+                        try:
+                            file_name = "Advanced-Callback-Scan.json"
+                            # Load JSON file
+                            with open(file_name, 'r') as file:
+                                data = json.load(file)
+                                st.json(data)
+                        except Exception as e:
+                            st.error(f"Error loading RedTeam results: {str(e)}")
+                            pass
                     else:
                         time.sleep(4)
                         st.success("✅ Security testing completed! (Demo mode)")
