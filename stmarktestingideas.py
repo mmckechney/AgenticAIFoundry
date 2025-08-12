@@ -557,6 +557,33 @@ def main():
             font-size: 1rem;
             line-height: 1.5;
         }
+        
+        /* Make chat input always visible (sticky footer) */
+        div[data-testid="stChatInput"] {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(6px);
+            border-top: 1px solid #e2e8f0;
+            padding: 0.75rem 2rem 1rem 2rem;
+            z-index: 1000;
+        }
+        div[data-testid="stChatInput"] textarea {
+            min-height: 60px;
+        }
+        /* Add bottom padding to main so content not hidden behind fixed input */
+        .stApp .block-container {
+            padding-bottom: 140px !important;
+        }
+        
+        /* Scroll panel helper */
+        .panel-scroll {
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -603,9 +630,10 @@ def main():
                     break
         
         if combined_response:
-            # Display in a scrollable container
-            with st.container(height=600):
-                st.markdown(combined_response)
+            # Display in scroll area sized to viewport
+            st.markdown('<div style="height:calc(100vh - 340px);" class="panel-scroll" id="summary-panel">', unsafe_allow_html=True)
+            st.markdown(combined_response)
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("No analysis available yet. Submit a product idea to generate comprehensive insights.")
 
@@ -615,47 +643,42 @@ def main():
         
         if st.session_state.agent_outputs:
             grouped = group_by_agent(st.session_state.agent_outputs)
-            
-            # Create scrollable container for all agents
-            with st.container(height=600):
-                # Create expandable sections for each agent
-                for agent_name, outputs in grouped.items():
-                    outputs_ordered = list(reversed(outputs))
-                    latest = outputs_ordered[0]
-                    count_text = f" ({len(outputs)} versions)" if len(outputs) > 1 else ""
-                    
-                    # Create expander for each agent
-                    with st.expander(f"🔧 {agent_name}{count_text}", expanded=False):
-                        # Format latest output - check if it's JSON first
-                        formatted_latest = latest
-                        is_json = False
-                        try:
-                            parsed = json.loads(latest)
-                            formatted_latest = json.dumps(parsed, indent=2)
-                            is_json = True
-                        except Exception:
-                            pass
-                        
-                        # Display latest output
-                        st.markdown("**Latest Output:**")
-                        if is_json:
-                            st.code(formatted_latest, language='json')
-                        else:
-                            st.markdown(formatted_latest)
-                        
-                        # Show previous versions if any
-                        if len(outputs_ordered) > 1:
-                            st.markdown("---")  # Separator
-                            st.markdown("**Previous Versions:**")
-                            for i, older in enumerate(outputs_ordered[1:], 1):
-                                with st.expander(f"📜 Version {i}", expanded=False):
-                                    # Check if JSON
-                                    try:
-                                        parsed_old = json.loads(older)
-                                        fm = json.dumps(parsed_old, indent=2)
-                                        st.code(fm, language='json')
-                                    except Exception:
-                                        st.markdown(older)
+
+            st.markdown('<div style="height:calc(100vh - 340px);" class="panel-scroll" id="agents-panel">', unsafe_allow_html=True)
+            # Create expandable sections for each agent
+            for agent_name, outputs in grouped.items():
+                outputs_ordered = list(reversed(outputs))
+                latest = outputs_ordered[0]
+                count_text = f" ({len(outputs)} versions)" if len(outputs) > 1 else ""
+
+                with st.expander(f"🔧 {agent_name}{count_text}", expanded=False):
+                    formatted_latest = latest
+                    is_json = False
+                    try:
+                        parsed = json.loads(latest)
+                        formatted_latest = json.dumps(parsed, indent=2)
+                        is_json = True
+                    except Exception:
+                        pass
+
+                    st.markdown("**Latest Output:**")
+                    if is_json:
+                        st.code(formatted_latest, language='json')
+                    else:
+                        st.markdown(formatted_latest)
+
+                    if len(outputs_ordered) > 1:
+                        st.markdown("---")
+                        st.markdown("**Previous Versions:**")
+                        for i, older in enumerate(outputs_ordered[1:], 1):
+                            with st.expander(f"📜 Version {i}", expanded=False):
+                                try:
+                                    parsed_old = json.loads(older)
+                                    fm = json.dumps(parsed_old, indent=2)
+                                    st.code(fm, language='json')
+                                except Exception:
+                                    st.markdown(older)
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("No agent outputs available yet. Submit a prompt to see individual agent analyses.")
     # Input and Controls Section

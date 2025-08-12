@@ -12,6 +12,7 @@ from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, Me
 from azure.ai.agents.models import MessageTextContent, ListSortOrder
 from azure.ai.agents.models import McpTool, RequiredMcpToolCall, SubmitToolApprovalAction, ToolApproval
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 import tempfile
 import uuid
@@ -557,6 +558,16 @@ def digitaltwin_main():
         
         chat_html += '</div>'
         st.markdown(chat_html, unsafe_allow_html=True)
+
+        # --- OpenUSD Rendering (latest scene) ---
+        latest_usd_code = get_latest_usd_code()
+        if latest_usd_code:
+            with st.expander("🖼 Render Latest OpenUSD Scene", expanded=True):
+                prims = parse_usd_prims(latest_usd_code)
+                if prims:
+                    render_usd_scene(prims)
+                else:
+                    st.info("No supported primitives (Sphere / Cube with optional Xform) detected to render.")
         
         # Input Section
         st.markdown("### 💭 Describe Your 3D Scene")
@@ -752,6 +763,117 @@ def get_latest_usd_code():
             if clean_code:
                 return clean_code
     return None
+
+# ---------------- Rendering Utilities -----------------
+import random, json as _json, re as _re
+
+USD_SPHERE_RE = _re.compile(r'def\s+Sphere\s+"(?P<name>[^"]+)"[^{]*{(?P<body>[^}]*)}', _re.MULTILINE | _re.DOTALL)
+USD_CUBE_RE = _re.compile(r'def\s+Cube\s+"(?P<name>[^"]+)"[^{]*{(?P<body>[^}]*)}', _re.MULTILINE | _re.DOTALL)
+USD_XFORM_RE = _re.compile(r'def\s+Xform\s+"(?P<name>[^"]+)"[^{]*{(?P<body>[^}]*)}', _re.MULTILINE | _re.DOTALL)
+
+def _extract_translate(xform_body:str):
+    # crude parse of xformOp:translate = (x, y, z)
+    m = _re.search(r'xformOp:translate\s*=\s*\(([^)]+)\)', xform_body)
+    if m:
+        parts = [p.strip() for p in m.group(1).split(',')]
+        if len(parts) == 3:
+            try:
+                return [float(parts[0]), float(parts[1]), float(parts[2])]
+            except:
+                return [0,0,0]
+    return [0,0,0]
+
+def parse_usd_prims(usd_code:str):
+    """Very lightweight USD parser for simple Sphere / Cube prims inside optional Xforms.
+    Returns list of dicts: {type, name, position[x,y,z], size|radius}
+    """
+    prims = []
+    # Map of child prim names to translation from parent Xform
+    xform_positions = {}
+    for xm in USD_XFORM_RE.finditer(usd_code):
+        xname = xm.group('name')
+        body = xm.group('body')
+        t = _extract_translate(body)
+        # Track for any nested child mention (simplified: if child defined inside we add translation)
+        for sm in USD_SPHERE_RE.finditer(body):
+            cname = sm.group('name')
+            xform_positions[cname] = t
+        for cm in USD_CUBE_RE.finditer(body):
+            cname = cm.group('name')
+            xform_positions[cname] = t
+
+    for sm in USD_SPHERE_RE.finditer(usd_code):
+        name = sm.group('name')
+        body = sm.group('body')
+        rad_match = _re.search(r'radius\s*=\s*([0-9.+-eE]+)', body)
+        radius = float(rad_match.group(1)) if rad_match else 1.0
+        pos = xform_positions.get(name, [0,0,0])
+        prims.append({"type":"sphere", "name":name, "radius":radius, "position":pos})
+    for cm in USD_CUBE_RE.finditer(usd_code):
+        name = cm.group('name')
+        body = cm.group('body')
+        # extent or size not always given; default 1
+        size_match = _re.search(r'size\s*=\s*([0-9.+-eE]+)', body)
+        size = float(size_match.group(1)) if size_match else 1.0
+        pos = xform_positions.get(name, [0,0,0])
+        prims.append({"type":"cube", "name":name, "size":size, "position":pos})
+    return prims
+
+def render_usd_scene(prims:List[Dict[str,Any]]):
+    """Render simple USD prims using Three.js via Streamlit components."""
+    scene_data = _json.dumps(prims)
+    prim_count = len(prims)
+    html_viewer = """
+<div id='usd-viewer' style='width:100%;height:400px;border:1px solid #e2e8f0;border-radius:8px;position:relative;background:#111;'>
+    <div style='position:absolute;top:8px;left:12px;color:#fff;font:12px/1.2 monospace;z-index:10;'>Scene Primitives: __PRIM_COUNT__</div>
+</div>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js'></script>
+<script>
+    const data = __SCENE_DATA__;
+    const container = document.getElementById('usd-viewer');
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111111);
+    const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 1000);
+    camera.position.set(4,4,6);
+    const hemi = new THREE.HemisphereLight(0xffffff,0x222222,1.0); scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff,0.8); dir.position.set(5,10,7); scene.add(dir);
+    const group = new THREE.Group(); scene.add(group);
+    const rndColor = () => new THREE.Color().setHSL(Math.random(),0.6,0.55);
+    data.forEach(p => {
+        let mesh;
+        if (p.type === 'sphere') {
+            const geo = new THREE.SphereGeometry(p.radius,32,32);
+            const mat = new THREE.MeshStandardMaterial({ color: rndColor() });
+            mesh = new THREE.Mesh(geo,mat);
+        } else if (p.type === 'cube') {
+            const geo = new THREE.BoxGeometry(p.size,p.size,p.size);
+            const mat = new THREE.MeshStandardMaterial({ color: rndColor() });
+            mesh = new THREE.Mesh(geo,mat);
+        }
+        if (mesh) {
+            const pos = p.position || [0,0,0];
+            mesh.position.set(pos[0], pos[1], pos[2]);
+            mesh.userData = p;
+            group.add(mesh);
+        }
+    });
+    // simple orbit (drag)
+    let isDown=false, prevX=0, prevY=0, rotY=0, rotX=0;
+    container.addEventListener('mousedown', e => { isDown=true; prevX=e.clientX; prevY=e.clientY; });
+    window.addEventListener('mouseup', () => { isDown=false; });
+    window.addEventListener('mousemove', e => { if(!isDown) return; const dx=e.clientX-prevX; const dy=e.clientY-prevY; rotY+=dx*0.005; rotX+=dy*0.005; prevX=e.clientX; prevY=e.clientY; group.rotation.y=rotY; group.rotation.x=rotX; });
+    function animate(){ requestAnimationFrame(animate); renderer.render(scene,camera); }
+    animate();
+    window.addEventListener('resize', () => { const w=container.clientWidth, h=container.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); });
+</script>
+<div style='font-size:0.75rem;color:#64748b;margin-top:4px;'>Simple preview (Sphere/Cube). For full USD features integrate a dedicated USD viewer.</div>
+"""
+    html_viewer = html_viewer.replace('__PRIM_COUNT__', str(prim_count)).replace('__SCENE_DATA__', scene_data)
+    components.html(html_viewer, height=450)
 
 
 if __name__ == "__main__":
