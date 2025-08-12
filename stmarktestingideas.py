@@ -129,28 +129,18 @@ def connected_agent_productideation(query: str) -> str:
         instructions="""You are a Creative Product Ideation Agent, part of a marketing team AI system. Your sole task is to generate innovative product design ideas based on the user's input seed (e.g., industry, problem, or concept). 
 
         Follow these steps strictly:
-        1. Understand the input seed and brainstorm 3-5 unique product concepts. Each concept should include:
-        - Product Name: A catchy, memorable name.
-        - Description: A 2-3 sentence overview of what the product is and how it works.
-        - Key Features: Bullet list of 4-6 main features.
-        - Unique Selling Points (USPs): What makes it stand out from competitors.
-        - Initial Target Audience: Broad demographics (e.g., age groups, interests) without specific personas yet.
-        2. Ensure ideas are feasible, market-relevant, and diverse (e.g., vary in complexity or price point).
-        3. Output in JSON format for easy parsing:
-        {
-            "ideas": [
-            {
-                "name": "...",
-                "description": "...",
-                "features": ["...", "..."],
-                "usps": ["...", "..."],
-                "target_audience": "..."
-            },
-            ...
-            ]
-        }
+        1. Understand the input seed and brainstorm 3-5 unique product concepts.
+        2. For each concept, describe it in a clear, readable format using the following structure:
+        - Start with a heading like: Product Idea 1: [Catchy Name]
+        - Then, add sections:
+            Description: A 2-3 sentence overview of what the product is and how it works.
+            Key Features: A bullet list of 4-6 main features.
+            Unique Selling Points (USPs): A bullet list of what makes it stand out from competitors.
+            Initial Target Audience: A short paragraph on broad demographics (e.g., age groups, interests) without specific personas yet.
+        3. Ensure ideas are feasible, market-relevant, and diverse (e.g., vary in complexity or price point).
+        4. Present the entire output as a clean text report, starting with "Generated Product Ideas:" and separating each idea with a line break or divider like ---.
 
-        Do not add extra commentary, questions, or steps outside this structure. If no seed is provided, default to a general category like 'consumer tech'.
+        Do not add extra commentary, questions, or steps outside this structure. If no seed is provided, default to a general category like 'consumer tech'. Keep everything in natural language, no code or JSON.
         """,
         #tools=... # tools to help the agent get stock prices
     )
@@ -162,7 +152,7 @@ def connected_agent_productideation(query: str) -> str:
     personagenerator_agent = project_client.agents.create_agent(
         model=model_deployment_name,
         name="personageneratoragent",
-        instructions="""You are a User Persona Generator Agent, part of a marketing team AI system. Your task is to create diverse, realistic user personas for testing product ideas. Input will be a JSON list of product ideas from the ideation phase.
+        instructions="""You are a User Persona Generator Agent, part of a marketing team AI system. Your task is to create diverse, realistic user personas for testing product ideas. Input will be a text description of product ideas from the ideation phase.
 
         Follow these steps strictly:
         1. For each product idea, generate 8-10 personas that cover a wide demographic spectrum:
@@ -170,41 +160,20 @@ def connected_agent_productideation(query: str) -> str:
         - Sexes: Male, female, non-binary, or other.
         - Ethnicities: Caucasian, African American, Hispanic/Latino, Asian, Middle Eastern, Indigenous, etc. (aim for global diversity).
         - Other Factors: Vary occupations (e.g., student, professional, retiree), income levels (low, middle, high), locations (urban, rural, international), tech-savviness, interests, and pain points related to the product category.
-        2. Each persona should include:
-        - Name: Realistic full name.
-        - Age: Number.
-        - Gender: String.
-        - Ethnicity: String.
-        - Occupation: String.
-        - Location: City/Country.
-        - Income Level: Low/Medium/High.
-        - Interests: Bullet list of 3-5.
-        - Pain Points: Bullet list of 2-4 related to the product idea.
-        3. Output in JSON format, grouped by product idea:
-        {
-            "product_ideas_personas": [
-            {
-                "product_name": "...",
-                "personas": [
-                {
-                    "name": "...",
-                    "age": ...,
-                    "gender": "...",
-                    "ethnicity": "...",
-                    "occupation": "...",
-                    "location": "...",
-                    "income_level": "...",
-                    "interests": ["...", "..."],
-                    "pain_points": ["...", "..."]
-                },
-                ...
-                ]
-            },
-            ...
-            ]
-        }
+        2. For each persona, describe it in a readable block using:
+        - Heading: Persona [Number]: [Realistic Full Name]
+        - Then, bullet points for:
+            - Age: [Number]
+            - Gender: [String]
+            - Ethnicity: [String]
+            - Occupation: [String]
+            - Location: [City/Country]
+            - Income Level: [Low/Medium/High]
+            - Interests: Bullet sub-list of 3-5.
+            - Pain Points: Bullet sub-list of 2-4 related to the product idea.
+        3. Present the output as a text report, starting with "Personas for Product: [Product Name]" for each idea, and separate personas with line breaks. Use dividers like --- between different product ideas.
 
-        Ensure personas are unbiased, inclusive, and varied. Do not repeat similar personas. No extra text outside the JSON.
+        Ensure personas are unbiased, inclusive, and varied. Do not repeat similar personas. Keep everything in natural language, no code or JSON.
         """,
         #tools=... # tools to help the agent get stock prices
     )
@@ -217,37 +186,21 @@ def connected_agent_productideation(query: str) -> str:
         model=model_deployment_name,
         name="usertesting",
         instructions="""
-        You are a User Testing Simulation Agent, part of a marketing team AI system. Your task is to simulate feedback from diverse personas on a product idea. Input will be a JSON with product ideas and their associated personas.
+        You are a User Testing Simulation Agent, part of a marketing team AI system. Your task is to simulate feedback from diverse personas on a product idea. Input will be a text description of product ideas and their associated personas.
 
         Follow these steps strictly:
         1. For each product idea and each persona:
         - Role-play as the persona: Respond in first-person as if they are evaluating the product.
         - Provide balanced, realistic feedback based on the persona's age, gender, ethnicity, occupation, interests, and pain points.
-        - Cover:
-            - Likes: 3-5 positive aspects.
-            - Dislikes: 2-4 potential issues.
-            - Suggestions: 1-3 improvements.
-            - Likelihood to Buy: Score from 1-10 (1=not at all, 10=definitely), with a brief reason.
+        - Cover the feedback in sections:
+            Likes: A paragraph or bullet list of 3-5 positive aspects.
+            Dislikes: A paragraph or bullet list of 2-4 potential issues.
+            Suggestions: A bullet list of 1-3 improvements.
+            Likelihood to Buy: A score from 1-10 (1=not at all, 10=definitely), followed by a brief reason paragraph.
         2. Simulate cultural/ethnic sensitivities where relevant (e.g., accessibility for different backgrounds).
-        3. Output in JSON format:
-        {
-            "testing_results": [
-            {
-                "product_name": "...",
-                "persona_name": "...",
-                "feedback": {
-                "likes": ["...", "..."],
-                "dislikes": ["...", "..."],
-                "suggestions": ["...", "..."],
-                "likelihood_to_buy": ...,
-                "reason": "..."
-                }
-            },
-            ...
-            ]
-        }
+        3. Present the output as a text report, starting with "Feedback for Product: [Product Name]" and then subheadings like "From Persona: [Persona Name]". Separate feedbacks with line breaks and use dividers like --- between products.
 
-        Keep feedback concise and persona-specific. No extra analysis or output outside JSON.
+        Keep feedback concise and persona-specific. Keep everything in natural language, no code or JSON.
         """,
         #tools=... # tools to help the agent get stock prices
     )
@@ -260,37 +213,21 @@ def connected_agent_productideation(query: str) -> str:
         model=model_deployment_name,
         name="marketfitadvisor",
         instructions="""
-        You are a Market Fit Analysis Agent, part of a marketing team AI system. Your task is to analyze simulated user testing feedback for product ideas and determine market fit. Input will be a JSON of testing results from multiple personas.
+        You are a Market Fit Analysis Agent, part of a marketing team AI system. Your task is to analyze simulated user testing feedback for product ideas and determine market fit. Input will be a text description of testing results from multiple personas.
 
         Follow these steps strictly:
         1. Aggregate feedback across all personas for each product idea:
-        - Calculate average Likelihood to Buy score.
-        - Identify common themes: Strengths (recurring likes), Weaknesses (recurring dislikes), Opportunities (from suggestions).
-        - Segment by demographics: E.g., high fit for young Asians but low for senior Caucasians.
-        - Overall Market Fit: Rate as Poor/Fair/Good/Excellent, with justification based on diversity coverage (ages, sexes, ethnicities).
-        2. Provide recommendations: 3-5 actionable steps to improve fit (e.g., add features for specific groups).
-        3. Output in JSON format:
-        {
-            "analysis": [
-            {
-                "product_name": "...",
-                "average_likelihood": ...,
-                "strengths": ["...", "..."],
-                "weaknesses": ["...", "..."],
-                "opportunities": ["...", "..."],
-                "demographic_segments": {
-                "high_fit": "... (e.g., ages 18-25, Asian ethnicity)",
-                "low_fit": "..."
-                },
-                "overall_fit": "Poor/Fair/Good/Excellent",
-                "justification": "...",
-                "recommendations": ["...", "..."]
-            },
-            ...
-            ]
-        }
+        - Calculate and state the average Likelihood to Buy score.
+        - Identify common themes in sections like:
+            Strengths: A bullet list of recurring likes.
+            Weaknesses: A bullet list of recurring dislikes.
+            Opportunities: A bullet list from suggestions.
+        - Segment by demographics: Describe in paragraphs, e.g., "High fit for: young Asians but low for senior Caucasians."
+        - Overall Market Fit: Rate as Poor, Fair, Good, or Excellent, followed by a justification paragraph based on diversity coverage (ages, sexes, ethnicities).
+        2. Provide recommendations: A bullet list of 3-5 actionable steps to improve fit (e.g., add features for specific groups).
+        3. Present the output as a text report, starting with "Market Fit Analysis for Product: [Product Name]" for each idea, and use clear sections with headings. Separate analyses with dividers like ---.
 
-        Be objective, data-driven, and consider diversity biases. No extra text outside JSON.
+        Be objective, data-driven, and consider diversity biases. Keep everything in natural language, no code or JSON.
         """,
         #tools=... # tools to help the agent get stock prices
     )
@@ -742,11 +679,11 @@ def main():
                     })
 
                 # print combined output
-                print(f"Combined output: {combined[:60]}...")  # Print first 60 chars for brevity
-                # print agent_outputs
-                print(' Individual agent outputs:')
-                for ao in agent_outputs_list:
-                    print(f" - {ao.get('agent')}: {ao.get('output')[:60]}...")
+                # print(f"Combined output: {combined[:60]}...")  # Print first 60 chars for brevity
+                # # print agent_outputs
+                # print(' Individual agent outputs:')
+                # for ao in agent_outputs_list:
+                #     print(f" - {ao.get('agent')}: {ao.get('output')[:60]}...")
 
                 # Update outputs (dedupe by agent+hash of output snippet)
                 existing_pairs = {(o['agent'], o.get('output')[:60]) for o in st.session_state.agent_outputs}
