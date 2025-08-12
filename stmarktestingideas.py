@@ -58,66 +58,42 @@ tracer = trace.get_tracer(__name__)
 # -----------------------
 # Helper: parse agent outputs from run steps
 # -----------------------
-def parse_agent_outputs(run_steps) -> List[Dict[str, Any]]:
-    """Attempt to extract individual connected agent outputs from heterogeneous run step objects.
-
-    Handles multiple SDK object/dict shapes defensively. Returns a list of {agent, output} dicts.
-    """
-    outputs: List[Dict[str, Any]] = []
-    try:
-        for step in run_steps:
-            # Support both dict and object styles
-            step_details = None
-            if isinstance(step, dict):
-                step_details = step.get('step_details')
-            else:
-                step_details = getattr(step, 'step_details', None)
-
-            if not step_details:
-                continue
-
-            # step_details may itself be dict or object possessing tool_calls
-            tool_calls = []
-            if isinstance(step_details, dict):
-                tool_calls = step_details.get('tool_calls', []) or []
-            else:
-                tool_calls = getattr(step_details, 'tool_calls', []) or []
-
-            if not tool_calls:
-                continue
-
+def parse_agent_outputs(run_steps):
+    """Parse agent outputs from run steps to extract individual agent responses."""
+    agent_outputs = {}
+    
+    for step in run_steps:
+        # Handle both dict and object types
+        if hasattr(step, '__dict__'):
+            step_dict = step.__dict__
+        else:
+            step_dict = step
+            
+        step_details = step_dict.get("step_details", {})
+        if hasattr(step_details, '__dict__'):
+            step_details = step_details.__dict__
+            
+        tool_calls = step_details.get("tool_calls", [])
+        
+        if tool_calls:
             for call in tool_calls:
-                # Tool call can be dict or object; connected agent may be nested
-                connected_agent = None
-                if isinstance(call, dict):
-                    connected_agent = call.get('connected_agent') or call.get('connectedAgent')
+                if hasattr(call, '__dict__'):
+                    call_dict = call.__dict__
                 else:
-                    connected_agent = getattr(call, 'connected_agent', None) or getattr(call, 'connectedAgent', None)
-
-                if not connected_agent:
-                    continue
-
-                # Connected agent may again be dict or object
-                if isinstance(connected_agent, dict):
-                    name = connected_agent.get('name') or connected_agent.get('id') or 'Agent'
-                    output_val = connected_agent.get('output') or connected_agent.get('result') or ''
-                else:
-                    name = getattr(connected_agent, 'name', None) or getattr(connected_agent, 'id', None) or 'Agent'
-                    output_val = getattr(connected_agent, 'output', None) or getattr(connected_agent, 'result', None) or ''
-
-                if output_val:
-                    outputs.append({'agent': name, 'output': str(output_val)})
-    except Exception as e:
-        print(f"parse_agent_outputs error: {e}")
-    # Deduplicate while preserving order
-    seen: Set[tuple] = set()
-    deduped: List[Dict[str, Any]] = []
-    for o in outputs:
-        key = (o['agent'], o['output'][:80])
-        if key not in seen:
-            seen.add(key)
-            deduped.append(o)
-    return deduped
+                    call_dict = call
+                    
+                connected_agent = call_dict.get("connected_agent", {})
+                if hasattr(connected_agent, '__dict__'):
+                    connected_agent = connected_agent.__dict__
+                    
+                if connected_agent:
+                    agent_name = connected_agent.get("name", "Unknown Agent")
+                    agent_output = connected_agent.get("output", "No output available")
+                    agent_outputs[agent_name] = agent_output
+                    print(f"Parsed agent: {agent_name[:20]}... with output length: {len(str(agent_output))}")
+    
+    print(f"Total agents parsed: {len(agent_outputs)}")
+    return agent_outputs
 
 # -----------------------
 # Helper: summarization (light heuristic)
@@ -355,6 +331,7 @@ def connected_agent_productideation(query: str) -> str:
             marketfit_connected_agent.definitions[0],
         ]
     )
+    
     print(f"Created agent, ID: {agent.id}")
     thread = project_client.agents.threads.create()
     print(f"Created thread, ID: {thread.id}")
@@ -382,10 +359,6 @@ def connected_agent_productideation(query: str) -> str:
             tool_outputs = []
             for tool_call in tool_calls:
                 print(f"Tool call: {tool_call.name}, ID: {tool_call.id}")
-            #     if tool_call.name == "fetch_weather":
-            #         output = fetch_weather("New York")
-            #         tool_outputs.append({"tool_call_id": tool_call.id, "output": output})
-            # project_client.agents.runs.submit_tool_outputs(thread_id=thread.id, run_id=run.id, tool_outputs=tool_outputs)
 
     print(f"Run completed with status: {run.status}")
     # print(f"Run finished with status: {run.status}")
@@ -422,65 +395,26 @@ def connected_agent_productideation(query: str) -> str:
     # Fetch run steps to get the details of the agent run
     run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
     
-    # Parse individual agent outputs (initial attempt)
-    agent_outputs = parse_agent_outputs(run_steps)
-
-    # Fallback / supplemental extraction with more verbose debugging
-    supplemental: List[Dict[str, Any]] = []
+    # Parse individual agent outputs
+    agent_outputs_dict = parse_agent_outputs(run_steps)
+    
     for step in run_steps:
-        try:
-            step_id = step.get('id') if isinstance(step, dict) else getattr(step, 'id', 'unknown')
-            step_status = step.get('status') if isinstance(step, dict) else getattr(step, 'status', 'unknown')
-            print(f"Step {step_id} status: {step_status}")
-            step_details = step.get('step_details') if isinstance(step, dict) else getattr(step, 'step_details', None)
-            if not step_details:
-                continue
-            tool_calls = []
-            if isinstance(step_details, dict):
-                tool_calls = step_details.get('tool_calls', []) or []
-            else:
-                tool_calls = getattr(step_details, 'tool_calls', []) or []
-            if not tool_calls:
-                continue
+        print(f"Step {step['id']} status: {step['status']}")
+        step_details = step.get("step_details", {})
+        tool_calls = step_details.get("tool_calls", [])
+
+        if tool_calls:
             print("  Tool calls:")
             for call in tool_calls:
-                if isinstance(call, dict):
-                    call_id = call.get('id')
-                    call_type = call.get('type')
-                    connected_agent = call.get('connected_agent') or call.get('connectedAgent')
-                else:
-                    call_id = getattr(call, 'id', None)
-                    call_type = getattr(call, 'type', None)
-                    connected_agent = getattr(call, 'connected_agent', None) or getattr(call, 'connectedAgent', None)
-                print(f"    Tool Call ID: {call_id}")
-                print(f"    Type: {call_type}")
+                print(f"    Tool Call ID: {call.get('id')}")
+                print(f"    Type: {call.get('type')}")
+
+                connected_agent = call.get("connected_agent", {})
                 if connected_agent:
-                    if isinstance(connected_agent, dict):
-                        cname = connected_agent.get('name') or connected_agent.get('id') or 'Agent'
-                        coutput = connected_agent.get('output') or connected_agent.get('result') or ''
-                    else:
-                        cname = getattr(connected_agent, 'name', None) or getattr(connected_agent, 'id', None) or 'Agent'
-                        coutput = getattr(connected_agent, 'output', None) or getattr(connected_agent, 'result', None) or ''
-                    print(f"    Connected Input(Name of Agent): {cname}")
-                    preview = (coutput[:140] + '...') if isinstance(coutput, str) and len(coutput) > 140 else coutput
-                    print(f"    Connected Output (truncated): {preview}")
-                    if coutput:
-                        supplemental.append({'agent': cname, 'output': str(coutput)})
-            print()
-        except Exception as inner_e:
-            print(f"Supplemental extraction error: {inner_e}")
+                    print(f"    Connected Input(Name of Agent): {connected_agent.get('name')}")
+                    print(f"    Connected Output: {connected_agent.get('output')}")
 
-    if supplemental:
-        # Merge supplemental with initial parse, dedupe
-        existing_pairs = {(o['agent'], o['output'][:80]) for o in agent_outputs}
-        for sup in supplemental:
-            key = (sup['agent'], sup['output'][:80])
-            if key not in existing_pairs:
-                agent_outputs.append(sup)
-                existing_pairs.add(key)
-
-    if not agent_outputs:
-        print("WARNING: No connected agent outputs parsed. Check SDK structure or update parser.")
+        print()  # add an extra newline between steps
 
     messages = project_client.agents.messages.list(thread_id=thread.id)
     for message in messages:
@@ -505,7 +439,7 @@ def connected_agent_productideation(query: str) -> str:
     # # Cleanup resources
     
 
-    return returntxt, agent_outputs, token_usage
+    return returntxt, agent_outputs_dict, token_usage
 
 # -----------------------
 # Streamlit UI Application
@@ -718,10 +652,10 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # Create two columns for the main content
-    col1, col2 = st.columns([1.2, 1], gap="large")
+    # Create layout with summary on left and individual agents on right
+    col1, col2 = st.columns([1, 1.5], gap="large")
 
-    # LEFT COLUMN: Summarized Response
+    # LEFT COLUMN: Executive Summary Only
     with col1:
         st.markdown("### 📋 Executive Summary")
         
@@ -735,65 +669,61 @@ def main():
         
         if combined_response:
             # Display in a scrollable container
-            with st.container(height=500):
+            with st.container(height=600):
                 st.markdown(combined_response)
         else:
             st.info("No analysis available yet. Submit a product idea to generate comprehensive insights.")
 
-    # RIGHT COLUMN: Individual Agent Outputs
+    # RIGHT COLUMN: Individual Agent Sections
     with col2:
-        st.markdown("### 🤖 Agent Insights")
+        st.markdown("### 🤖 Individual Agent Outputs")
         
         if st.session_state.agent_outputs:
             grouped = group_by_agent(st.session_state.agent_outputs)
             
-            # Debug information
-            st.write(f"**Debug Info:** Found {len(st.session_state.agent_outputs)} total agent outputs")
-            st.write(f"**Debug Info:** Grouped into {len(grouped)} different agents")
-            for agent, outputs in grouped.items():
-                st.write(f"- {agent}: {len(outputs)} outputs")
-            
-            # Display agent outputs in scrollable container
-            with st.container(height=500):
-                for agent_name, outputs in grouped.items():
-                    outputs_ordered = list(reversed(outputs))
-                    latest = outputs_ordered[0]
-                    count_text = f" ({len(outputs)} outputs)" if len(outputs) > 1 else ""
-                    
-                    with st.expander(f"🔧 {agent_name}{count_text}", expanded=False):
-                        # Format latest output
-                        formatted_latest = latest
-                        is_json = False
-                        try:
-                            parsed = json.loads(latest)
-                            formatted_latest = json.dumps(parsed, indent=2)
-                            is_json = True
-                        except Exception:
-                            pass
-                        
-                        if is_json:
-                            st.code(formatted_latest, language='json')
-                        else:
-                            st.text_area("Output", value=formatted_latest, height=200, key=f"agent_{agent_name}_{len(outputs)}")
-                        
-                        # Show previous versions if any
-                        if len(outputs_ordered) > 1:
-                            st.markdown("**Previous Outputs:**")
-                            for i, older in enumerate(outputs_ordered[1:], 1):
-                                with st.expander(f"Version {i}", expanded=False):
-                                    fm = older
-                                    is_json_old = False
-                                    try:
-                                        parsed_old = json.loads(older)
-                                        fm = json.dumps(parsed_old, indent=2)
-                                        is_json_old = True
-                                    except Exception:
-                                        pass
-                                    
-                                    if is_json_old:
-                                        st.code(fm, language='json')
-                                    else:
-                                        st.text_area("Output", value=fm, height=150, key=f"agent_{agent_name}_v{i}_{len(outputs)}")
+            # Create separate sections for each agent
+            for agent_name, outputs in grouped.items():
+                outputs_ordered = list(reversed(outputs))
+                latest = outputs_ordered[0]
+                count_text = f" ({len(outputs)} versions)" if len(outputs) > 1 else ""
+                
+                # Agent section header
+                st.markdown(f"#### 🔧 {agent_name}{count_text}")
+                
+                # Format latest output - check if it's JSON first
+                formatted_latest = latest
+                is_json = False
+                try:
+                    parsed = json.loads(latest)
+                    formatted_latest = json.dumps(parsed, indent=2)
+                    is_json = True
+                except Exception:
+                    pass
+                
+                # Display latest output in a container
+                with st.container(height=200):
+                    if is_json:
+                        st.code(formatted_latest, language='json')
+                    else:
+                        st.markdown(formatted_latest)
+                
+                # Show previous versions if any
+                if len(outputs_ordered) > 1:
+                    with st.expander(f"📜 Previous Versions ({len(outputs_ordered)-1})", expanded=False):
+                        for i, older in enumerate(outputs_ordered[1:], 1):
+                            st.markdown(f"**Version {i}:**")
+                            # Check if JSON
+                            try:
+                                parsed_old = json.loads(older)
+                                fm = json.dumps(parsed_old, indent=2)
+                                st.code(fm, language='json')
+                            except Exception:
+                                st.markdown(older)
+                            if i < len(outputs_ordered) - 1:
+                                st.divider()
+                
+                # Add separator between agents
+                st.divider()
         else:
             st.info("No agent outputs available yet. Submit a prompt to see individual agent analyses.")
     # Input and Controls Section
@@ -806,21 +736,29 @@ def main():
         st.session_state.chat_history.append({'role':'user','content':user_prompt})
         with st.spinner('Running multi-agent ideation pipeline...'):
             try:
-                combined, agent_outputs, usage = connected_agent_productideation(user_prompt)
-                
-                # Debug outputs
-                st.write(f"**Debug:** Returned {len(agent_outputs)} agent outputs from function")
-                for i, ao in enumerate(agent_outputs):
-                    st.write(f"  {i+1}. Agent: {ao.get('agent', 'Unknown')}, Output length: {len(str(ao.get('output', '')))}")
-                
+                combined, agent_outputs_dict, usage = connected_agent_productideation(user_prompt)
+
+                # Convert agent_outputs dictionary to list format expected by UI
+                agent_outputs_list = []
+                for agent_name, output in agent_outputs_dict.items():
+                    agent_outputs_list.append({
+                        'agent': agent_name,
+                        'output': output
+                    })
+
+                # print combined output
+                print(f"Combined output: {combined}...")  # Print first 60 chars for brevity
+                # print agent_outputs
+                print(' Individual agent outputs:')
+                for ao in agent_outputs_list:
+                    print(f" - {ao.get('agent')}: {ao.get('output')[:60]}...")
+
                 # Update outputs (dedupe by agent+hash of output snippet)
                 existing_pairs = {(o['agent'], o.get('output')[:60]) for o in st.session_state.agent_outputs}
-                for ao in agent_outputs:
+                for ao in agent_outputs_list:
                     pair = (ao.get('agent'), ao.get('output','')[:60])
                     if pair not in existing_pairs:
                         st.session_state.agent_outputs.append(ao)
-                
-                st.write(f"**Debug:** Total agent outputs in session state: {len(st.session_state.agent_outputs)}")
                 
                 # Append combined text as system summary message
                 st.session_state.chat_history.append({'role':'system','content': combined})
