@@ -89,7 +89,8 @@ def get_chat_response(query: str) -> tuple[str, dict]:
             presence_penalty=0
         )
         returntxt = completion.choices[0].message.content
-        
+        print('Entire completion:', completion.choices[0])
+
         # Extract token usage information
         if hasattr(completion, 'usage') and completion.usage:
             token_usage = {
