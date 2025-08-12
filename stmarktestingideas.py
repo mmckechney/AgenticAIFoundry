@@ -26,9 +26,10 @@ import logging
 endpoint = os.environ["PROJECT_ENDPOINT"] # Sample : https://<account_name>.services.ai.azure.com/api/projects/<project_name>
 model_endpoint = os.environ["MODEL_ENDPOINT"] # Sample : https://<account_name>.services.ai.azure.com
 model_api_key= os.environ["MODEL_API_KEY"]
-model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"] # Sample : gpt-4o-mini
+# model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"] # Sample : gpt-4o-mini
 WHISPER_DEPLOYMENT_NAME = "whisper"
 os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true" 
+model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"]
 
 # Create the project client (Foundry project and credentials)
 project_client = AIProjectClient(
@@ -63,36 +64,17 @@ def parse_agent_outputs(run_steps):
     agent_outputs = {}
     
     for step in run_steps:
-        # Handle both dict and object types
-        if hasattr(step, '__dict__'):
-            step_dict = step.__dict__
-        else:
-            step_dict = step
-            
-        step_details = step_dict.get("step_details", {})
-        if hasattr(step_details, '__dict__'):
-            step_details = step_details.__dict__
-            
+        step_details = step.get("step_details", {})
         tool_calls = step_details.get("tool_calls", [])
         
         if tool_calls:
             for call in tool_calls:
-                if hasattr(call, '__dict__'):
-                    call_dict = call.__dict__
-                else:
-                    call_dict = call
-                    
-                connected_agent = call_dict.get("connected_agent", {})
-                if hasattr(connected_agent, '__dict__'):
-                    connected_agent = connected_agent.__dict__
-                    
+                connected_agent = call.get("connected_agent", {})
                 if connected_agent:
                     agent_name = connected_agent.get("name", "Unknown Agent")
                     agent_output = connected_agent.get("output", "No output available")
                     agent_outputs[agent_name] = agent_output
-                    print(f"Parsed agent: {agent_name[:20]}... with output length: {len(str(agent_output))}")
     
-    print(f"Total agents parsed: {len(agent_outputs)}")
     return agent_outputs
 
 # -----------------------
@@ -117,7 +99,17 @@ def build_summary(agent_outputs: List[Dict[str, str]]) -> str:
 # -----------------------
 def group_by_agent(outputs: List[Dict[str, str]]) -> Dict[str, List[str]]:
     grouped: Dict[str, List[str]] = {}
+    
+    # Handle cases where outputs might be corrupted or wrong type
+    if not outputs:
+        return grouped
+        
     for o in outputs:
+        # Handle case where o might not be a dictionary
+        if not isinstance(o, dict):
+            print(f"Warning: Expected dict but got {type(o)}: {o}")
+            continue
+            
         agent = o.get('agent', 'Agent')
         grouped.setdefault(agent, []).append(o.get('output', '') or '')
     return grouped
@@ -132,7 +124,7 @@ def connected_agent_productideation(query: str) -> str:
         # api_version="latest",
     )
     ideation_agent = project_client.agents.create_agent(
-        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        model=model_deployment_name,
         name="ideationagent",
         instructions="""You are a Creative Product Ideation Agent, part of a marketing team AI system. Your sole task is to generate innovative product design ideas based on the user's input seed (e.g., industry, problem, or concept). 
 
@@ -168,7 +160,7 @@ def connected_agent_productideation(query: str) -> str:
     )
 
     personagenerator_agent = project_client.agents.create_agent(
-        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        model=model_deployment_name,
         name="personageneratoragent",
         instructions="""You are a User Persona Generator Agent, part of a marketing team AI system. Your task is to create diverse, realistic user personas for testing product ideas. Input will be a JSON list of product ideas from the ideation phase.
 
@@ -222,7 +214,7 @@ def connected_agent_productideation(query: str) -> str:
     )
 
     usertesting_analyst = project_client.agents.create_agent(
-        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        model=model_deployment_name,
         name="usertesting",
         instructions="""
         You are a User Testing Simulation Agent, part of a marketing team AI system. Your task is to simulate feedback from diverse personas on a product idea. Input will be a JSON with product ideas and their associated personas.
@@ -265,7 +257,7 @@ def connected_agent_productideation(query: str) -> str:
     )
 
     marketfit_advisor = project_client.agents.create_agent(
-        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        model=model_deployment_name,
         name="marketfitadvisor",
         instructions="""
         You are a Market Fit Analysis Agent, part of a marketing team AI system. Your task is to analyze simulated user testing feedback for product ideas and determine market fit. Input will be a JSON of testing results from multiple personas.
@@ -309,7 +301,7 @@ def connected_agent_productideation(query: str) -> str:
 
     # Orchestrate the connected agent with the main agent
     agent = project_client.agents.create_agent(
-        model=os.environ["MODEL_DEPLOYMENT_NAME"],
+        model=model_deployment_name,
         name="MarketProductIdeasAgent",
         instructions="""
         You are a Marketing AI Agent your team is provided as agents. Use the provided tools to answer the user's questions comprehensively.
@@ -321,7 +313,7 @@ def connected_agent_productideation(query: str) -> str:
         User Testing Agent: User testing and feedback specialist
         Market Fit Advisor: Market fit analysis expert
 
-        Provide details on the each agent insights.        
+        Summarize all the results from each agent's output.
         """,
         # tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
         tools=[
@@ -636,6 +628,12 @@ def main():
         st.session_state.chat_history = []  # type: ignore
     if 'agent_outputs' not in st.session_state:
         st.session_state.agent_outputs = []  # type: ignore
+    
+    # Safety check: ensure agent_outputs is a list
+    if not isinstance(st.session_state.agent_outputs, list):
+        print(f"Warning: agent_outputs was {type(st.session_state.agent_outputs)}, resetting to list")
+        st.session_state.agent_outputs = []
+        
     if 'processing' not in st.session_state:
         st.session_state.processing = False
     if 'token_totals' not in st.session_state:
@@ -653,7 +651,7 @@ def main():
     )
 
     # Create layout with summary on left and individual agents on right
-    col1, col2 = st.columns([1, 1.5], gap="large")
+    col1, col2 = st.columns([1, 1], gap="large")
 
     # LEFT COLUMN: Executive Summary Only
     with col1:
@@ -681,49 +679,46 @@ def main():
         if st.session_state.agent_outputs:
             grouped = group_by_agent(st.session_state.agent_outputs)
             
-            # Create separate sections for each agent
-            for agent_name, outputs in grouped.items():
-                outputs_ordered = list(reversed(outputs))
-                latest = outputs_ordered[0]
-                count_text = f" ({len(outputs)} versions)" if len(outputs) > 1 else ""
-                
-                # Agent section header
-                st.markdown(f"#### 🔧 {agent_name}{count_text}")
-                
-                # Format latest output - check if it's JSON first
-                formatted_latest = latest
-                is_json = False
-                try:
-                    parsed = json.loads(latest)
-                    formatted_latest = json.dumps(parsed, indent=2)
-                    is_json = True
-                except Exception:
-                    pass
-                
-                # Display latest output in a container
-                with st.container(height=200):
-                    if is_json:
-                        st.code(formatted_latest, language='json')
-                    else:
-                        st.markdown(formatted_latest)
-                
-                # Show previous versions if any
-                if len(outputs_ordered) > 1:
-                    with st.expander(f"📜 Previous Versions ({len(outputs_ordered)-1})", expanded=False):
-                        for i, older in enumerate(outputs_ordered[1:], 1):
-                            st.markdown(f"**Version {i}:**")
-                            # Check if JSON
-                            try:
-                                parsed_old = json.loads(older)
-                                fm = json.dumps(parsed_old, indent=2)
-                                st.code(fm, language='json')
-                            except Exception:
-                                st.markdown(older)
-                            if i < len(outputs_ordered) - 1:
-                                st.divider()
-                
-                # Add separator between agents
-                st.divider()
+            # Create scrollable container for all agents
+            with st.container(height=600):
+                # Create expandable sections for each agent
+                for agent_name, outputs in grouped.items():
+                    outputs_ordered = list(reversed(outputs))
+                    latest = outputs_ordered[0]
+                    count_text = f" ({len(outputs)} versions)" if len(outputs) > 1 else ""
+                    
+                    # Create expander for each agent
+                    with st.expander(f"🔧 {agent_name}{count_text}", expanded=False):
+                        # Format latest output - check if it's JSON first
+                        formatted_latest = latest
+                        is_json = False
+                        try:
+                            parsed = json.loads(latest)
+                            formatted_latest = json.dumps(parsed, indent=2)
+                            is_json = True
+                        except Exception:
+                            pass
+                        
+                        # Display latest output
+                        st.markdown("**Latest Output:**")
+                        if is_json:
+                            st.code(formatted_latest, language='json')
+                        else:
+                            st.markdown(formatted_latest)
+                        
+                        # Show previous versions if any
+                        if len(outputs_ordered) > 1:
+                            st.markdown("---")  # Separator
+                            st.markdown("**Previous Versions:**")
+                            for i, older in enumerate(outputs_ordered[1:], 1):
+                                with st.expander(f"📜 Version {i}", expanded=False):
+                                    # Check if JSON
+                                    try:
+                                        parsed_old = json.loads(older)
+                                        fm = json.dumps(parsed_old, indent=2)
+                                        st.code(fm, language='json')
+                                    except Exception:
+                                        st.markdown(older)
         else:
             st.info("No agent outputs available yet. Submit a prompt to see individual agent analyses.")
     # Input and Controls Section
@@ -747,7 +742,7 @@ def main():
                     })
 
                 # print combined output
-                print(f"Combined output: {combined}...")  # Print first 60 chars for brevity
+                print(f"Combined output: {combined[:60]}...")  # Print first 60 chars for brevity
                 # print agent_outputs
                 print(' Individual agent outputs:')
                 for ao in agent_outputs_list:
