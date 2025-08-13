@@ -253,8 +253,9 @@ def digitaltwin_main():
         margin: 15px 0;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
-        height: 500px;
-        overflow-y: auto;
+    /* Dynamic height: full viewport minus header + input area (approx) */
+    height: calc(100vh - 360px);
+    overflow-y: auto;
     }
     
     /* Individual message styling */
@@ -424,6 +425,35 @@ def digitaltwin_main():
     }
     </style>
     """, unsafe_allow_html=True)
+
+    # Inject sticky chat input CSS (after base styles to override if needed)
+    st.markdown(
+        """
+        <style>
+        /* Sticky chat input */
+        div[data-testid="stChatInput"] {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(6px);
+            padding: 0.75rem 2rem 1rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            z-index: 1000;
+        }
+        div[data-testid="stChatInput"] textarea {
+            min-height: 60px;
+        }
+        /* Add bottom padding so content not hidden behind sticky bar */
+        .stApp .block-container { padding-bottom: 140px !important; }
+        @media (max-width: 900px) {
+            .chat-container { height: calc(100vh - 400px); }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Initialize session state for chat history
     if 'chat_history' not in st.session_state:
