@@ -145,6 +145,44 @@ def get_chat_response_gpt5(query: str) -> tuple[str, dict]:
         returntxt = f"An error occurred while processing your request. {e}"
         return returntxt, token_usage
     
+def get_chat_response_gpt5_response(query: str) -> str:
+    returntxt = ""
+
+    responseclient = AzureOpenAI(
+        azure_endpoint=AZURE_ENDPOINT,
+        api_key=AZURE_API_KEY,
+        api_version="preview",
+    )
+    deployment = "gpt-5"
+
+    response = responseclient.responses.create(
+        model=deployment,
+        input= [{ 'role': 'developer', 'content': query }, 
+                { 'role': 'user', 'content': 'You are AI assistant, respond to users queries.' }],
+        reasoning = {
+            "effort": "high"
+        },
+        max_output_tokens=15000,
+    )
+
+    # Extract model's text output
+    output_text = ""
+    for item in response.output:
+        if hasattr(item, "content"):
+            for content in item.content:
+                if hasattr(content, "text"):
+                    output_text += content.text
+
+    # Token usage details
+    usage = response.usage
+
+    print("--------------------------------")
+    print("Output:")
+    print(output_text)
+    returntxt = output_text
+
+    return returntxt, usage
+        
 def main_screen():
     st.set_page_config(
         page_title="AI Assessment Assistant",
@@ -495,6 +533,7 @@ def main_screen():
                     full_response, token_usage = get_chat_response(prompt.strip())
             else:
                 try:
+                    # full_response, token_usage = get_chat_response_gpt5_response(prompt.strip())
                     full_response, token_usage = get_chat_response_gpt5(prompt.strip())
                     escaped_response = full_response.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
                     response_placeholder.markdown(f'<div class="streaming-message"><div class="streaming-header">🧠 Reasoning (GPT-5) <span style="font-size:0.75em; color:#6b7280; margin-left:auto;">{datetime.now().strftime("%H:%M:%S")}</span></div><div class="streaming-content">{escaped_response}</div></div>', unsafe_allow_html=True)
