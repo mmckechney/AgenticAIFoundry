@@ -62,6 +62,8 @@ from utils import send_email
 from user_logic_apps import AzureLogicAppTool, create_send_email_function
 from azure.ai.agents.models import MessageTextContent, ListSortOrder
 from azure.ai.agents.models import McpTool, RequiredMcpToolCall, SubmitToolApprovalAction, ToolApproval
+from azure.ai.evaluation import AzureOpenAILabelGrader, evaluate, AzureOpenAIStringCheckGrader, AzureOpenAITextSimilarityGrader, AzureOpenAIGrader
+from openai.types.graders import StringCheckGrader
 
 from dotenv import load_dotenv
 
@@ -188,6 +190,47 @@ def eval()-> str:
     indirect_attack_eval = IndirectAttackEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
     protected_material_eval = ProtectedMaterialEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
     hate_unfairness_eval = HateUnfairnessEvaluator(azure_ai_project=azure_ai_project_dict, credential=credential)
+    #  Evaluation criteria: Determine if the response column contains texts that are "too short", "just right", or "too long" and pass if it is "just right"
+    label_grader = AzureOpenAILabelGrader(
+        model_config=model_config,
+        input=[{"content": "{{item.response}}", "role": "user"},
+            {"content":"Any text including space that's more than 600 characters are too long, less than 500 characters are too short; 500 to 600 characters are just right.", "role":"user", "type": "message"}],
+        labels=["too short", "just right", "too long"],
+        passing_labels=["just right"],
+        model="gpt-4o",
+        name="label",
+    )
+    # Evaluation criteria: Pass if the query column contains "What is"
+    string_grader = AzureOpenAIStringCheckGrader(
+        model_config=model_config,
+        input="{{item.query}}",
+        name="starts with what is",
+        operation="like", # "eq" for equal, "ne" for not equal, "like" for contain, "ilike" for case insensitive contain
+        reference="What is",
+    )
+    # Evaluation criteria: Pass if response column and ground_truth column similarity score >= 0.5 using "fuzzy_match"
+    sim_grader = AzureOpenAITextSimilarityGrader(
+        model_config=model_config,
+        evaluation_metric="fuzzy_match", # support evaluation metrics including: "fuzzy_match", "bleu", "gleu", "meteor", "rouge_1", "rouge_2", "rouge_3", "rouge_4", "rouge_5", "rouge_l", "cosine",
+        input="{{item.response}}",
+        name="similarity",
+        pass_threshold=0.5,
+        reference="{{item.ground_truth}}",
+    )
+    # Define an string check grader config directly using the OAI SDK
+    # Evaluation criteria: Pass if query column contains "Northwind"
+    oai_string_check_grader = StringCheckGrader(
+        input="{{item.query}}",
+        name="contains hello",
+        operation="like",
+        reference="Northwind",
+        type="string_check"
+    )
+    # Plug that into the general grader
+    general_grader = AzureOpenAIGrader(
+        model_config=model_config,
+        grader_config=oai_string_check_grader
+    )
 
     result = evaluate(
         data="datarfp.jsonl", # provide your data here
@@ -209,6 +252,10 @@ def eval()-> str:
             "retrieval": retrieval_evaluator,
             "groundnesspro": groundnesspro_evaluator,
             "similarity": similarity_evaluator,
+            "label": label_grader,
+            "string": string_grader,
+            "simgrader": sim_grader,
+            "general": general_grader,
         },        
         evaluator_config={
             "content_safety": {"query": "${data.query}", "response": "${data.response}"},
@@ -231,6 +278,10 @@ def eval()-> str:
             "retrieval": {"query": "${data.query}", "context": "${data.context}"},
             "groundnesspro": {"query": "${data.query}", "context" : "${data.context}", "response": "${data.response}"},
             "similarity": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            #"label": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            #"general": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            #"custom": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            # "simgrader": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
         },
         # Optionally provide your Azure AI Foundry project information to track your evaluation results in your project portal
         azure_ai_project = os.environ["PROJECT_ENDPOINT"],
@@ -1345,15 +1396,15 @@ def aiactionplat_agent(query: str) -> str:
     return returntxt
 
 def main():
-    with tracer.start_as_current_span("azureaifoundryagent-tracing"):
+    with tracer.start_as_current_span("manualazureaifoundryagent-tracing"):
         print("Running code interpreter example...")
         #code_interpreter()
         
         print("Running evaluation example...")
         # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/evaluation/azure-ai-evaluation/samples/evaluation_samples_evaluate_fdp.py
         # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_logic_apps.py
-        # evalrs = eval()
-        # print(evalrs)
+        evalrs = eval()
+        print(evalrs)
         
         print("Running red teaming example...")
         # redteamrs = asyncio.run(redteam())
@@ -1399,11 +1450,11 @@ def main():
         # multiagent
 
         # msft learn
-        starttime = datetime.now()
-        msft_learn_result = msft_learn_mcp_agent("Show me top 5 AI courses?")
-        print(msft_learn_result)
-        endtime = datetime.now()
-        print(f"MSFT Learn MCP agent example completed in {endtime - starttime} seconds")
+        # starttime = datetime.now()
+        # msft_learn_result = msft_learn_mcp_agent("Show me top 5 AI courses?")
+        # print(msft_learn_result)
+        # endtime = datetime.now()
+        # print(f"MSFT Learn MCP agent example completed in {endtime - starttime} seconds")
 
         #hf_mcp_agent
         # https://devblogs.microsoft.com/foundry/announcing-model-context-protocol-support-preview-in-azure-ai-foundry-agent-service/
