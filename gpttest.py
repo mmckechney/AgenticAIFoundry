@@ -29,6 +29,31 @@ client = AzureOpenAI(
     api_version="2024-06-01"  # Adjust API version as needed
 )
 
+def normalize_token_usage(usage) -> dict:
+    """Normalize various usage objects/dicts into a standard dict.
+    Returns {'prompt_tokens', 'completion_tokens', 'total_tokens'} or {} if unavailable.
+    """
+    try:
+        if not usage:
+            return {}
+        # If it's already a dict, use it directly
+        if isinstance(usage, dict):
+            d = usage
+        else:
+            # Attempt attribute access (e.g., ResponseUsage pydantic model)
+            d = {}
+            for name in ("prompt_tokens", "completion_tokens", "total_tokens", "input_tokens", "output_tokens"):
+                val = getattr(usage, name, None)
+                if val is not None:
+                    d[name] = val
+
+        prompt = int(d.get("prompt_tokens", d.get("input_tokens", 0)) or 0)
+        completion = int(d.get("completion_tokens", d.get("output_tokens", 0)) or 0)
+        total = int(d.get("total_tokens", prompt + completion) or 0)
+        return {"prompt_tokens": prompt, "completion_tokens": completion, "total_tokens": total}
+    except Exception:
+        return {}
+
 def get_chat_response_stream(query: str):
     """Get streaming response from Azure OpenAI"""
     try:
@@ -93,11 +118,7 @@ def get_chat_response(query: str) -> tuple[str, dict]:
 
         # Extract token usage information
         if hasattr(completion, 'usage') and completion.usage:
-            token_usage = {
-                'prompt_tokens': getattr(completion.usage, 'prompt_tokens', 0),
-                'completion_tokens': getattr(completion.usage, 'completion_tokens', 0),
-                'total_tokens': getattr(completion.usage, 'total_tokens', 0)
-            }
+            token_usage = normalize_token_usage(completion.usage)
         
         return returntxt, token_usage
     except OpenAIError as e:
@@ -131,11 +152,7 @@ def get_chat_response_gpt5(query: str) -> tuple[str, dict]:
 
         # Extract token usage information
         if hasattr(completion, 'usage') and completion.usage:
-            token_usage = {
-                'prompt_tokens': getattr(completion.usage, 'prompt_tokens', 0),
-                'completion_tokens': getattr(completion.usage, 'completion_tokens', 0),
-                'total_tokens': getattr(completion.usage, 'total_tokens', 0)
-            }
+            token_usage = normalize_token_usage(completion.usage)
 
         print(completion.to_json())
         
@@ -149,37 +166,40 @@ def get_chat_response_gpt5_response(query: str) -> str:
     returntxt = ""
 
     responseclient = AzureOpenAI(
-        azure_endpoint=AZURE_ENDPOINT,
-        api_key=AZURE_API_KEY,
-        api_version="preview",
-    )
+        base_url = os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/v1/",  
+        api_key= os.getenv("AZURE_OPENAI_KEY"),
+        api_version="preview"
+        )
     deployment = "gpt-5"
 
+    # Some new parameters!  
     response = responseclient.responses.create(
+        input=query,
         model=deployment,
-        input= [{ 'role': 'developer', 'content': query }, 
-                { 'role': 'user', 'content': 'You are AI assistant, respond to users queries.' }],
-        reasoning = {
-            "effort": "high"
+        reasoning={
+            "effort": "medium",
+            "summary": "auto" # auto, concise, or detailed 
         },
-        max_output_tokens=15000,
+        text={
+            "verbosity": "low" # New with GPT-5 models
+        }
     )
 
-    # Extract model's text output
-    output_text = ""
-    for item in response.output:
-        if hasattr(item, "content"):
-            for content in item.content:
-                if hasattr(content, "text"):
-                    output_text += content.text
+    # # Extract model's text output
+    # output_text = ""
+    # for item in response.output:
+    #     if hasattr(item, "content"):
+    #         for content in item.content:
+    #             if hasattr(content, "text"):
+    #                 output_text += content.text
 
-    # Token usage details
-    usage = response.usage
+    # # Token usage details
+    usage = normalize_token_usage(response.usage)
 
-    print("--------------------------------")
-    print("Output:")
-    print(output_text)
-    returntxt = output_text
+    # print("--------------------------------")
+    # print("Output:")
+    # print(output_text)
+    returntxt = response.output_text
 
     return returntxt, usage
         
@@ -463,7 +483,7 @@ def main_screen():
                     </div>
                     <div class="message-content">{content}</div>'''
                 if message["role"] == "assistant" and message.get("token_usage"):
-                    token_info = message["token_usage"]
+                    token_info = normalize_token_usage(message["token_usage"]) or {}
                     chat_html += f'''
                     <div class="token-info">
                         📊 Tokens: {token_info.get("prompt_tokens", 0)} prompt + {token_info.get("completion_tokens", 0)} completion = {token_info.get("total_tokens", 0)} total
@@ -533,13 +553,15 @@ def main_screen():
                     full_response, token_usage = get_chat_response(prompt.strip())
             else:
                 try:
-                    # full_response, token_usage = get_chat_response_gpt5_response(prompt.strip())
-                    full_response, token_usage = get_chat_response_gpt5(prompt.strip())
+                    full_response, token_usage = get_chat_response_gpt5_response(prompt.strip())
+                    # full_response, token_usage = get_chat_response_gpt5(prompt.strip())
                     escaped_response = full_response.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
                     response_placeholder.markdown(f'<div class="streaming-message"><div class="streaming-header">🧠 Reasoning (GPT-5) <span style="font-size:0.75em; color:#6b7280; margin-left:auto;">{datetime.now().strftime("%H:%M:%S")}</span></div><div class="streaming-content">{escaped_response}</div></div>', unsafe_allow_html=True)
                 except Exception as e:
                     response_placeholder.error(f"Error during reasoning request: {e}")
                     full_response = f"Error: {e}"; token_usage = {}
+            # Normalize and accumulate token usage safely
+            token_usage = normalize_token_usage(token_usage)
             if token_usage:
                 st.session_state.total_session_tokens['prompt_tokens'] += token_usage.get('prompt_tokens', 0)
                 st.session_state.total_session_tokens['completion_tokens'] += token_usage.get('completion_tokens', 0)
@@ -619,7 +641,7 @@ def main_screen():
                 # Show token info for assistant messages
                 token_info = ""
                 if msg["role"] == "assistant" and msg.get("token_usage"):
-                    tokens = msg["token_usage"].get("total_tokens", 0)
+                    tokens = (normalize_token_usage(msg["token_usage"]) or {}).get("total_tokens", 0)
                     token_info = f"<br><span style='color: #0ea5e9; font-size: 0.55em;'>🔢 {tokens} tokens</span>"
                 
                 st.markdown(f"""
