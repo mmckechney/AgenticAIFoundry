@@ -66,6 +66,10 @@ def search_query_agent(query: str) -> Dict[str, Any]:
         "thread_id": None,
         "run_status": None,
     "usage": None,   # {prompt_tokens, completion_tokens, total_tokens, is_estimated}
+        "citations": [], # list of URLs extracted from messages/tool output
+    "tool_outputs": [], # raw tool outputs if retrievable
+    "search_results": [], # structured items extracted from tool outputs
+    "steps_count": 0,
     }
 
     project_endpoint = os.environ["PROJECT_ENDPOINT"]
@@ -228,6 +232,112 @@ def search_query_agent(query: str) -> Dict[str, Any]:
 
     result["usage"] = usage
 
+    # Extract citations (URLs) from assistant/message texts
+    def _extract_urls(text: str) -> List[str]:
+        if not text:
+            return []
+        try:
+            import re as _re
+            # matches http/https URLs until whitespace or closing bracket/paren
+            pattern = _re.compile(r"https?://[^\s\]\)]+", _re.IGNORECASE)
+            return pattern.findall(text)
+        except Exception:
+            return []
+
+    url_set: Set[str] = set()
+    for m in result["messages"]:
+        for url in _extract_urls(m.get("text", "")):
+            url_set.add(url)
+    for url in _extract_urls(result.get("assistant_text", "")):
+        url_set.add(url)
+
+    # Optionally: attempt to fetch tool call steps and capture outputs (best-effort)
+    try:
+        run_id = getattr(run, "id", None) or (run.get("id") if isinstance(run, dict) else None)
+        if run_id and hasattr(project_client.agents.runs, 'list_steps'):
+            steps = project_client.agents.runs.list_steps(thread_id=thread.id, run_id=run_id, order=ListSortOrder.ASCENDING)
+            count_steps = 0
+            for s in steps:
+                count_steps += 1
+                # Capture any visible text from step output/details
+                text_bits: List[str] = []
+                for attr in ("output", "result", "details", "content", "message"):
+                    try:
+                        v = getattr(s, attr, None)
+                    except Exception:
+                        v = None
+                    if not v and isinstance(s, dict):
+                        v = s.get(attr)
+                    if v:
+                        try:
+                            if isinstance(v, (list, tuple)):
+                                text_bits.extend([str(x) for x in v if x is not None])
+                            elif isinstance(v, (dict,)):
+                                text_bits.append(json.dumps(v))
+                            else:
+                                text_bits.append(str(v))
+                        except Exception:
+                            pass
+                raw = "\n".join([b for b in text_bits if b])
+                if raw:
+                    result["tool_outputs"].append(raw)
+                    for url in _extract_urls(raw):
+                        url_set.add(url)
+
+                    # Try to parse structured results from JSON-looking raw
+                    def _try_json_parse(text: str):
+                        try:
+                            return json.loads(text)
+                        except Exception:
+                            return None
+
+                    parsed = _try_json_parse(raw)
+                    items: List[Dict[str, Any]] = []
+                    if isinstance(parsed, dict):
+                        items = [parsed]
+                    elif isinstance(parsed, list):
+                        items = [x for x in parsed if isinstance(x, (dict, str))]
+
+                    def _as_result(obj) -> Optional[Dict[str, str]]:
+                        try:
+                            if isinstance(obj, str):
+                                # Single URL string
+                                if obj.startswith("http"):
+                                    return {"title": obj, "url": obj, "snippet": ""}
+                                return None
+                            # Dict shape: look for common fields
+                            title = obj.get("title") or obj.get("name") or obj.get("caption") or obj.get("source") or ""
+                            url = obj.get("url") or obj.get("link") or obj.get("sourceUrl") or obj.get("href") or ""
+                            snippet = obj.get("snippet") or obj.get("summary") or obj.get("content") or obj.get("chunk") or obj.get("text") or ""
+                            if not url:
+                                # Try pulling first URL-like token from any string fields
+                                for k, v in obj.items():
+                                    if isinstance(v, str):
+                                        found = _extract_urls(v)
+                                        if found:
+                                            url = found[0]
+                                            break
+                            if not url and not title and not snippet:
+                                return None
+                            if not title:
+                                title = url or "Result"
+                            # Clamp snippet length
+                            if isinstance(snippet, str) and len(snippet) > 400:
+                                snippet = snippet[:400] + "…"
+                            return {"title": str(title), "url": str(url), "snippet": str(snippet) if snippet is not None else ""}
+                        except Exception:
+                            return None
+
+                    for it in items:
+                        r = _as_result(it)
+                        if r:
+                            result["search_results"].append(r)
+            result["steps_count"] = count_steps
+    except Exception:
+        pass
+
+    result["citations"] = sorted(url_set)
+
     # Fetch and log all messages in the thread
     # messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
     # for message in messages.data:
@@ -262,14 +372,14 @@ def main_screen():
             margin-bottom: 6px;
             box-shadow: 0 1px 6px rgba(0,0,0,0.06);
         }
-        .chat-wrapper { display: flex; flex-direction: column; height: 1vh; }
+        .chat-wrapper { display: flex; flex-direction: column; height: 7vh; }
         .chat-container {
             background: #ffffff;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 8px 10px;
             overflow-y: auto; overflow-x: hidden;
-            height: 30vh; min-height: 400px;
+            height: 40vh; min-height: 300px;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
         }
         .input-container {
@@ -282,7 +392,7 @@ def main_screen():
         .msg { margin: 6px 0; padding: 8px; border-radius: 8px; font-size: 0.9em; }
         .user { background: #ecfeff; border-left: 4px solid #06b6d4; }
         .assistant { background: #f3f4f6; border-left: 4px solid #6b7280; }
-        .agent-panel { height: 1vh; overflow-y: auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; }
+    .agent-panel { height: 2vh; overflow-y: auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; }
         .metric { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px; margin: 4px 0; text-align: center; }
         .section-title { font-size: 0.95em; margin: 4px 0; }
         </style>
@@ -364,6 +474,40 @@ def main_screen():
             u1.markdown(f'<div class="metric"><div style="font-size:0.8em; color:#6b7280;">Total ({label})</div><div style="font-weight:700; color:#111827;">{usage.get("total_tokens", 0)}</div></div>', unsafe_allow_html=True)
             u2.markdown(f'<div class="metric"><div style="font-size:0.8em; color:#6b7280;">Prompt</div><div style="font-weight:700; color:#111827;">{usage.get("prompt_tokens", 0)}</div></div>', unsafe_allow_html=True)
             u3.markdown(f'<div class="metric"><div style="font-size:0.8em; color:#6b7280;">Completion</div><div style="font-weight:700; color:#111827;">{usage.get("completion_tokens", 0)}</div></div>', unsafe_allow_html=True)
+
+            # Citations
+            citations = details.get("citations") or []
+            if citations:
+                st.markdown('<div class="section-title" style="margin-top:6px;">Citations</div>', unsafe_allow_html=True)
+                for url in citations[:10]:
+                    st.markdown(f"- [{url}]({url})")
+
+            # Optional raw tool outputs (collapsed)
+            tool_outs = details.get("tool_outputs") or []
+            if tool_outs:
+                with st.expander("Raw Tool Output", expanded=False):
+                    for i, raw in enumerate(tool_outs[:5], 1):
+                        st.markdown(f"**Step {i}**")
+                        st.code(raw)
+            else:
+                sc = details.get("steps_count", 0)
+                if sc == 0:
+                    st.info("No tool steps returned by the run. The agent may have answered without calling the search tool.")
+
+            # Structured tool results
+            results = details.get("search_results") or []
+            if results:
+                st.markdown('<div class="section-title" style="margin-top:6px;">Tool Results</div>', unsafe_allow_html=True)
+                for r in results[:10]:
+                    title = r.get("title") or r.get("url") or "Result"
+                    url = r.get("url") or ""
+                    snippet = (r.get("snippet") or "").strip()
+                    if url:
+                        st.markdown(f"- [{title}]({url})")
+                    else:
+                        st.markdown(f"- {title}")
+                    if snippet:
+                        st.markdown(f"<div style='color:#6b7280; font-size:0.85em; margin-left:8px;'>{snippet}</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="section-title" style="margin-top:6px;">Messages</div>', unsafe_allow_html=True)
             msgs = details.get("messages", [])
