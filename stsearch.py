@@ -97,7 +97,7 @@ def search_query_agent(query: str) -> Dict[str, Any]:
     agent = project_client.agents.create_agent(
         model=model_deployment_name,
         name="AISearch-agent",
-        instructions="You are a helpful AI agent, please provide urls as citation [url] [url].",
+        instructions="You are a helpful AI agent. Answer only from the tools. please provide urls as citation [url] [url].",
         tools=ai_search.definitions,
         tool_resources=ai_search.resources,
     )
