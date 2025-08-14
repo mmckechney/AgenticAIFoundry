@@ -185,14 +185,6 @@ def get_chat_response_gpt5_response(query: str) -> str:
         }
     )
 
-    # # Extract model's text output
-    # output_text = ""
-    # for item in response.output:
-    #     if hasattr(item, "content"):
-    #         for content in item.content:
-    #             if hasattr(content, "text"):
-    #                 output_text += content.text
-
     # # Token usage details
     usage = normalize_token_usage(response.usage)
 
