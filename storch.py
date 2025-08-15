@@ -7,7 +7,7 @@ import pandas as pd
 from typing import Any, Callable, Set, Dict, List, Optional
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from openai import AzureOpenAI
+from openai import AzureOpenAI, _client
 from azure.ai.agents.models import ConnectedAgentTool, MessageRole
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from azure.ai.agents.models import MessageTextContent, ListSortOrder
@@ -348,7 +348,7 @@ def search_query_agent(query: str) -> Dict[str, Any]:
     # Delete the agent
     project_client.agents.delete_agent(agent.id)
     project_client.agents.threads.delete(thread.id)
-    print("Deleted agent and thread")
+    print("Search agent Deleted agent and thread")
 
 
     return result
@@ -389,7 +389,138 @@ def code_interpreter(query: str) -> str:
 
         _client.agents.delete_agent(agent.id)
         _client.agents.threads.delete(thread.id)
-        print("Deleted agent and thread")
+        print("Code interpreter Deleted agent and thread")
+
+    return returntxt
+
+def ideation_agent(query: str) -> str:
+    returntxt = ""
+
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+        # api_version="latest",
+    )
+    ideation_agent = project_client.agents.create_agent(
+        model=model_deployment_name,
+        name="ideationagent",
+        instructions="""You are an Ideation Catalyst, a creative powerhouse for brainstorming sessions.
+        
+        Your role is to:
+        - Generate creative and innovative ideas
+        - Expand on initial concepts with fresh perspectives
+        - Ask thought-provoking questions to stimulate creativity
+        - Encourage out-of-the-box thinking
+        - Build upon ideas to create new possibilities
+        
+        Structure your responses as:
+        ## 💡 Creative Insights
+        ### Initial Ideas
+        - [List 3-5 innovative ideas]
+        ### Expansion Opportunities
+        - [Ways to expand or modify ideas]
+        ### Provocative Questions
+        - [Questions to spark further creativity]
+        
+        Be enthusiastic, creative, and push boundaries while remaining practical.
+        """,
+        #tools=... # tools to help the agent get stock prices
+    )
+
+    print(f"Created agent, ID: {ideation_agent.id}")
+
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=query,
+    )
+    print(f"Created message, ID: {message['id']}")
+
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=ideation_agent.id)
+    print(f"Run finished with status: {run.status}")
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    messages = project_client.agents.messages.list(thread_id=thread.id)
+    for message in messages:
+        print(f"Role: {message.role}, Content: {message.content}")
+        returntxt += f"Role: {message.role}, Content: {message.content}\n"
+
+    project_client.agents.delete_agent(ideation_agent.id)
+    project_client.agents.threads.delete(thread.id)
+    print("ideation_agent Deleted agent and thread")
+
+    return returntxt
+
+def business_agent(query: str) -> str:
+    returntxt = ""
+
+    project_client = AIProjectClient(
+        endpoint=os.environ["PROJECT_ENDPOINT"],
+        credential=DefaultAzureCredential(),
+        # api_version="latest",
+    )
+
+    business_analyst = project_client.agents.create_agent(
+        model=model_deployment_name,
+        name="businessanalyst",
+        instructions="""
+        You are a Business Analyst specializing in market and financial analysis.
+        
+        Your role is to:
+        - Analyze market potential and sizing
+        - Evaluate revenue models and financial viability
+        - Assess competitive landscape
+        - Identify target customer segments
+        - Evaluate business model feasibility
+        
+        Structure your responses as:
+        ## 💼 Business Analysis
+        ### Market Opportunity
+        - Market size and growth potential
+        - Target customer segments
+        ### Revenue Model
+        - Potential revenue streams
+        - Pricing strategies
+        ### Competitive Landscape
+        - Key competitors and differentiation
+        ### Financial Viability
+        - Investment requirements and ROI projections
+        
+        Provide data-driven insights and realistic business assessments.
+        """,
+        #tools=... # tools to help the agent get stock prices
+    )
+    print(f"Created agent, ID: {business_analyst.id}")
+
+    thread = project_client.agents.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    message = project_client.agents.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=query,
+    )
+    print(f"Created message, ID: {message['id']}")
+
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=business_analyst.id)
+    print(f"Run finished with status: {run.status}")
+
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    messages = project_client.agents.messages.list(thread_id=thread.id)
+    for message in messages:
+        print(f"Role: {message.role}, Content: {message.content}")
+        returntxt += f"Role: {message.role}, Content: {message.content}\n"
+
+    project_client.agents.delete_agent(business_analyst.id)
+    project_client.agents.threads.delete(thread.id)
+    print("business_analyst Deleted agent and thread")
 
     return returntxt
 
@@ -412,6 +543,22 @@ AGENT_STEPS: List[Dict[str, Any]] = [
         "is_async": False,
         "returns_dict": True,
     },
+    {
+        "id": "business_analyst",
+        "label": "Business Analyst",
+        "fn": business_agent,
+        "needs_query": True,
+        "is_async": False,
+        "returns_dict": True,
+    },
+    {
+        "id": "ideation_agent",
+        "label": "Ideation Agent",
+        "fn": ideation_agent,
+        "needs_query": True,
+        "is_async": False,
+        "returns_dict": True,
+    }
 ]
 
 def main_orch():
