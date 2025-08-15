@@ -78,11 +78,9 @@ model_api_key= os.environ["MODEL_API_KEY"]
 model_deployment_name = os.environ["MODEL_DEPLOYMENT_NAME"] # Sample : gpt-4o-mini
 os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true" 
 
-# Create the project client (Foundry project and credentials)
-project_client = AIProjectClient(
-    endpoint=endpoint,
-    credential=DefaultAzureCredential(),
-)
+# NOTE: Avoid a long-lived global client for actions because closing it in one
+# function (via a context manager) will break others. Prefer creating a fresh
+# AIProjectClient per function call using a context manager.
 
 client = AzureOpenAI(
   azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
@@ -105,44 +103,38 @@ tracer = trace.get_tracer(__name__)
 
 def code_interpreter() -> str:
     code_interpreter = CodeInterpreterTool()
-    with project_client:
-        # Create an agent with the Bing Grounding tool
-        agent = project_client.agents.create_agent(
-            model=os.environ["MODEL_DEPLOYMENT_NAME"],  # Model deployment name
-            name="codeint-agent",  # Name of the agent
-            instructions="You are a helpful agent",  # Instructions for the agent
-            tools=code_interpreter.definitions,  # Attach the tool
+    # Use a fresh client instance for this operation
+    with AIProjectClient(endpoint=endpoint, credential=DefaultAzureCredential()) as _client:
+        agent = _client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="codeint-agent",
+            instructions="You are a helpful agent",
+            tools=code_interpreter.definitions,
         )
         print(f"Created agent, ID: {agent.id}")
 
-        # Create a thread for communication
-        thread = project_client.agents.threads.create()
+        thread = _client.agents.threads.create()
         print(f"Created thread, ID: {thread.id}")
-        
-        # Add a message to the thread
-        message = project_client.agents.messages.create(
+
+        message = _client.agents.messages.create(
             thread_id=thread.id,
-            role="user",  # Role of the message sender
-            content="What is the weather in Seattle today?",  # Message content
+            role="user",
+            content="What is the weather in Seattle today?",
         )
         print(f"Created message, ID: {message['id']}")
-        
-        # Create and process an agent run
-        run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+
+        run = _client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
         print(f"Run finished with status: {run.status}")
-        
-        # Check if the run failed
+
         if run.status == "failed":
             print(f"Run failed: {run.last_error}")
-        
-        # Fetch and log all messages
-        messages = project_client.agents.messages.list(thread_id=thread.id)
+
+        messages = _client.agents.messages.list(thread_id=thread.id)
         for message in messages:
             print(f"Role: {message.role}, Content: {message.content}")
-        
-        # Delete the agent when done
-        project_client.agents.delete_agent(agent.id)
-        project_client.agents.threads.delete(thread.id)
+
+        _client.agents.delete_agent(agent.id)
+        _client.agents.threads.delete(thread.id)
         print("Deleted agent and thread")
 
 def eval()-> str:
@@ -1037,7 +1029,7 @@ def load_existing_agent(query: str) -> str:
 
     # thread = project.agents.threads.get("thread_ndWUUGkSrgC0eMME7yNaVwfR")
     print(f"Created agent, ID: {agent.id}")
-    thread = project_client.agents.threads.create()
+    thread = project.agents.threads.create()
     print(f"Created thread, ID: {thread.id}")
 
     message = project.agents.messages.create(
@@ -1055,7 +1047,7 @@ def load_existing_agent(query: str) -> str:
     if run.status == "failed":
         print(f"Run failed: {run.last_error}")
     else:
-        messages = project_client.agents.messages.list(thread_id=thread.id)
+        messages = project.agents.messages.list(thread_id=thread.id)
         for message in messages:
             if message.role == MessageRole.AGENT:
                 # print(f"{message.role}: {message.text_messages[-1].text.value}")
@@ -1063,7 +1055,7 @@ def load_existing_agent(query: str) -> str:
             print(f"Messages inside thread {message}\n\n")
 
         # Fetch run steps to get the details of the agent run
-        run_steps = project_client.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
+        run_steps = project.agents.run_steps.list(thread_id=thread.id, run_id=run.id)
         for step in run_steps:
             print(f"Step {step['id']} status: {step['status']}")
             step_details = step.get("step_details", {})
@@ -1081,7 +1073,7 @@ def load_existing_agent(query: str) -> str:
                         print(f"    Connected Output: {connected_agent.get('output')}")
 
             print()  # add an extra newline between steps
-        messages = project_client.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+        messages = project.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
         for message in messages:
             if message.role == MessageRole.AGENT and message.url_citation_annotations:
                 placeholder_annotations = {
@@ -1331,67 +1323,66 @@ def aiactionplat_agent(query: str) -> str:
     # Define the path to the file to be uploaded
     file_path = "./data/Americas-AI-Action-Plan.pdf"
 
-    # Upload the file
-    file = project_client.agents.files.upload_and_poll(file_path=file_path, purpose=FilePurpose.AGENTS)
-    print(f"Uploaded file, file ID: {file.id}")
+    # Upload the file using a fresh client instance
+    with AIProjectClient(endpoint=endpoint, credential=DefaultAzureCredential()) as _client:
+        file = _client.agents.files.upload_and_poll(file_path=file_path, purpose=FilePurpose.AGENTS)
+        print(f"Uploaded file, file ID: {file.id}")
 
-    # Create a vector store with the uploaded file
-    vector_store = project_client.agents.vector_stores.create_and_poll(file_ids=[file.id], name="aiactionplanstore")
-    print(f"Created vector store, vector store ID: {vector_store.id}")
-    # Create a file search tool
-    file_search = FileSearchTool(vector_store_ids=[vector_store.id])
+        # Create a vector store with the uploaded file
+        vector_store = _client.agents.vector_stores.create_and_poll(file_ids=[file.id], name="aiactionplanstore")
+        print(f"Created vector store, vector store ID: {vector_store.id}")
+        # Create a file search tool
+        file_search = FileSearchTool(vector_store_ids=[vector_store.id])
 
-    # Create an agent with the file search tool
-    agent = project_client.agents.create_agent(
-        model=os.environ["MODEL_DEPLOYMENT_NAME"],  # Model deployment name
-        name="AIActionPlan-agent",  # Name of the agent
-        instructions="You are a helpful agent and can search information from uploaded files, which has new Americas AI Action plan from whitehouse.",  # Instructions for the agent
-        tools=file_search.definitions,  # Tools available to the agent
-        tool_resources=file_search.resources,  # Resources for the tools
-    )
-    print(f"Created agent, ID: {agent.id}")
-    # Create a thread
-    thread = project_client.agents.threads.create()
-    print(f"Created thread, ID: {thread.id}")
+        # Create an agent with the file search tool
+        agent = _client.agents.create_agent(
+            model=os.environ["MODEL_DEPLOYMENT_NAME"],
+            name="AIActionPlan-agent",
+            instructions="You are a helpful agent and can search information from uploaded files, which has new Americas AI Action plan from whitehouse.",
+            tools=file_search.definitions,
+            tool_resources=file_search.resources,
+        )
+        print(f"Created agent, ID: {agent.id}")
+        # Create a thread
+        thread = _client.agents.threads.create()
+        print(f"Created thread, ID: {thread.id}")
 
-    # Send a message to the thread
-    message = project_client.agents.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=query,  # Message content
-    )
-    print(f"Created message, ID: {message['id']}")
-    # Create and process an agent run in the thread
-    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
-    print(f"Run finished with status: {run.status}")
+        # Send a message to the thread
+        _client.agents.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=query,
+        )
+        print("Created message for thread")
+        # Create and process an agent run in the thread
+        run = _client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+        print(f"Run finished with status: {run.status}")
 
-    if run.status == "failed":
-        print(f"Run failed: {run.last_error}")
+        if run.status == "failed":
+            print(f"Run failed: {run.last_error}")
 
-    # Cleanup resources
-    project_client.agents.vector_stores.delete(vector_store.id)
-    print("Deleted vector store")
+        # Fetch and log all messages from the thread
+        messages = _client.agents.messages.list(thread_id=thread.id)
+        file_name = os.path.split(file_path)[-1]
+        for msg in messages:
+            if msg.text_messages:
+                last_text = msg.text_messages[-1].text.value
+                for annotation in msg.text_messages[-1].text.annotations:
+                    citation = (
+                        file_name if annotation.file_citation.file_id == file.id else annotation.file_citation.file_id
+                    )
+                    last_text = last_text.replace(annotation.text, f" [{citation}]")
+                
+                returntxt += last_text
+                print(f"{msg.role}: {last_text}")
 
-    project_client.agents.files.delete(file_id=file.id)
-    print("Deleted file")
-
-    project_client.agents.delete_agent(agent.id)
-    print("Deleted agent")
-
-    # Fetch and log all messages from the thread
-    messages = project_client.agents.messages.list(thread_id=thread.id)
-    file_name = os.path.split(file_path)[-1]
-    for msg in messages:
-        if msg.text_messages:
-            last_text = msg.text_messages[-1].text.value
-            for annotation in msg.text_messages[-1].text.annotations:
-                citation = (
-                    file_name if annotation.file_citation.file_id == file.id else annotation.file_citation.file_id
-                )
-                last_text = last_text.replace(annotation.text, f" [{citation}]")
-            
-            returntxt += last_text
-            print(f"{msg.role}: {last_text}")
+        # Cleanup resources (delete after reading messages)
+        _client.agents.vector_stores.delete(vector_store.id)
+        print("Deleted vector store")
+        _client.agents.files.delete(file_id=file.id)
+        print("Deleted file")
+        _client.agents.delete_agent(agent.id)
+        print("Deleted agent")
 
     return returntxt
 
