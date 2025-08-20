@@ -865,21 +865,32 @@ def main_screen():
         """
         <style>
     html, body { height: 100%; }
-    .block-container { height: 50vh; padding-bottom: 96px; }
+    .block-container { height: 80vh; padding-bottom: 96px; }
     .tab-body { height: calc(1vh - 140px); display: flex; flex-direction: column; }
         .panel { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
         .panel h3 { margin: 0 0 8px 0; font-size: 1.05rem; }
         .scroll { overflow: auto; flex: 1; }
         .meta { color: #6b7280; font-size: 0.9rem; margin-bottom: 6px; }
-        .agent-card { border: 1px solid #eef2f7; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; background: #fcfdff; }
+    .agent-card { border: 1px solid #eef2f7; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; background: #fcfdff; }
+    /* HTML details-based expanders */
+    .agent-expander { border: 1px solid #eef2f7; border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; background: #fcfdff; }
+    .agent-expander summary { cursor: pointer; font-weight: 600; list-style: none; }
+    .agent-expander summary::-webkit-details-marker { display: none; }
+    .agent-expander summary:before { content: '\25B6'; display: inline-block; margin-right: 8px; transition: transform 0.2s ease; }
+    .agent-expander[open] summary:before { transform: rotate(90deg); }
+    .agent-expander pre { white-space: pre-wrap; word-wrap: break-word; margin: 6px 0 0 0; }
     /* Fix panel height within viewport; adjust 210px if header/footer change */
-    .panel-fixed { height: calc(50vh - 210px); }
+    .panel-fixed { height: calc(80vh - 210px); }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    tabs = st.tabs(["Phase 1", "Phase 2", "Phase 3"])
+    tabs = st.tabs([
+        "Phase 1: Research and Development (R&D)",
+        "Phase 2: Prototyping and Testing",
+        "Phase 3: Scaling to Mass Production",
+    ])
 
     # Session state containers per phase
     for key in ["p1_history", "p2_history", "p3_history", "p1_agents", "p2_agents", "p3_agents"]:
@@ -915,15 +926,17 @@ def main_screen():
             if not agents_map:
                 right_inner = "<p class='meta'>Agent outputs will appear here after you submit a question.</p>"
             else:
-                cards = []
+                sections = []
                 for name, output in agents_map.items():
                     safe_name = _html_escape(str(name))
                     safe_output = _html_escape(str(output))
-                    cards.append(
-                        f"<div class='agent-card'><div><strong>{safe_name}</strong></div>"
-                        f"<pre style='white-space:pre-wrap;word-wrap:break-word;margin:6px 0 0 0'>{safe_output}</pre></div>"
+                    sections.append(
+                        f"<details class='agent-expander'>"
+                        f"<summary>{safe_name}</summary>"
+                        f"<pre>{safe_output}</pre>"
+                        f"</details>"
                     )
-                right_inner = "\n".join(cards)
+                right_inner = "\n".join(sections)
             right_html = (
                 f"<div class='panel panel-fixed'>"
                 f"<h3>{_html_escape(phase_title)} • Agent Outputs</h3>"
@@ -945,11 +958,11 @@ def main_screen():
                 st.error(str(e))
 
     with tabs[0]:
-        render_phase("Phase 1: Adhesive Product Development", "p1", connected_agent_phase1)
+        render_phase("Phase 1: Research and Development (R&D)", "p1", connected_agent_phase1)
     with tabs[1]:
-        render_phase("Phase 2: Pilot Production Ramp-Up", "p2", connected_agent_phase2)
+        render_phase("Phase 2: Prototyping and Testing", "p2", connected_agent_phase2)
     with tabs[2]:
-        render_phase("Phase 3: Full-Scale Manufacturing", "p3", connected_agent_phase3)
+        render_phase("Phase 3: Scaling to Mass Production", "p3", connected_agent_phase3)
 
 if __name__ == "__main__":
     main_screen()
