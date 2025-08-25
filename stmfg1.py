@@ -978,7 +978,7 @@ def main_screen():
                 st.markdown(f"**{_html_escape(phase_title)} • Summary**")
                 
                 # Create a container with defined height for scrolling
-                with st.container():
+                with st.container(height=600):
                     # Apply scrollable styling
                     st.markdown('<div class="scrollable-panel">', unsafe_allow_html=True)
                     
@@ -998,7 +998,7 @@ def main_screen():
                 st.markdown(f"**{_html_escape(phase_title)} • Agent Outputs**")
                 
                 # Create a container with defined height for scrolling
-                with st.container():
+                with st.container(height=600):
                     # Apply scrollable styling
                     st.markdown('<div class="scrollable-panel">', unsafe_allow_html=True)
                     
