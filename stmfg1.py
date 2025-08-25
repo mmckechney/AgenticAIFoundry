@@ -857,6 +857,13 @@ def connected_agent_phase3(query: str) -> str:
     return returntxt, agent_outputs, token_usage
 
 
+def _html_escape(text):
+    """Escape HTML characters to prevent injection."""
+    if not text:
+        return ""
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#x27;")
+
+
 def main_screen():
     # Professional, one-screen layout with scrollable panels per tab and chat input
     st.set_page_config(page_title="Adhesive Manufacturing Orchestrator", layout="wide")
@@ -864,23 +871,85 @@ def main_screen():
     st.markdown(
         """
         <style>
-    html, body { height: 100%; }
-    .block-container { height: 80vh; padding-bottom: 96px; }
-    .tab-body { height: calc(1vh - 140px); display: flex; flex-direction: column; }
-        .panel { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
-        .panel h3 { margin: 0 0 8px 0; font-size: 1.05rem; }
-        .scroll { overflow: auto; flex: 1; }
-        .meta { color: #6b7280; font-size: 0.9rem; margin-bottom: 6px; }
-    .agent-card { border: 1px solid #eef2f7; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; background: #fcfdff; }
-    /* HTML details-based expanders */
-    .agent-expander { border: 1px solid #eef2f7; border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; background: #fcfdff; }
-    .agent-expander summary { cursor: pointer; font-weight: 600; list-style: none; }
-    .agent-expander summary::-webkit-details-marker { display: none; }
-    .agent-expander summary:before { content: '\25B6'; display: inline-block; margin-right: 8px; transition: transform 0.2s ease; }
-    .agent-expander[open] summary:before { transform: rotate(90deg); }
-    .agent-expander pre { white-space: pre-wrap; word-wrap: break-word; margin: 6px 0 0 0; }
-    /* Fix panel height within viewport; adjust 210px if header/footer change */
-    .panel-fixed { height: calc(80vh - 210px); }
+        html, body { height: 100vh; }
+        .block-container { max-height: 100vh; padding-bottom: 120px; }
+        
+        .panel { 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px; 
+            background: #f8fafc; 
+            padding: 15px; 
+            margin-bottom: 15px;
+        }
+        
+        .panel h3 { 
+            margin: 0 0 10px 0; 
+            font-size: 1.1rem; 
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+        
+        .scrollable-panel { 
+            max-height: calc(80vh - 420px); 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            padding: 10px 5px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #ffffff;
+        }
+        
+        /* Ensure content stays within scrollable bounds */
+        .scrollable-panel > div {
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .chat-input-container {
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            padding: 15px 0 10px 0;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        
+        .chat-input-container h4 {
+            margin: 0 0 10px 0;
+            color: #374151;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        /* Style for Streamlit expanders */
+        .streamlit-expanderHeader {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        /* Ensure chat input is always visible */
+        .stChatInput {
+            position: relative;
+            z-index: 1000;
+        }
+        
+        /* Prevent page-level scrolling issues */
+        .main > div {
+            padding-top: 1rem;
+        }
+        
+        /* Ensure Streamlit containers don't overflow */
+        .element-container {
+            max-width: 100%;
+        }
+        
+        /* Style for better text wrapping in summary */
+        .scrollable-panel p, .scrollable-panel div {
+            word-break: break-word;
+            hyphens: auto;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -899,54 +968,56 @@ def main_screen():
 
     # Helper to render a phase panel
     def render_phase(phase_title: str, phase_key: str, run_fn):
-        st.markdown(f"<div class='tab-body'>", unsafe_allow_html=True)
-        left_col, right_col = st.columns([1, 1.2], gap="medium")
+        # Create content area with scrollable panels
+        content_container = st.container()
+        with content_container:
+            left_col, right_col = st.columns([1, 1], gap="medium")
 
-        # Left: summarized output
-        with left_col:
-            history = st.session_state[phase_key + "_history"]
-            if not history:
-                content_html = "<p class='meta'>No responses yet. Ask something using the chat input.</p>"
-            else:
-                items = []
-                for i, m in enumerate(history, 1):
-                    items.append(f"<div><strong>{i}.</strong> {_html_escape(str(m))}</div>")
-                content_html = "\n".join(items)
-            left_html = (
-                f"<div class='panel panel-fixed'>"
-                f"<h3>{_html_escape(phase_title)} • Summary</h3>"
-                f"<div class='scroll'>{content_html}</div>"
-                f"</div>"
-            )
-            st.markdown(left_html, unsafe_allow_html=True)
+            # Left: summarized output in scrollable container
+            with left_col:
+                st.markdown(f"**{_html_escape(phase_title)} • Summary**")
+                
+                # Create a container with defined height for scrolling
+                with st.container():
+                    # Apply scrollable styling
+                    st.markdown('<div class="scrollable-panel">', unsafe_allow_html=True)
+                    
+                    history = st.session_state[phase_key + "_history"]
+                    if not history:
+                        st.caption("No responses yet. Ask something using the chat input below.")
+                    else:
+                        # Create each summary item within the scrollable area
+                        for i, m in enumerate(history, 1):
+                            with st.container():
+                                st.markdown(f"**{i}.** {m}")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-        # Right: individual agent outputs
-        with right_col:
-            agents_map = st.session_state[phase_key + "_agents"] or {}
-            if not agents_map:
-                right_inner = "<p class='meta'>Agent outputs will appear here after you submit a question.</p>"
-            else:
-                sections = []
-                for name, output in agents_map.items():
-                    safe_name = _html_escape(str(name))
-                    safe_output = _html_escape(str(output))
-                    sections.append(
-                        f"<details class='agent-expander'>"
-                        f"<summary>{safe_name}</summary>"
-                        f"<pre>{safe_output}</pre>"
-                        f"</details>"
-                    )
-                right_inner = "\n".join(sections)
-            right_html = (
-                f"<div class='panel panel-fixed'>"
-                f"<h3>{_html_escape(phase_title)} • Agent Outputs</h3>"
-                f"<div class='scroll'>{right_inner}</div>"
-                f"</div>"
-            )
-            st.markdown(right_html, unsafe_allow_html=True)
+            # Right: individual agent outputs using st.expander
+            with right_col:
+                st.markdown(f"**{_html_escape(phase_title)} • Agent Outputs**")
+                
+                # Create a container with defined height for scrolling
+                with st.container():
+                    # Apply scrollable styling
+                    st.markdown('<div class="scrollable-panel">', unsafe_allow_html=True)
+                    
+                    agents_map = st.session_state[phase_key + "_agents"] or {}
+                    if not agents_map:
+                        st.caption("Agent outputs will appear here after you submit a question below.")
+                    else:
+                        for name, output in agents_map.items():
+                            with st.expander(f"🤖 {name}", expanded=False):
+                                st.write(output)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-        # Chat input for this phase
-        user_msg = st.chat_input(f"Ask a question for {phase_title}", key=phase_key + "_chat")
+        # Add some spacing before chat input
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Chat input for this phase - always visible at bottom
+        st.markdown(f"<div class='chat-input-container'><h4>💬 Ask a question for {_html_escape(phase_title)}</h4></div>", unsafe_allow_html=True)
+        user_msg = st.chat_input(f"Type your question here...", key=phase_key + "_chat")
         if user_msg:
             try:
                 summary, agents, usage = run_fn(user_msg)
