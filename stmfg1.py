@@ -221,7 +221,7 @@ def connected_agent_phase1(query: str) -> str:
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="PresalesAgent",
         instructions="""
-        You are a Presales Solution Architect and specialist. Use the provided tools to answer the user's questions comprehensively.
+        You are a Product Manufacturing Expert and specialist. Use the provided tools to answer the user's questions comprehensively.
         Be postive and professional in your responses. Provide detailed and structured answers.
         Here are the list of Agents to involve and get response from all
         Ideation Agent: Creative ideation and innovation catalyst
@@ -230,7 +230,7 @@ def connected_agent_phase1(query: str) -> str:
         Initial Lab Test Agent: Quality assurance and analytical specialist in adhesive R&D
         Concept Validation Agent: Collaborative integrator in the final R&D stage for adhesive products
 
-        Summarize all the results and also provide architecture diagram in Mermaid format.
+        Summarize all the results and also provide Detail flow and sequence diagram in Mermaid format.
         Also provide the Architecture pro's and con's.        
         """,
         # tools=list(unique_tools.values()), #search_connected_agent.definitions,  # Attach the connected agents
