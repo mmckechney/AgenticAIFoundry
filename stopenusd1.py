@@ -194,39 +194,55 @@ def extract_clean_usd_code(content: str) -> str:
     
     content = content.strip()
     
-    # Simple approach: Find ```usda and extract everything until the next ```
+    # Method 1: Look for ```usda blocks
     if "```usda" in content:
         start_marker = "```usda"
         start_pos = content.find(start_marker)
         if start_pos != -1:
-            # Find the start of the actual code (after the marker and newline)
             code_start = start_pos + len(start_marker)
             if content[code_start:code_start+1] == '\n':
                 code_start += 1
             
-            # Find the end marker
             end_pos = content.find("```", code_start)
             if end_pos != -1:
-                raw_code = content[code_start:end_pos]
-                return raw_code
+                raw_code = content[code_start:end_pos].strip()
+                if raw_code and "#usda" in raw_code:
+                    return raw_code
     
-    # Fallback: Look for any ``` block that contains #usda
+    # Method 2: Look for ```usd blocks
+    if "```usd" in content:
+        start_marker = "```usd"
+        start_pos = content.find(start_marker)
+        if start_pos != -1:
+            code_start = start_pos + len(start_marker)
+            if content[code_start:code_start+1] == '\n':
+                code_start += 1
+            
+            end_pos = content.find("```", code_start)
+            if end_pos != -1:
+                raw_code = content[code_start:end_pos].strip()
+                if raw_code and "#usda" in raw_code:
+                    return raw_code
+    
+    # Method 3: Look for any code block containing #usda
     if "```" in content:
         parts = content.split("```")
         for i in range(1, len(parts), 2):  # Odd indices are code blocks
-            code_block = parts[i]
+            code_block = parts[i].strip()
             if "#usda" in code_block:
                 return code_block
     
-    # Last resort: Extract from #usda to end of meaningful content
+    # Method 4: Extract from #usda header to reasonable end
     if "#usda" in content:
         start_pos = content.find("#usda")
         if start_pos != -1:
-            # Take everything from #usda onwards, but stop at common end markers
             remaining = content[start_pos:]
             
-            # Stop at common end patterns
-            end_markers = ["\n\n**", "\n**Tips", "\n**Variations", "\nTips:", "\nHere"]
+            # Look for natural end points
+            end_markers = [
+                "\n\n**", "\n**Tips", "\n**Variations", "\nTips:", "\nHere",
+                "\n\nStep 4:", "\n\n4.", "\nAdditional", "\nFor more"
+            ]
             end_pos = len(remaining)
             
             for marker in end_markers:
@@ -234,7 +250,12 @@ def extract_clean_usd_code(content: str) -> str:
                 if marker_pos != -1 and marker_pos < end_pos:
                     end_pos = marker_pos
             
-            return remaining[:end_pos].strip()
+            extracted_code = remaining[:end_pos].strip()
+            
+            # Validate that this looks like USD code
+            if (extracted_code.count('{') > 0 and extracted_code.count('}') > 0 and 
+                ('def ' in extracted_code or 'Sphere' in extracted_code or 'Cube' in extracted_code)):
+                return extracted_code
     
     return ""
 
@@ -254,9 +275,9 @@ def digitaltwin_main():
     /* Main header styling */
     .main-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 25px;
+        padding: 12px;
         border-radius: 15px;
-        margin-bottom: 25px;
+        margin-bottom: 15px;
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
         text-align: center;
         color: white;
@@ -264,15 +285,15 @@ def digitaltwin_main():
     
     .main-header h1 {
         color: white !important;
-        font-size: 2.2rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .main-header p {
         color: rgba(255,255,255,0.9) !important;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         margin: 0;
         font-weight: 300;
     }
@@ -285,9 +306,48 @@ def digitaltwin_main():
         margin: 15px 0;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
-    /* Dynamic height: full viewport minus header + input area (approx) */
-    height: calc(80vh - 360px);
-    overflow-y: auto;
+        /* Default compact height */
+        height: 350px;
+        overflow-y: auto;
+        transition: height 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+    }
+    
+    .chat-container.expanded {
+        height: calc(80vh - 360px);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .chat-toggle-btn {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: rgba(102, 126, 234, 0.1);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        color: #667eea;
+        cursor: pointer;
+        z-index: 100;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+    }
+    
+    .chat-toggle-btn:hover {
+        background: rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.5);
+        transform: translateY(-1px);
+    }
+    
+    .chat-container-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-right: 80px; /* Space for toggle button */
     }
     
     /* Individual message styling */
@@ -480,7 +540,9 @@ def digitaltwin_main():
         /* Add bottom padding so content not hidden behind sticky bar */
         .stApp .block-container { padding-bottom: 140px !important; }
         @media (max-width: 900px) {
-            .chat-container { height: calc(80vh - 400px); }
+            .chat-container { height: 250px; }
+            .chat-container.expanded { height: calc(70vh - 300px); }
+        }
         }
         </style>
         """,
@@ -512,8 +574,19 @@ def digitaltwin_main():
         # Chat History Display
         st.markdown("### 💬 Conversation History")
         
-        # Create scrollable chat container
-        chat_html = '<div class="chat-container">'
+        # Initialize chat expansion state
+        if 'chat_expanded' not in st.session_state:
+            st.session_state.chat_expanded = False
+        
+        # Create scrollable chat container with toggle functionality
+        chat_expanded_class = "expanded" if st.session_state.chat_expanded else ""
+        toggle_text = "Collapse Chat" if st.session_state.chat_expanded else "Expand Chat"
+        toggle_icon = "⬇️" if st.session_state.chat_expanded else "⬆️"
+        
+        chat_html = f'''
+        <div class="chat-container {chat_expanded_class}" id="chat-container">
+            <button class="chat-toggle-btn" onclick="toggleChatContainer()">{toggle_icon} {toggle_text}</button>
+        '''
         
         if st.session_state.chat_history:
             for i, message in enumerate(st.session_state.chat_history):
@@ -619,6 +692,41 @@ def digitaltwin_main():
             </div>'''
         
         chat_html += '</div>'
+        
+        # Add JavaScript for toggle functionality
+        chat_html += '''
+        <script>
+        function toggleChatContainer() {
+            const container = document.getElementById('chat-container');
+            const btn = document.querySelector('.chat-toggle-btn');
+            
+            if (container.classList.contains('expanded')) {
+                container.classList.remove('expanded');
+                btn.innerHTML = '⬆️ Expand Chat';
+                // Auto-scroll to bottom when collapsing
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            } else {
+                container.classList.add('expanded');
+                btn.innerHTML = '⬇️ Collapse Chat';
+                // Auto-scroll to bottom when expanding
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 350);
+            }
+        }
+        
+        // Auto-scroll to bottom on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('chat-container');
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+        </script>
+        '''
+        
         st.html(chat_html)
 
         # --- OpenUSD Rendering (latest scene) ---
@@ -630,7 +738,18 @@ def digitaltwin_main():
                     render_usd_scene(prims)
                 else:
                     st.info("No supported primitives (Sphere / Cube with optional Xform) detected to render.")
-        
+                    st.text("Raw USD Code Preview:")
+                    st.code(latest_usd_code[:500] + "..." if len(latest_usd_code) > 500 else latest_usd_code)
+        else:
+            # Show a demo scene if no USD code exists yet
+            with st.expander("🖼 Demo 3D Scene", expanded=False):
+                st.info("No OpenUSD code generated yet. Here's a demo scene:")
+                demo_prims = [
+                    {"type": "sphere", "name": "DemoSphere", "radius": 1.0, "position": [0, 0, 0]},
+                    {"type": "cube", "name": "DemoCube", "size": 1.5, "position": [3, 0, 0]},
+                    {"type": "sphere", "name": "DemoSphere2", "radius": 0.7, "position": [-2, 1, 0]}
+                ]
+                render_usd_scene(demo_prims)
         # Input Section
         st.markdown("### 💭 Describe Your 3D Scene")
         with st.container():
@@ -834,7 +953,8 @@ USD_CUBE_RE = _re.compile(r'def\s+Cube\s+"(?P<name>[^"]+)"[^{]*{(?P<body>[^}]*)}
 USD_XFORM_RE = _re.compile(r'def\s+Xform\s+"(?P<name>[^"]+)"[^{]*{(?P<body>[^}]*)}', _re.MULTILINE | _re.DOTALL)
 
 def _extract_translate(xform_body:str):
-    # crude parse of xformOp:translate = (x, y, z)
+    """Extract translation from USD Xform body - handles multiple formats."""
+    # Method 1: xformOp:translate = (x, y, z)
     m = _re.search(r'xformOp:translate\s*=\s*\(([^)]+)\)', xform_body)
     if m:
         parts = [p.strip() for p in m.group(1).split(',')]
@@ -842,28 +962,69 @@ def _extract_translate(xform_body:str):
             try:
                 return [float(parts[0]), float(parts[1]), float(parts[2])]
             except:
-                return [0,0,0]
+                pass
+    
+    # Method 2: matrix4d xformOp:transform = ( (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (x, y, z, 1) )
+    m = _re.search(r'matrix4d\s+xformOp:transform\s*=\s*\(\s*\([^)]+\)\s*,\s*\([^)]+\)\s*,\s*\([^)]+\)\s*,\s*\(([^)]+)\)\s*\)', xform_body)
+    if m:
+        parts = [p.strip() for p in m.group(1).split(',')]
+        if len(parts) >= 3:
+            try:
+                return [float(parts[0]), float(parts[1]), float(parts[2])]
+            except:
+                pass
+    
+    # Method 3: Look for any translate pattern
+    translate_patterns = [
+        r'translate\s*=\s*\(([^)]+)\)',
+        r'translation\s*=\s*\(([^)]+)\)',
+        r'position\s*=\s*\(([^)]+)\)'
+    ]
+    
+    for pattern in translate_patterns:
+        m = _re.search(pattern, xform_body)
+        if m:
+            parts = [p.strip() for p in m.group(1).split(',')]
+            if len(parts) == 3:
+                try:
+                    return [float(parts[0]), float(parts[1]), float(parts[2])]
+                except:
+                    continue
+    
     return [0,0,0]
 
 def parse_usd_prims(usd_code:str):
     """Very lightweight USD parser for simple Sphere / Cube prims inside optional Xforms.
     Returns list of dicts: {type, name, position[x,y,z], size|radius}
     """
+    if not usd_code or not usd_code.strip():
+        print("No USD code to parse")
+        return []
+    
+    print(f"Parsing USD code:\n{usd_code[:200]}...")
+    
     prims = []
     # Map of child prim names to translation from parent Xform
     xform_positions = {}
+    
+    # Parse Xforms first to get positioning info
     for xm in USD_XFORM_RE.finditer(usd_code):
         xname = xm.group('name')
         body = xm.group('body')
         t = _extract_translate(body)
+        print(f"Found Xform '{xname}' at position {t}")
+        
         # Track for any nested child mention (simplified: if child defined inside we add translation)
         for sm in USD_SPHERE_RE.finditer(body):
             cname = sm.group('name')
             xform_positions[cname] = t
+            print(f"  Nested sphere '{cname}' inherits position {t}")
         for cm in USD_CUBE_RE.finditer(body):
             cname = cm.group('name')
             xform_positions[cname] = t
+            print(f"  Nested cube '{cname}' inherits position {t}")
 
+    # Parse spheres
     for sm in USD_SPHERE_RE.finditer(usd_code):
         name = sm.group('name')
         body = sm.group('body')
@@ -871,14 +1032,36 @@ def parse_usd_prims(usd_code:str):
         radius = float(rad_match.group(1)) if rad_match else 1.0
         pos = xform_positions.get(name, [0,0,0])
         prims.append({"type":"sphere", "name":name, "radius":radius, "position":pos})
+        print(f"Added sphere '{name}' with radius {radius} at position {pos}")
+    
+    # Parse cubes
     for cm in USD_CUBE_RE.finditer(usd_code):
         name = cm.group('name')
         body = cm.group('body')
-        # extent or size not always given; default 1
+        # Look for size or extent
         size_match = _re.search(r'size\s*=\s*([0-9.+-eE]+)', body)
-        size = float(size_match.group(1)) if size_match else 1.0
+        if not size_match:
+            # Try extent format: extent = [(-1, -1, -1), (1, 1, 1)]
+            extent_match = _re.search(r'extent\s*=\s*\[\s*\([^)]+\)\s*,\s*\(([^)]+)\)\s*\]', body)
+            if extent_match:
+                try:
+                    coords = [float(x.strip()) for x in extent_match.group(1).split(',')]
+                    if len(coords) == 3:
+                        size = coords[0] * 2  # Assuming symmetric extent
+                    else:
+                        size = 1.0
+                except:
+                    size = 1.0
+            else:
+                size = 1.0
+        else:
+            size = float(size_match.group(1))
+        
         pos = xform_positions.get(name, [0,0,0])
         prims.append({"type":"cube", "name":name, "size":size, "position":pos})
+        print(f"Added cube '{name}' with size {size} at position {pos}")
+    
+    print(f"Total primitives parsed: {len(prims)}")
     return prims
 
 def render_usd_scene(prims:List[Dict[str,Any]]):
@@ -886,53 +1069,208 @@ def render_usd_scene(prims:List[Dict[str,Any]]):
     scene_data = _json.dumps(prims)
     prim_count = len(prims)
     html_viewer = """
-<div id='usd-viewer' style='width:100%;height:400px;border:1px solid #e2e8f0;border-radius:8px;position:relative;background:#111;'>
+<div id='usd-viewer' style='width:100%;height:400px;border:1px solid #e2e8f0;border-radius:8px;position:relative;background:#333;'>
     <div style='position:absolute;top:8px;left:12px;color:#fff;font:12px/1.2 monospace;z-index:10;'>Scene Primitives: __PRIM_COUNT__</div>
 </div>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js'></script>
 <script>
     const data = __SCENE_DATA__;
     const container = document.getElementById('usd-viewer');
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    
+    // Check if we have any data to render
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;">No 3D objects to render</div>';
+        return;
+    }
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setClearColor(0x2a2a2a, 1.0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
+    
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111111);
-    const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 1000);
-    camera.position.set(4,4,6);
-    const hemi = new THREE.HemisphereLight(0xffffff,0x222222,1.0); scene.add(hemi);
-    const dir = new THREE.DirectionalLight(0xffffff,0.8); dir.position.set(5,10,7); scene.add(dir);
-    const group = new THREE.Group(); scene.add(group);
-    const rndColor = () => new THREE.Color().setHSL(Math.random(),0.6,0.55);
+    scene.background = new THREE.Color(0x2a2a2a);
+    
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
+    
+    // Calculate scene bounds to position camera appropriately
+    let minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
+    let hasObjects = false;
+    
+    data.forEach(p => {
+        const pos = p.position || [0,0,0];
+        const size = p.radius || p.size || 1;
+        minX = Math.min(minX, pos[0] - size);
+        maxX = Math.max(maxX, pos[0] + size);
+        minY = Math.min(minY, pos[1] - size);
+        maxY = Math.max(maxY, pos[1] + size);
+        minZ = Math.min(minZ, pos[2] - size);
+        maxZ = Math.max(maxZ, pos[2] + size);
+        hasObjects = true;
+    });
+    
+    if (hasObjects) {
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        const centerZ = (minZ + maxZ) / 2;
+        const sizeX = maxX - minX;
+        const sizeY = maxY - minY;
+        const sizeZ = maxZ - minZ;
+        const maxSize = Math.max(sizeX, sizeY, sizeZ);
+        const distance = maxSize * 2.5;
+        
+        camera.position.set(centerX + distance * 0.7, centerY + distance * 0.5, centerZ + distance);
+        camera.lookAt(centerX, centerY, centerZ);
+    } else {
+        camera.position.set(5, 5, 10);
+        camera.lookAt(0, 0, 0);
+    }
+    
+    // Improved lighting setup
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 10, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+    
+    const pointLight = new THREE.PointLight(0xffffff, 0.3, 0);
+    pointLight.position.set(-10, 10, -10);
+    scene.add(pointLight);
+    
+    const group = new THREE.Group(); 
+    scene.add(group);
+    
+    // Fixed color palette instead of random
+    const colors = [0xff6b6b, 0x4ecdc4, 0x45b7d1, 0x96ceb4, 0xffeaa7, 0xdda0dd, 0x98d8c8, 0xf7dc6f];
+    let colorIndex = 0;
+    
+    // Add ground plane for reference
+    const planeGeo = new THREE.PlaneGeometry(20, 20);
+    const planeMat = new THREE.MeshStandardMaterial({ color: 0x808080, opacity: 0.3, transparent: true });
+    const plane = new THREE.Mesh(planeGeo, planeMat);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.y = -2;
+    plane.receiveShadow = true;
+    scene.add(plane);
+    
     data.forEach(p => {
         let mesh;
+        const color = colors[colorIndex % colors.length];
+        colorIndex++;
+        
         if (p.type === 'sphere') {
-            const geo = new THREE.SphereGeometry(p.radius,32,32);
-            const mat = new THREE.MeshStandardMaterial({ color: rndColor() });
-            mesh = new THREE.Mesh(geo,mat);
+            const radius = p.radius || 1;
+            const geo = new THREE.SphereGeometry(radius, 32, 32);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: color,
+                metalness: 0.3,
+                roughness: 0.4
+            });
+            mesh = new THREE.Mesh(geo, mat);
         } else if (p.type === 'cube') {
-            const geo = new THREE.BoxGeometry(p.size,p.size,p.size);
-            const mat = new THREE.MeshStandardMaterial({ color: rndColor() });
-            mesh = new THREE.Mesh(geo,mat);
+            const size = p.size || 1;
+            const geo = new THREE.BoxGeometry(size, size, size);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: color,
+                metalness: 0.2,
+                roughness: 0.6
+            });
+            mesh = new THREE.Mesh(geo, mat);
         }
+        
         if (mesh) {
             const pos = p.position || [0,0,0];
             mesh.position.set(pos[0], pos[1], pos[2]);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
             mesh.userData = p;
             group.add(mesh);
+            
+            // Add wireframe for better visibility
+            const wireframe = new THREE.WireframeGeometry(mesh.geometry);
+            const line = new THREE.LineSegments(wireframe);
+            line.material.color.setHex(0x000000);
+            line.material.opacity = 0.2;
+            line.material.transparent = true;
+            line.position.copy(mesh.position);
+            group.add(line);
         }
     });
-    // simple orbit (drag)
-    let isDown=false, prevX=0, prevY=0, rotY=0, rotX=0;
-    container.addEventListener('mousedown', e => { isDown=true; prevX=e.clientX; prevY=e.clientY; });
-    window.addEventListener('mouseup', () => { isDown=false; });
-    window.addEventListener('mousemove', e => { if(!isDown) return; const dx=e.clientX-prevX; const dy=e.clientY-prevY; rotY+=dx*0.005; rotX+=dy*0.005; prevX=e.clientX; prevY=e.clientY; group.rotation.y=rotY; group.rotation.x=rotX; });
-    function animate(){ requestAnimationFrame(animate); renderer.render(scene,camera); }
+    
+    // Enhanced orbit controls
+    let isDown = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
+    let distance = 10;
+    
+    container.addEventListener('mousedown', e => { 
+        isDown = true; 
+        prevX = e.clientX; 
+        prevY = e.clientY; 
+        container.style.cursor = 'grabbing';
+    });
+    
+    window.addEventListener('mouseup', () => { 
+        isDown = false; 
+        container.style.cursor = 'grab';
+    });
+    
+    window.addEventListener('mousemove', e => { 
+        if(!isDown) return; 
+        const dx = e.clientX - prevX; 
+        const dy = e.clientY - prevY; 
+        rotY += dx * 0.01; 
+        rotX += dy * 0.01; 
+        rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+        prevX = e.clientX; 
+        prevY = e.clientY; 
+        
+        // Update camera position based on rotation
+        const radius = distance;
+        camera.position.x = radius * Math.cos(rotX) * Math.sin(rotY);
+        camera.position.y = radius * Math.sin(rotX);
+        camera.position.z = radius * Math.cos(rotX) * Math.cos(rotY);
+        camera.lookAt(0, 0, 0);
+    });
+    
+    // Mouse wheel zoom
+    container.addEventListener('wheel', e => {
+        e.preventDefault();
+        distance += e.deltaY * 0.01;
+        distance = Math.max(2, Math.min(50, distance));
+        
+        const radius = distance;
+        camera.position.x = radius * Math.cos(rotX) * Math.sin(rotY);
+        camera.position.y = radius * Math.sin(rotX);
+        camera.position.z = radius * Math.cos(rotX) * Math.cos(rotY);
+    });
+    
+    container.style.cursor = 'grab';
+    
+    function animate() { 
+        requestAnimationFrame(animate); 
+        renderer.render(scene, camera); 
+    }
     animate();
-    window.addEventListener('resize', () => { const w=container.clientWidth, h=container.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); });
+    
+    window.addEventListener('resize', () => { 
+        const w = container.clientWidth, h = container.clientHeight; 
+        renderer.setSize(w, h); 
+        camera.aspect = w / h; 
+        camera.updateProjectionMatrix(); 
+    });
+    
+    // Debug info
+    console.log('USD Scene rendered with', data.length, 'objects:', data);
 </script>
-<div style='font-size:0.75rem;color:#64748b;margin-top:4px;'>Simple preview (Sphere/Cube). For full USD features integrate a dedicated USD viewer.</div>
+<div style='font-size:0.75rem;color:#64748b;margin-top:4px;'>
+    Interactive 3D viewer - Drag to rotate, scroll to zoom. Supports Sphere/Cube primitives.
+</div>
 """
     html_viewer = html_viewer.replace('__PRIM_COUNT__', str(prim_count)).replace('__SCENE_DATA__', scene_data)
     st.html(html_viewer)
