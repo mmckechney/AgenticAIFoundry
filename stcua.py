@@ -61,7 +61,7 @@ def cuarun(query: str) -> str:
     # returntxt = response.choices[0].message.content.strip()
     # retturntxt = response.output_text
     # print(f"Response: {retturntxt}")
-    print(response.output)
+    print('Output:', response.output)
     ## response.output is the previous response from the model
     computer_calls = [item for item in response.output if item.type == "computer_call"]
     if not computer_calls:
@@ -103,6 +103,7 @@ def cuarun(query: str) -> str:
     # )
 
 if __name__ == "__main__":
-    query = "Check the latest AI news on bing.com."
+    # query = "Check the latest AI news on bing.com."
+    query = "Summarize the content from https://www.gethalfbaked.com/p/startup-ideas-425-cognitive-fitness"
     cuarun(query)
     # You can also use asyncio.run(cuarun(query)) if you want to run it in an async context
