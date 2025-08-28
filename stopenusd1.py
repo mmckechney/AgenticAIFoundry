@@ -20,6 +20,7 @@ import requests
 import io
 import re
 import html
+import streamlit.components.v1 as components
 
 load_dotenv()
 
@@ -120,12 +121,6 @@ def msft_generate_chat_response(query):
     
     try:
         # Use simple OpenAI chat completion instead of MCP
-        # simple_client = AzureOpenAI(
-        #     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        #     api_key=os.getenv("AZURE_OPENAI_KEY"),
-        #     api_version="2024-12-01-preview"
-        # )
-
         simple_client = AzureOpenAI(  
             base_url = os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/v1/",  
             api_key= os.getenv("AZURE_OPENAI_KEY"),
@@ -137,19 +132,10 @@ def msft_generate_chat_response(query):
             {"role": "user", "content": prompt}
         ]
         
-        # response = simple_client.chat.completions.create(
-        #     model=CHAT_DEPLOYMENT_NAME,
-        #     messages=messages,
-        #     max_tokens=2000,
-        #     temperature=0.7
-        # )
-        
-        # result = response.choices[0].message.content.strip()
-        # print(f"Response: {result}")
         response = simple_client.responses.create(
             model=CHAT_DEPLOYMENT_NAME,
             input=messages,
-            max_output_tokens= 2000,
+            max_output_tokens=5000,
             instructions="Generate functional OpenUSD code wrapped in ```usda code blocks. Always include complete, working USD scenes.",
         )
 
@@ -178,7 +164,7 @@ def msft_generate_chat_response(query):
             #     },
             # ],
             input=prompt,
-            max_output_tokens= 2000,
+            max_output_tokens=5000,
             instructions="Generate functional OpenUSD code wrapped in ```usda code blocks. Always include complete, working USD scenes.",
         )
         
@@ -728,6 +714,7 @@ def digitaltwin_main():
         '''
         
         st.html(chat_html)
+        # components.html(chat_html, height=600, scrolling=True)
 
         # --- OpenUSD Rendering (latest scene) ---
         latest_usd_code = get_latest_usd_code()
@@ -1069,211 +1056,212 @@ def render_usd_scene(prims:List[Dict[str,Any]]):
     scene_data = _json.dumps(prims)
     prim_count = len(prims)
     html_viewer = """
-<div id='usd-viewer' style='width:100%;height:400px;border:1px solid #e2e8f0;border-radius:8px;position:relative;background:#333;'>
-    <div style='position:absolute;top:8px;left:12px;color:#fff;font:12px/1.2 monospace;z-index:10;'>Scene Primitives: __PRIM_COUNT__</div>
-</div>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js'></script>
-<script>
-    const data = __SCENE_DATA__;
-    const container = document.getElementById('usd-viewer');
-    
-    // Check if we have any data to render
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;">No 3D objects to render</div>';
-        return;
-    }
-    
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setClearColor(0x2a2a2a, 1.0);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    container.appendChild(renderer.domElement);
-    
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2a2a2a);
-    
-    const camera = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
-    
-    // Calculate scene bounds to position camera appropriately
-    let minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
-    let hasObjects = false;
-    
-    data.forEach(p => {
-        const pos = p.position || [0,0,0];
-        const size = p.radius || p.size || 1;
-        minX = Math.min(minX, pos[0] - size);
-        maxX = Math.max(maxX, pos[0] + size);
-        minY = Math.min(minY, pos[1] - size);
-        maxY = Math.max(maxY, pos[1] + size);
-        minZ = Math.min(minZ, pos[2] - size);
-        maxZ = Math.max(maxZ, pos[2] + size);
-        hasObjects = true;
-    });
-    
-    if (hasObjects) {
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-        const centerZ = (minZ + maxZ) / 2;
-        const sizeX = maxX - minX;
-        const sizeY = maxY - minY;
-        const sizeZ = maxZ - minZ;
-        const maxSize = Math.max(sizeX, sizeY, sizeZ);
-        const distance = maxSize * 2.5;
+    <div id='usd-viewer' style='width:100%;height:400px;border:1px solid #e2e8f0;border-radius:8px;position:relative;background:#333;'>
+        <div style='position:absolute;top:8px;left:12px;color:#fff;font:12px/1.2 monospace;z-index:10;'>Scene Primitives: __PRIM_COUNT__</div>
+    </div>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js'></script>
+    <script>
+        const data = __SCENE_DATA__;
+        const container = document.getElementById('usd-viewer');
         
-        camera.position.set(centerX + distance * 0.7, centerY + distance * 0.5, centerZ + distance);
-        camera.lookAt(centerX, centerY, centerZ);
-    } else {
-        camera.position.set(5, 5, 10);
-        camera.lookAt(0, 0, 0);
-    }
-    
-    // Improved lighting setup
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-    scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 10, 5);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    scene.add(directionalLight);
-    
-    const pointLight = new THREE.PointLight(0xffffff, 0.3, 0);
-    pointLight.position.set(-10, 10, -10);
-    scene.add(pointLight);
-    
-    const group = new THREE.Group(); 
-    scene.add(group);
-    
-    // Fixed color palette instead of random
-    const colors = [0xff6b6b, 0x4ecdc4, 0x45b7d1, 0x96ceb4, 0xffeaa7, 0xdda0dd, 0x98d8c8, 0xf7dc6f];
-    let colorIndex = 0;
-    
-    // Add ground plane for reference
-    const planeGeo = new THREE.PlaneGeometry(20, 20);
-    const planeMat = new THREE.MeshStandardMaterial({ color: 0x808080, opacity: 0.3, transparent: true });
-    const plane = new THREE.Mesh(planeGeo, planeMat);
-    plane.rotation.x = -Math.PI / 2;
-    plane.position.y = -2;
-    plane.receiveShadow = true;
-    scene.add(plane);
-    
-    data.forEach(p => {
-        let mesh;
-        const color = colors[colorIndex % colors.length];
-        colorIndex++;
-        
-        if (p.type === 'sphere') {
-            const radius = p.radius || 1;
-            const geo = new THREE.SphereGeometry(radius, 32, 32);
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: color,
-                metalness: 0.3,
-                roughness: 0.4
-            });
-            mesh = new THREE.Mesh(geo, mat);
-        } else if (p.type === 'cube') {
-            const size = p.size || 1;
-            const geo = new THREE.BoxGeometry(size, size, size);
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: color,
-                metalness: 0.2,
-                roughness: 0.6
-            });
-            mesh = new THREE.Mesh(geo, mat);
+        // Check if we have any data to render
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;">No 3D objects to render</div>';
+            return;
         }
         
-        if (mesh) {
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setClearColor(0x2a2a2a, 1.0);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2a2a2a);
+        
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
+        
+        // Calculate scene bounds to position camera appropriately
+        let minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
+        let hasObjects = false;
+        
+        data.forEach(p => {
             const pos = p.position || [0,0,0];
-            mesh.position.set(pos[0], pos[1], pos[2]);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            mesh.userData = p;
-            group.add(mesh);
+            const size = p.radius || p.size || 1;
+            minX = Math.min(minX, pos[0] - size);
+            maxX = Math.max(maxX, pos[0] + size);
+            minY = Math.min(minY, pos[1] - size);
+            maxY = Math.max(maxY, pos[1] + size);
+            minZ = Math.min(minZ, pos[2] - size);
+            maxZ = Math.max(maxZ, pos[2] + size);
+            hasObjects = true;
+        });
+        
+        if (hasObjects) {
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const centerZ = (minZ + maxZ) / 2;
+            const sizeX = maxX - minX;
+            const sizeY = maxY - minY;
+            const sizeZ = maxZ - minZ;
+            const maxSize = Math.max(sizeX, sizeY, sizeZ);
+            const distance = maxSize * 2.5;
             
-            // Add wireframe for better visibility
-            const wireframe = new THREE.WireframeGeometry(mesh.geometry);
-            const line = new THREE.LineSegments(wireframe);
-            line.material.color.setHex(0x000000);
-            line.material.opacity = 0.2;
-            line.material.transparent = true;
-            line.position.copy(mesh.position);
-            group.add(line);
+            camera.position.set(centerX + distance * 0.7, centerY + distance * 0.5, centerZ + distance);
+            camera.lookAt(centerX, centerY, centerZ);
+        } else {
+            camera.position.set(5, 5, 10);
+            camera.lookAt(0, 0, 0);
         }
-    });
-    
-    // Enhanced orbit controls
-    let isDown = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
-    let distance = 10;
-    
-    container.addEventListener('mousedown', e => { 
-        isDown = true; 
-        prevX = e.clientX; 
-        prevY = e.clientY; 
-        container.style.cursor = 'grabbing';
-    });
-    
-    window.addEventListener('mouseup', () => { 
-        isDown = false; 
+        
+        // Improved lighting setup
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 10, 5);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        scene.add(directionalLight);
+        
+        const pointLight = new THREE.PointLight(0xffffff, 0.3, 0);
+        pointLight.position.set(-10, 10, -10);
+        scene.add(pointLight);
+        
+        const group = new THREE.Group(); 
+        scene.add(group);
+        
+        // Fixed color palette instead of random
+        const colors = [0xff6b6b, 0x4ecdc4, 0x45b7d1, 0x96ceb4, 0xffeaa7, 0xdda0dd, 0x98d8c8, 0xf7dc6f];
+        let colorIndex = 0;
+        
+        // Add ground plane for reference
+        const planeGeo = new THREE.PlaneGeometry(20, 20);
+        const planeMat = new THREE.MeshStandardMaterial({ color: 0x808080, opacity: 0.3, transparent: true });
+        const plane = new THREE.Mesh(planeGeo, planeMat);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = -2;
+        plane.receiveShadow = true;
+        scene.add(plane);
+        
+        data.forEach(p => {
+            let mesh;
+            const color = colors[colorIndex % colors.length];
+            colorIndex++;
+            
+            if (p.type === 'sphere') {
+                const radius = p.radius || 1;
+                const geo = new THREE.SphereGeometry(radius, 32, 32);
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: color,
+                    metalness: 0.3,
+                    roughness: 0.4
+                });
+                mesh = new THREE.Mesh(geo, mat);
+            } else if (p.type === 'cube') {
+                const size = p.size || 1;
+                const geo = new THREE.BoxGeometry(size, size, size);
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: color,
+                    metalness: 0.2,
+                    roughness: 0.6
+                });
+                mesh = new THREE.Mesh(geo, mat);
+            }
+            
+            if (mesh) {
+                const pos = p.position || [0,0,0];
+                mesh.position.set(pos[0], pos[1], pos[2]);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.userData = p;
+                group.add(mesh);
+                
+                // Add wireframe for better visibility
+                const wireframe = new THREE.WireframeGeometry(mesh.geometry);
+                const line = new THREE.LineSegments(wireframe);
+                line.material.color.setHex(0x000000);
+                line.material.opacity = 0.2;
+                line.material.transparent = true;
+                line.position.copy(mesh.position);
+                group.add(line);
+            }
+        });
+        
+        // Enhanced orbit controls
+        let isDown = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
+        let distance = 10;
+        
+        container.addEventListener('mousedown', e => { 
+            isDown = true; 
+            prevX = e.clientX; 
+            prevY = e.clientY; 
+            container.style.cursor = 'grabbing';
+        });
+        
+        window.addEventListener('mouseup', () => { 
+            isDown = false; 
+            container.style.cursor = 'grab';
+        });
+        
+        window.addEventListener('mousemove', e => { 
+            if(!isDown) return; 
+            const dx = e.clientX - prevX; 
+            const dy = e.clientY - prevY; 
+            rotY += dx * 0.01; 
+            rotX += dy * 0.01; 
+            rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+            prevX = e.clientX; 
+            prevY = e.clientY; 
+            
+            // Update camera position based on rotation
+            const radius = distance;
+            camera.position.x = radius * Math.cos(rotX) * Math.sin(rotY);
+            camera.position.y = radius * Math.sin(rotX);
+            camera.position.z = radius * Math.cos(rotX) * Math.cos(rotY);
+            camera.lookAt(0, 0, 0);
+        });
+        
+        // Mouse wheel zoom
+        container.addEventListener('wheel', e => {
+            e.preventDefault();
+            distance += e.deltaY * 0.01;
+            distance = Math.max(2, Math.min(50, distance));
+            
+            const radius = distance;
+            camera.position.x = radius * Math.cos(rotX) * Math.sin(rotY);
+            camera.position.y = radius * Math.sin(rotX);
+            camera.position.z = radius * Math.cos(rotX) * Math.cos(rotY);
+        });
+        
         container.style.cursor = 'grab';
-    });
-    
-    window.addEventListener('mousemove', e => { 
-        if(!isDown) return; 
-        const dx = e.clientX - prevX; 
-        const dy = e.clientY - prevY; 
-        rotY += dx * 0.01; 
-        rotX += dy * 0.01; 
-        rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
-        prevX = e.clientX; 
-        prevY = e.clientY; 
         
-        // Update camera position based on rotation
-        const radius = distance;
-        camera.position.x = radius * Math.cos(rotX) * Math.sin(rotY);
-        camera.position.y = radius * Math.sin(rotX);
-        camera.position.z = radius * Math.cos(rotX) * Math.cos(rotY);
-        camera.lookAt(0, 0, 0);
-    });
-    
-    // Mouse wheel zoom
-    container.addEventListener('wheel', e => {
-        e.preventDefault();
-        distance += e.deltaY * 0.01;
-        distance = Math.max(2, Math.min(50, distance));
+        function animate() { 
+            requestAnimationFrame(animate); 
+            renderer.render(scene, camera); 
+        }
+        animate();
         
-        const radius = distance;
-        camera.position.x = radius * Math.cos(rotX) * Math.sin(rotY);
-        camera.position.y = radius * Math.sin(rotX);
-        camera.position.z = radius * Math.cos(rotX) * Math.cos(rotY);
-    });
-    
-    container.style.cursor = 'grab';
-    
-    function animate() { 
-        requestAnimationFrame(animate); 
-        renderer.render(scene, camera); 
-    }
-    animate();
-    
-    window.addEventListener('resize', () => { 
-        const w = container.clientWidth, h = container.clientHeight; 
-        renderer.setSize(w, h); 
-        camera.aspect = w / h; 
-        camera.updateProjectionMatrix(); 
-    });
-    
-    // Debug info
-    console.log('USD Scene rendered with', data.length, 'objects:', data);
-</script>
-<div style='font-size:0.75rem;color:#64748b;margin-top:4px;'>
-    Interactive 3D viewer - Drag to rotate, scroll to zoom. Supports Sphere/Cube primitives.
-</div>
-"""
+        window.addEventListener('resize', () => { 
+            const w = container.clientWidth, h = container.clientHeight; 
+            renderer.setSize(w, h); 
+            camera.aspect = w / h; 
+            camera.updateProjectionMatrix(); 
+        });
+        
+        // Debug info
+        console.log('USD Scene rendered with', data.length, 'objects:', data);
+    </script>
+    <div style='font-size:0.75rem;color:#64748b;margin-top:4px;'>
+        Interactive 3D viewer - Drag to rotate, scroll to zoom. Supports Sphere/Cube primitives.
+    </div>
+    """
     html_viewer = html_viewer.replace('__PRIM_COUNT__', str(prim_count)).replace('__SCENE_DATA__', scene_data)
-    st.html(html_viewer)
+    # st.html(html_viewer)
+    components.html(html_viewer, height=450, scrolling=True)
 
 
 if __name__ == "__main__":
