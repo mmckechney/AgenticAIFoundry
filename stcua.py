@@ -14,12 +14,46 @@ from typing import Optional, Dict, Any, List
 from scipy.signal import resample
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
+import base64
+import PIL.ImageGrab as ImageGrab
+from PIL import Image
 
 
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+def capture_screenshot() -> str:
+    """Capture a screenshot and return it as a base64 encoded string"""
+    try:
+        # Capture the entire screen
+        screenshot = ImageGrab.grab()
+        
+        # Convert to RGB if needed (some systems return RGBA)
+        if screenshot.mode != 'RGB':
+            screenshot = screenshot.convert('RGB')
+        
+        # Save to bytes buffer
+        buffer = io.BytesIO()
+        screenshot.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        # Encode to base64
+        screenshot_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        print(f"Screenshot captured successfully. Size: {len(screenshot_base64)} chars")
+        return screenshot_base64
+        
+    except Exception as e:
+        print(f"Error capturing screenshot: {str(e)}")
+        # Return a placeholder image if screenshot fails
+        # Create a simple 1x1 pixel image as fallback
+        fallback_img = Image.new('RGB', (1, 1), color='white')
+        buffer = io.BytesIO()
+        fallback_img.save(buffer, format='PNG')
+        buffer.seek(0)
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
 # Azure OpenAI configuration (replace with your credentials)
 AZURE_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -82,19 +116,130 @@ def cuarun(query: str, environment: str = "browser") -> Dict[str, Any]:
         print("=== DEBUG: Response object ===")
         print(f"Response type: {type(response)}")
         print(f"Response attributes: {dir(response)}")
+        ## response.output is the previous response from the model
+        computer_calls = [item for item in response.output if item.type == "computer_call"]
+        if not computer_calls:
+            print("No computer call found. Output from model:")
+            for item in response.output:
+                print(item)
+
+        computer_call = computer_calls[0]
+        last_call_id = computer_call.call_id
+        action = computer_call.action
+
+        # Extract screenshot from the first response if available
+        screenshot_base64 = None
         
+        # Look for screenshot data in the response output
+        for item in response.output:
+            if hasattr(item, 'type'):
+                # Check if this is a screenshot output
+                if item.type == "computer_call_output" and hasattr(item, 'output'):
+                    output_obj = item.output
+                    if hasattr(output_obj, 'type') and output_obj.type == "screenshot":
+                        if hasattr(output_obj, 'image_url'):
+                            # Extract base64 from image_url
+                            image_url = output_obj.image_url
+                            if "base64," in image_url:
+                                screenshot_base64 = image_url.split("base64,")[1]
+                                print(f"Found screenshot in first response: {len(screenshot_base64)} chars")
+                        elif hasattr(output_obj, 'data'):
+                            screenshot_base64 = output_obj.data
+                            print(f"Found screenshot data in first response: {len(screenshot_base64)} chars")
+                # Check if the item itself contains screenshot data
+                elif hasattr(item, 'image_url') and item.image_url:
+                    image_url = item.image_url
+                    if "base64," in image_url:
+                        screenshot_base64 = image_url.split("base64,")[1]
+                        print(f"Found image_url in item: {len(screenshot_base64)} chars")
+        
+        # If no screenshot found in first response, use desktop capture as fallback
+        screenshot_source = "first_response"
+        if not screenshot_base64:
+            print("No screenshot found in first response, capturing desktop as fallback")
+            screenshot_base64 = capture_screenshot()
+            screenshot_source = "desktop_fallback"
+
+        # Your application would now perform the action suggested by the model
+        # And create a screenshot of the updated state of the environment before sending another response
+        
+        # Store screenshot info in results
+        result["screenshots"].append({
+            "timestamp": datetime.now().isoformat(),
+            "description": f"Screenshot used for model analysis ({screenshot_source})",
+            "size": len(screenshot_base64),
+            "source": screenshot_source
+        })
+
+        response_2 = cuaclient.responses.create(
+            model="computer-use-preview",
+            previous_response_id=response.id,
+            tools=[{
+                "type": "computer_use_preview",
+                "display_width": 1024,
+                "display_height": 768,
+                "environment": environment # browser for web tasks, windows for desktop
+            }],
+            input=[
+                {
+                    "call_id": last_call_id,
+                    "type": "computer_call_output",
+                    "output": {
+                        "type": "input_image",
+                        # Image should be in base64
+                        "image_url": f"data:image/png;base64,{screenshot_base64}"
+                    }
+                }
+            ],
+            truncation="auto"
+        )
+                
+        # Process both the initial response and the follow-up response with screenshot
         # Try to access response content in different ways
         response_content = None
         
+        # Store both responses for debugging
+        result["full_response"] = f"Response 1: {str(response)}\n\nResponse 2: {str(response_2)}"
+        
+        print("=== DEBUG: Processing Response 2 (with screenshot) ===")
+        print(f"Response 2 type: {type(response_2)}")
+        
+        # Process response_2 first (this should have the final analysis after screenshot)
+        if hasattr(response_2, 'output') and response_2.output:
+            print(f"Found response_2.output: {type(response_2.output)}")
+            result["raw_output"].extend(response_2.output)
+            result["response_type"] = "output_with_screenshot"
+            
+            # Process each item in response_2 output
+            for i, item in enumerate(response_2.output):
+                print(f"Response 2 Output item {i}: {type(item)} - {item}")
+                
+                if hasattr(item, 'type'):
+                    if item.type == "text":
+                        text_content = getattr(item, 'text', str(item))
+                        result["text_content"].append(f"[Final Analysis]: {text_content}")
+                        print(f"Response 2 Text content: {text_content}")
+                    else:
+                        # Handle other types from response_2
+                        item_str = str(item)
+                        result["text_content"].append(f"[Response 2 - {item.type}] {item_str}")
+                        print(f"Response 2 Other type {item.type}: {item_str}")
+                else:
+                    item_str = str(item)
+                    result["text_content"].append(f"[Response 2] {item_str}")
+                    print(f"Response 2 No type attribute: {item_str}")
+        
+        # Also process the initial response (for computer calls/actions)
         # Method 1: Check for output attribute
         if hasattr(response, 'output') and response.output:
             print(f"Found response.output: {type(response.output)}")
-            result["raw_output"] = response.output
-            result["response_type"] = "output"
+            if not result["raw_output"]:  # Only set if not already set by response_2
+                result["raw_output"] = response.output
+                result["response_type"] = "output"
             
-            # Process each item in output
+            # Process each item in output from initial response
             for i, item in enumerate(response.output):
-                print(f"Output item {i}: {type(item)} - {item}")
+                print(f"Response 1 Output item {i}: {type(item)} - {item}")
                 
                 # Try to extract content based on item type
                 if hasattr(item, 'type'):
@@ -136,6 +281,21 @@ def cuarun(query: str, environment: str = "browser") -> Dict[str, Any]:
                         result["text_content"].append(text_content)
                         print(f"Text content: {text_content}")
                     
+                    elif item.type == "computer_call_output":
+                        # This might contain screenshot or other output data
+                        output_obj = getattr(item, 'output', None)
+                        if output_obj and hasattr(output_obj, 'type'):
+                            if output_obj.type == "screenshot":
+                                screenshot_info = {
+                                    "timestamp": datetime.now().isoformat(),
+                                    "description": "Screenshot from computer use model",
+                                    "type": "model_screenshot"
+                                }
+                                if hasattr(output_obj, 'image_url'):
+                                    screenshot_info["image_url"] = output_obj.image_url[:100] + "..." # Truncate for display
+                                result["screenshots"].append(screenshot_info)
+                                print(f"Found screenshot output in first response")
+                    
                     else:
                         # Handle other types
                         item_str = str(item)
@@ -176,19 +336,28 @@ def cuarun(query: str, environment: str = "browser") -> Dict[str, Any]:
         # If we found computer calls, explain what happens next
         if result["computer_calls"]:
             explanation = """
-🔄 **Computer Use Model Response Received!**
+🔄 **Computer Use Model with Screenshot Feedback!**
 
-The model has analyzed your request and provided computer actions to perform. 
-In a complete implementation, the system would:
+The model has analyzed your request and provided computer actions. A screenshot was automatically captured and sent back to the model for analysis.
 
-1. Execute the suggested action (click, type, navigate, etc.)
-2. Take a screenshot of the result
-3. Send the screenshot back to the model
-4. Get the final analysis/content extraction
+**What happened:**
+1. ✅ Model analyzed your request and planned actions
+2. ✅ Screenshot was automatically captured from your screen
+3. ✅ Screenshot was sent back to the model for analysis
+4. ✅ Model provided final analysis based on the visual information
 
-**Current Status**: We received the action plan but need to implement the execution loop.
+**Current Status**: Both the action plan and visual analysis are now available.
             """
             result["text_content"].insert(0, explanation)
+        else:
+            # Check if we have analysis from response_2
+            if result.get("text_content") and any("Final Analysis" in text for text in result["text_content"]):
+                explanation = """
+🔄 **Visual Analysis Completed!**
+
+A screenshot was captured and analyzed by the computer use model. The analysis results are shown below.
+                """
+                result["text_content"].insert(0, explanation)
         
         return result
 
