@@ -112,7 +112,16 @@ def cuarun(query: str, environment: str = "browser") -> Dict[str, Any]:
                             print(f"Action object: {type(action_obj)} - {action_obj}")
                             computer_call_info["action_details"] = str(action_obj)
                             
-                            # Try to get action type
+                            # Handle different action types
+                            if hasattr(action_obj, 'type'):
+                                computer_call_info["action_type"] = action_obj.type
+                                
+                                # Handle screenshot action
+                                if action_obj.type == 'screenshot':
+                                    computer_call_info["action_type"] = "screenshot"
+                                    computer_call_info["description"] = "Take screenshot of current screen"
+                                    
+                            # Try to get other action properties
                             if hasattr(action_obj, 'action'):
                                 computer_call_info["action_type"] = action_obj.action
                             if hasattr(action_obj, 'coordinate'):
@@ -240,7 +249,7 @@ def main():
             else:
                 st.info("🖥️ Desktop mode: For system-level tasks")
         
-        col1, col2, col3 = st.columns([1, 1, 4])
+        col1, col2= st.columns([1, 1])
         with col1:
             if st.button("🚀 Browse & Extract", type="primary"):
                 if query.strip():
@@ -275,59 +284,65 @@ def execute_computer_use(query: str, environment: str = "browser"):
 def display_results(result: Dict[str, Any], original_query: str):
     """Display detailed results from computer use model with enhanced debugging and explanation"""
     
+    # Create unique key prefix to avoid button key conflicts
+    import time
+    key_prefix = f"result_{int(time.time() * 1000)}"
+    
+    # Use full width container for results
     st.markdown("---")
-    st.markdown("### 📊 Computer Use Model Results")
     
-    # Show original query and environment
-    with st.expander("📝 Request Details", expanded=False):
-        st.code(original_query, language="text")
-        st.info(f"🖥️ Environment: **{result.get('environment', 'browser')}**")
-        st.info(f"🔍 Response Type: **{result.get('response_type', 'unknown')}**")
-    
-    # Success/Error status with detailed explanation
-    if result["success"]:
-        if result.get("computer_calls"):
-            st.warning("⚠️ **Action Plan Received** - Execution needed for final results")
-            st.info("💡 The model provided computer actions but they haven't been executed yet. This is expected for computer use models - they plan actions but need an execution loop.")
+    # Create a full-width container for all results
+    with st.container(height=600, width=1000):
+        st.markdown("### 📊 Computer Use Model Results")
+        
+        # Show original query and environment
+        with st.expander("📝 Request Details", expanded=False):
+            st.code(original_query, language="text")
+            st.info(f"🖥️ Environment: **{result.get('environment', 'browser')}**")
+            st.info(f"🔍 Response Type: **{result.get('response_type', 'unknown')}**")
+        
+        # Success/Error status with detailed explanation
+        if result["success"]:
+            if result.get("computer_calls"):
+                st.warning("⚠️ **Action Plan Received** - Execution needed for final results")
+                st.info("💡 The model provided computer actions but they haven't been executed yet. This is expected for computer use models - they plan actions but need an execution loop.")
+            else:
+                st.success("✅ Request processed successfully")
         else:
-            st.success("✅ Request processed successfully")
-    else:
-        st.error(f"❌ Error: {result['error']}")
-        return
-    
-    # Display response ID if available
-    if result["response_id"]:
-        st.info(f"🆔 Response ID: `{result['response_id']}`")
-    
-    # Show what the model is actually doing
-    st.markdown("### 🔍 Understanding Computer Use Model Behavior")
-    
-    if result.get("computer_calls"):
-        st.warning("**🎯 The Model Planned Actions (Step 1 of 3)**")
-        st.markdown("""
-        The computer use model has analyzed your request and planned the necessary actions. 
-        Here's what typically happens:
+            st.error(f"❌ Error: {result['error']}")
+            return
         
-        1. **Planning Phase** ← *You are here*
-           - Model analyzes your request
-           - Creates action plan (click, type, navigate, etc.)
-           
-        2. **Execution Phase** (Not implemented yet)
-           - System executes the planned actions
-           - Takes screenshots of results
-           
-        3. **Analysis Phase** (Not implemented yet)  
-           - Model analyzes screenshots
-           - Extracts and formats final content
-        """)
+        # Display response ID if available
+        if result["response_id"]:
+            st.info(f"🆔 Response ID: `{result['response_id']}`")
         
-        st.info("💡 **Why you see 'response submitted'**: The model successfully created an action plan, but we need to implement the execution loop to get actual web content.")
-    
-    else:
-        st.success("**✅ Direct Response Received**")
-        st.info("The model provided a direct response without needing browser actions.")
-    
-    # Enhanced debugging section
+        # Show what the model is actually doing
+        st.markdown("### 🔍 Understanding Computer Use Model Behavior")
+        
+        if result.get("computer_calls"):
+            st.warning("**🎯 The Model Planned Actions (Step 1 of 3)**")
+            st.markdown("""
+            The computer use model has analyzed your request and planned the necessary actions. 
+            Here's what typically happens:
+            
+            1. **Planning Phase** ← *You are here*
+               - Model analyzes your request
+               - Creates action plan (click, type, navigate, etc.)
+               
+            2. **Execution Phase** (Not implemented yet)
+               - System executes the planned actions
+               - Takes screenshots of results
+               
+            3. **Analysis Phase** (Not implemented yet)  
+               - Model analyzes screenshots
+               - Extracts and formats final content
+            """)
+            
+            st.info("💡 **Why you see 'response submitted'**: The model successfully created an action plan, but we need to implement the execution loop to get actual web content.")
+        
+        else:
+            st.success("**✅ Direct Response Received**")
+            st.info("The model provided a direct response without needing browser actions.")    # Enhanced debugging section
     with st.expander("🔧 Advanced Debugging Information", expanded=False):
         st.markdown("**Raw Response Attributes:**")
         st.json({
@@ -403,7 +418,7 @@ def display_results(result: Dict[str, Any], original_query: str):
                             
                     # Add copy button for longer content
                     if len(text) > 100:
-                        if st.button(f"📋 Copy Response {i+1}", key=f"copy_response_{i}"):
+                        if st.button(f"📋 Copy Response {i+1}", key=f"{key_prefix}_copy_response_{i}"):
                             st.code(text, language="text")
     
     # Display web content if any was extracted
@@ -418,7 +433,7 @@ def display_results(result: Dict[str, Any], original_query: str):
                 else:
                     st.text(content)
                 
-                if st.button(f"📋 Copy Web Content {i+1}", key=f"copy_web_{i}"):
+                if st.button(f"📋 Copy Web Content {i+1}", key=f"{key_prefix}_copy_web_{i}"):
                     st.code(content, language="text")
     
     # Display screenshots if available
