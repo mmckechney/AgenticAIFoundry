@@ -2,10 +2,12 @@ import streamlit as st
 import io
 import contextlib
 import json
+import os
 from datetime import datetime
 
 # Import agent functions from stcondemo.py
 from stcondemo import single_agent, connected_agent
+
 
 st.set_page_config(page_title="Agent Demo (Single vs Multi)", layout="wide")
 
@@ -16,6 +18,19 @@ if "runs" not in st.session_state:
 	st.session_state.runs = []  # list of run dicts with summary, tools, mode, raw
 if "last_mode" not in st.session_state:
 	st.session_state.last_mode = "Single Agent"
+
+from azure.monitor.opentelemetry import configure_azure_monitor
+# connection_string = project_client.telemetry.get_application_insights_connection_string()
+connection_string = os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
+
+if not connection_string:
+    print("Application Insights is not enabled. Enable by going to Tracing in your Azure AI Foundry project.")
+    exit()
+
+configure_azure_monitor(connection_string=connection_string) #enable telemetry collection
+
+from opentelemetry import trace
+tracer = trace.get_tracer(__name__)
 
 st.title("Agent Chat Demo: Single vs Connected (Multi) Agents")
 st.caption("Use Azure AI Foundry agents via single local tools or a connected multi-agent orchestration.")
@@ -144,86 +159,91 @@ def run_multi_agent(user_text: str):
 	st.session_state.runs.append(run_record)
 	return run_record
 
-# --- Layout ---
-col_left, col_right = st.columns([0.55, 0.45], gap="medium")
+def ui_main():
+	# --- Layout ---
+    col_left, col_right = st.columns([0.55, 0.45], gap="medium")
 
-with col_left:
-	st.subheader("Summaries & Chat History")
-	summary_container = st.container(height=200, border=True)
-	history_container = st.container(height=300, border=True)
+    with col_left:
+        st.subheader("Summaries & Chat History")
+        summary_container = st.container(height=200, border=True)
+        history_container = st.container(height=300, border=True)
 
-with col_right:
-	st.subheader("Tools & Agent Outputs")
-	tools_container = st.container(height=520, border=True)
+    with col_right:
+        st.subheader("Tools & Agent Outputs")
+        tools_container = st.container(height=520, border=True)
 
-# --- Chat Input ---
-user_prompt = st.chat_input("Ask a question (weather, stocks, docs, RFP, sustainability)...")
+    # --- Chat Input ---
+    user_prompt = st.chat_input("Ask a question (weather, stocks, docs, RFP, sustainability)...")
 
-if user_prompt:
-	# Add user message
-	st.session_state.chat_history.append({
-		"role": "user",
-		"content": user_prompt,
-		"timestamp": datetime.utcnow().strftime("%H:%M:%S"),
-	})
-	# Execute agent
-	if mode == "Single Agent":
-		run_record = run_single_agent(user_prompt)
-	else:
-		run_record = run_multi_agent(user_prompt)
-	# Add assistant summary to chat history
-	st.session_state.chat_history.append({
-		"role": "assistant",
-		"content": run_record.get("summary", "(no summary)"),
-		"timestamp": datetime.utcnow().strftime("%H:%M:%S"),
-	})
-	st.rerun()
+    if user_prompt:
+        # Add user message
+        st.session_state.chat_history.append({
+            "role": "user",
+            "content": user_prompt,
+            "timestamp": datetime.utcnow().strftime("%H:%M:%S"),
+        })
+        # Execute agent
+        if mode == "Single Agent":
+            with tracer.start_as_current_span("SingleAgentExecution"):
+                run_record = run_single_agent(user_prompt)
+        else:
+            with tracer.start_as_current_span("MultiAgentExecution"):
+                run_record = run_multi_agent(user_prompt)
+        # Add assistant summary to chat history
+        st.session_state.chat_history.append({
+            "role": "assistant",
+            "content": run_record.get("summary", "(no summary)"),
+            "timestamp": datetime.utcnow().strftime("%H:%M:%S"),
+        })
+        st.rerun()
 
-# --- Render Left Column ---
-with summary_container:
-	if st.session_state.runs:
-		latest = st.session_state.runs[-1]
-		st.markdown(f"**Latest Mode:** {latest['mode']}  ")
-		st.markdown(f"**Summary:** {_truncate(latest.get('summary'))}")
-		tu = latest.get("token_usage")
-		if tu:
-			st.markdown(
-				f"**Token Usage:** Prompt={tu.get('prompt_tokens','?')} · Completion={tu.get('completion_tokens','?')} · Total={tu.get('total_tokens','?')}"
-			)
-		else:
-			st.markdown("**Token Usage:** N/A")
-	else:
-		st.info("No runs yet. Ask a question below.")
+    # --- Render Left Column ---
+    with summary_container:
+        if st.session_state.runs:
+            latest = st.session_state.runs[-1]
+            st.markdown(f"**Latest Mode:** {latest['mode']}  ")
+            st.markdown(f"**Summary:** {_truncate(latest.get('summary'))}")
+            tu = latest.get("token_usage")
+            if tu:
+                st.markdown(
+                    f"**Token Usage:** Prompt={tu.get('prompt_tokens','?')} · Completion={tu.get('completion_tokens','?')} · Total={tu.get('total_tokens','?')}"
+                )
+            else:
+                st.markdown("**Token Usage:** N/A")
+        else:
+            st.info("No runs yet. Ask a question below.")
 
-with history_container:
-	_render_chat_history(history_container)
+    with history_container:
+        _render_chat_history(history_container)
 
-# --- Render Right Column ---
-with tools_container:
-	if not st.session_state.runs:
-		st.write("No tool activity yet.")
-	else:
-		latest = st.session_state.runs[-1]
-		tools = latest.get("tools", [])
-		# Moved Run Logs here from summary section
-		if latest.get("details"):
-			with st.expander("Run Logs (tail)", expanded=False):
-				st.code(_truncate(latest.get("details"), 8000), language="text")
-		if not tools:
-			st.write("No tool outputs captured for this run.")
-		for idx, t in enumerate(tools, start=1):
-			name = t.get("name") or t.get("agent_name") or "(unknown)"
-			label = f"{idx}. {name}"
-			with st.expander(label, expanded=False):
-				st.markdown(f"**Step:** {t.get('step_id','-')}  ")
-				if t.get("arguments"):
-					st.code(_truncate(t.get("arguments"), 500), language="json")
-				output = t.get("output") or t.get("raw") or "(no output)"
-				st.markdown("**Output:**")
-				st.code(_truncate(output, 4000), language="text")
-		if latest["mode"] == "Multi Agent":
-			st.caption("Parsed from stdout of connected agent run.")
+    # --- Render Right Column ---
+    with tools_container:
+        if not st.session_state.runs:
+            st.write("No tool activity yet.")
+        else:
+            latest = st.session_state.runs[-1]
+            tools = latest.get("tools", [])
+            # Moved Run Logs here from summary section
+            if latest.get("details"):
+                with st.expander("Run Logs (tail)", expanded=False):
+                    st.code(_truncate(latest.get("details"), 8000), language="text")
+            if not tools:
+                st.write("No tool outputs captured for this run.")
+            for idx, t in enumerate(tools, start=1):
+                name = t.get("name") or t.get("agent_name") or "(unknown)"
+                label = f"{idx}. {name}"
+                with st.expander(label, expanded=False):
+                    st.markdown(f"**Step:** {t.get('step_id','-')}  ")
+                    if t.get("arguments"):
+                        st.code(_truncate(t.get("arguments"), 500), language="json")
+                    output = t.get("output") or t.get("raw") or "(no output)"
+                    st.markdown("**Output:**")
+                    st.code(_truncate(output, 4000), language="text")
+            if latest["mode"] == "Multi Agent":
+                st.caption("Parsed from stdout of connected agent run.")
 
-st.markdown("---")
-st.caption("Chat input stays visible below. Scroll containers independently to review summaries, history, and tool outputs.")
+    st.markdown("---")
+    st.caption("Chat input stays visible below. Scroll containers independently to review summaries, history, and tool outputs.")
 
+if __name__ == "__main__":
+    ui_main()

@@ -773,7 +773,7 @@ def connected_agent(query: str):
     return {"summary": returntxt, "token_usage": token_usage, "status": run.status}
 
 def main():
-    with tracer.start_as_current_span("manualazureaifoundryagent-tracing"):
+    with tracer.start_as_current_span("DemoAIAgent-tracing"):
         print("Starting...")
 
         # fetch_stock_data("Apple Inc.")
