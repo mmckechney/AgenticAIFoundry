@@ -547,8 +547,8 @@ def connected_agent(query: str):
     ai_search = AzureAISearchTool(
         index_connection_id=azure_ai_conn_id,
         index_name=index_name,
-        query_type=AzureAISearchQueryType.SIMPLE,  # Use SIMPLE query type
-        top_k=5,  # Retrieve the top 3 results
+        query_type=AzureAISearchQueryType.VECTOR_SEMANTIC_HYBRID,  # Use VECTOR_SEMANTIC_HYBRID query type
+        top_k=5,  # Retrieve the top 5 results
         filter="",  # Optional filter for search results
     )
     # Define the model deployment name
@@ -644,7 +644,7 @@ def connected_agent(query: str):
         instructions="""
         You are a helpful assistant, and use the connected agents to get stock prices, construction RFP Data, 
         Sustainability Paper.
-        For RFP related questions, use the RFP connected agent.
+        For RFP related questions, use the RFP connected agent and provide citatons and sources.
         For stock price related questions, use the Stock Price connected agent.
         For sustainability paper related questions, use the Sustainability Paper connected agent.
         For Azure or general technical documentation questions, use the MCP connected agent.
