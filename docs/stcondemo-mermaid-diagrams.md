@@ -947,7 +947,7 @@ graph TB
     MessageFormatting --> MessageSeparator[Add Separator]
     
     %% Clear History Flow
-    ClearHistory --> HistoryReset[Reset chat_history to []]
+    ClearHistory --> HistoryReset[Reset chat_history to empty array]
     HistoryReset --> UIRefresh[Trigger UI Refresh]
     
     %% Memory Management
