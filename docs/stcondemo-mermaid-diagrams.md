@@ -934,7 +934,7 @@ graph TB
     
     %% Message Record Structure
     AppendToHistory --> MessageStructure[Message Structure]
-    MessageStructure --> RoleField[role: "user"/"assistant"]
+    MessageStructure --> RoleField[role: user/assistant]
     MessageStructure --> ContentField[content: message text]
     MessageStructure --> TimestampField[timestamp: HH:MM:SS]
     
