@@ -86,8 +86,8 @@ graph TD
     A[User Opens App] --> B[Select Agent Mode]
     B --> C[Enter Query in Chat]
     C --> D{Mode Selected?}
-    D -->|Single Agent| E[Execute single_agent()]
-    D -->|Multi Agent| F[Execute connected_agent()]
+    D -->|Single Agent| E[Execute single_agent]
+    D -->|Multi Agent| F[Execute connected_agent]
     E --> G[Display Results]
     F --> G
     G --> H[Show in UI Components]
