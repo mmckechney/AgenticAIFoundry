@@ -28,7 +28,11 @@ async def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--instructions", dest="instructions",
-        default="Open Word and Then convert Hello world from english to tamil language and type the translated text in word document.",
+        default="""Open the microsoft Edge web brower go to for msxi report, 
+        look for SubscriptionGUID filters and select basic filtering default will be basic filtering, and 
+        search for subscription one at a time and here is the list 74949419-3a9e-4ec8-b9b0-ee1899f13e27 43d551c1-125a-41e3-a572-40e0358a965a 10d2d78a-bacc-4701-839a-6ec8b5fefb2d 4de7faf7-e430-49eb-879c-f824c6528977 f90e3325-06d9-4952-a40b-1c9ad3e714b9, wait for it find, 
+        then select the filtered subscription in the search list and wait for page to refresh.
+          """,
         help="Instructions to follow")
     parser.add_argument("--model", dest="model",
         default="computer-use-preview")
@@ -89,7 +93,8 @@ async def main():
             logger.info(f"  {action} {action_args}")
         if agent.messages:
             logger.info("")
-            logger.info(f"Agent: {"".join(agent.messages)}")
+            # Join messages safely; original f-string had improper nested quotes
+            logger.info(f"Agent: {''.join(agent.messages)}")
 
         
 
