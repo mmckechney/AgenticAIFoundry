@@ -14,6 +14,8 @@ from azure.ai.agents.models import (
     MessageRole,
     ConnectedAgentTool,
     FilePurpose,
+    DeepResearchTool,
+    ThreadMessage,
 )
 from azure.ai.agents.models import AzureAISearchTool, AzureAISearchQueryType, MessageRole, ListSortOrder, ToolDefinition, FilePurpose, FileSearchTool
 from azure.ai.agents.models import CodeInterpreterTool, FunctionTool, ToolSet
@@ -776,6 +778,61 @@ def connected_agent(query: str):
         token_usage = {k: getattr(usage, k) for k in ["prompt_tokens", "completion_tokens", "total_tokens"] if hasattr(usage, k)} or None
 
     return {"summary": returntxt, "token_usage": token_usage, "status": run.status}
+
+def fetch_and_print_new_agent_response(
+    thread_id: str,
+    agents_client: AgentsClient,
+    last_message_id: Optional[str] = None,
+) -> Optional[str]:
+    response = agents_client.messages.get_last_message_by_role(
+        thread_id=thread_id,
+        role=MessageRole.AGENT,
+    )
+    if not response or response.id == last_message_id:
+        return last_message_id  # No new content
+
+    print("\nAgent response:")
+    print("\n".join(t.text.value for t in response.text_messages))
+
+    for ann in response.url_citation_annotations:
+        print(f"URL Citation: [{ann.url_citation.title}]({ann.url_citation.url})")
+
+    return response.id
+
+
+def create_research_summary(
+        message : ThreadMessage,
+        filepath: str = "research_summary.md"
+) -> None:
+    if not message:
+        print("No message content provided, cannot create research summary.")
+        return
+
+    with open(filepath, "w", encoding="utf-8") as fp:
+        # Write text summary
+        text_summary = "\n\n".join([t.text.value.strip() for t in message.text_messages])
+        fp.write(text_summary)
+
+        # Write unique URL citations, if present
+        if message.url_citation_annotations:
+            fp.write("\n\n## References\n")
+            seen_urls = set()
+            for ann in message.url_citation_annotations:
+                url = ann.url_citation.url
+                title = ann.url_citation.title or url
+                if url not in seen_urls:
+                    fp.write(f"- [{title}]({url})\n")
+                    seen_urls.add(url)
+
+    print(f"Research summary written to '{filepath}'.")
+
+def deep_research(query: str) -> str:
+
+    returntxt = ""
+    #unable to implement as this sub is not suspended to create the bing search resource.
+
+
+    return returntxt
 
 def main():
     with tracer.start_as_current_span("DemoAIAgent-tracing"):
