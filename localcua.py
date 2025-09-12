@@ -28,11 +28,38 @@ async def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--instructions", dest="instructions",
-        default="""Open the microsoft Edge web brower go to for msxi report, 
-        look for SubscriptionGUID filters and select basic filtering default will be basic filtering, and 
-        search for subscription one at a time and here is the list 74949419-3a9e-4ec8-b9b0-ee1899f13e27 43d551c1-125a-41e3-a572-40e0358a965a 10d2d78a-bacc-4701-839a-6ec8b5fefb2d 4de7faf7-e430-49eb-879c-f824c6528977 f90e3325-06d9-4952-a40b-1c9ad3e714b9, wait for it find, 
-        then select the filtered subscription in the search list and wait for page to refresh.
-          """,
+        # default="""Open the microsoft Edge web brower go to for msxi report, 
+        # look for SubscriptionGUID filters and select basic filtering default will be basic filtering, and 
+        # search for subscription one at a time and here is the list 74949419-3a9e-4ec8-b9b0-ee1899f13e27 43d551c1-125a-41e3-a572-40e0358a965a 10d2d78a-bacc-4701-839a-6ec8b5fefb2d 4de7faf7-e430-49eb-879c-f824c6528977 f90e3325-06d9-4952-a40b-1c9ad3e714b9, wait for it find, 
+        # then select the filtered subscription in the search list and wait for page to refresh.
+        #   """,
+        default=f"""Task:
+        Open Microsoft Edge and retrieve MSXI report data for a list of SubscriptionGUIDs, applying basic filtering for each.
+
+        Steps:
+
+        Open Browser
+
+        Launch Microsoft Edge.
+        Navigate to the MSXI report URL:
+        Set Filter
+
+        Locate the SubscriptionGUID filter section.
+        Only search in SubscritionGUID filter.
+        Ensure the filtering mode is set to Basic Filtering (default is Basic Filtering).
+        Search and Select Subscription (Repeat for each SubscriptionGUID in the list)
+        For each GUID in the list:
+
+ 
+        a. Enter the SubscriptionGUID into the search box.
+        b. Wait for the search results to load.
+        c. Select the filtered subscription from the search results.
+        d. Wait for the page to fully refresh before proceeding to the next GUID.
+
+        Repeat
+
+        Continue steps 3a–3d for the next SubscriptionGUID in the list until all have been processed.
+        """,
         help="Instructions to follow")
     parser.add_argument("--model", dest="model",
         default="computer-use-preview")

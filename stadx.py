@@ -129,6 +129,7 @@ def adx_agent(query: str) -> dict:
     status = "unknown"
     messages_list = []
     steps_list = []  # structured step data
+    selected_tools = []  # capture tool selections for return
     # Collect local function outputs (tool_call_id -> output text)
     local_tool_outputs_map = {}
 
@@ -152,6 +153,9 @@ def adx_agent(query: str) -> dict:
             _ensure_list(mcp_tool.definitions)
             + _ensure_list(functions.definitions)
         )
+        # tool_definitions = (
+        #    _ensure_list(functions.definitions)
+        # )
         log(f"Tool definitions count: {len(tool_definitions)}")
         # Improved introspection so we don't just log 'unknown'
         def _describe_tool(td):
@@ -266,17 +270,89 @@ def adx_agent(query: str) -> dict:
         thread = agents_client.threads.create()
         log(f"Thread: {thread.id}")
         agents_client.messages.create(thread_id=thread.id, role="user", content=query)
-        run = agents_client.runs.create(thread_id=thread.id, agent_id=agent.id, 
-                                        tool_resources=mcp_tool.resources,
-                                        temperature=0.0)
-        log(f"Run: {run.id}")
+        run = agents_client.runs.create(
+            thread_id=thread.id,
+            agent_id=agent.id,
+            tool_resources=mcp_tool.resources,
+            temperature=0.0,
+        )
+        log(f"Run attempt 1 created: {run.id}")
+
+        # Diagnostics / retry controls for stuck queued state
+        queued_start_ts = time.time() if run.status == "queued" else None
+        # Increase default queued timeout to ~60s per user request
+        queued_timeout_seconds = float(os.environ.get("ADX_AGENT_QUEUED_TIMEOUT", 60))  # configurable
+        max_run_retries = int(os.environ.get("ADX_AGENT_MAX_RUN_RETRIES", 2))  # additional attempts after first
+        run_retry_attempt = 1
+        queued_timeout_triggered = False
+        queued_events = []  # capture periodic queued diagnostics
 
         iteration = 0
         max_iterations = 50
+        backoff_base = 0.8
+        backoff_factor = 1.25
+
         while run.status in ["queued", "in_progress", "requires_action"] and iteration < max_iterations:
             iteration += 1
-            time.sleep(0.8)
-            run = agents_client.runs.get(thread_id=thread.id, run_id=run.id)
+            # Adaptive backoff: slowly increase polling interval to reduce service pressure
+            sleep_interval = min(backoff_base * (backoff_factor ** (iteration // 6)), 5.0)
+            time.sleep(sleep_interval)
+            try:
+                run = agents_client.runs.get(thread_id=thread.id, run_id=run.id)
+            except Exception as ex:
+                log(f"Run fetch error (iteration {iteration}): {ex}; retrying after short delay")
+                time.sleep(1.2)
+                continue
+
+            now = time.time()
+            # QUEUED handling / diagnostics
+            if run.status == "queued":
+                if queued_start_ts is None:
+                    queued_start_ts = now
+                queued_elapsed = now - queued_start_ts
+                if iteration % 5 == 0:
+                    # We don't yet know pending tool calls until requires_action, but we log placeholder
+                    pending_tool = None  # tool name only known after requires_action
+                    log_line = f"Still queued (attempt {run_retry_attempt}) elapsed={queued_elapsed:.1f}s interval={sleep_interval:.2f}s run_id={run.id} pending_tool={pending_tool}" if pending_tool else f"Still queued (attempt {run_retry_attempt}) elapsed={queued_elapsed:.1f}s interval={sleep_interval:.2f}s run_id={run.id}"
+                    log(log_line)
+                    queued_events.append({
+                        "attempt": run_retry_attempt,
+                        "elapsed_seconds": round(queued_elapsed, 2),
+                        "sleep_interval": round(sleep_interval, 2),
+                        "run_id": run.id,
+                        "pending_tool": pending_tool,
+                    })
+                if queued_elapsed > queued_timeout_seconds:
+                    log(f"Run stuck in queued for {queued_elapsed:.1f}s (attempt {run_retry_attempt}/{1 + max_run_retries}); initiating retry logic (timeout={queued_timeout_seconds}s)")
+                    queued_timeout_triggered = True
+                    try:
+                        agents_client.runs.cancel(thread_id=thread.id, run_id=run.id)
+                        log("Cancelled stuck queued run")
+                    except Exception as cx:
+                        log(f"Cancel failed (non-fatal): {cx}")
+                    if run_retry_attempt <= max_run_retries:
+                        run_retry_attempt += 1
+                        try:
+                            run = agents_client.runs.create(
+                                thread_id=thread.id,
+                                agent_id=agent.id,
+                                tool_resources=mcp_tool.resources,
+                                temperature=0.0,
+                            )
+                            log(f"Recreated run attempt {run_retry_attempt}: {run.id}")
+                            iteration = 0  # reset iteration counter for new run
+                            queued_start_ts = time.time() if run.status == "queued" else None
+                            continue
+                        except Exception as rx:
+                            log(f"Failed to recreate run: {rx}; aborting queued recovery")
+                            break
+                    else:
+                        log("Max run retry attempts reached while queued; aborting.")
+                        break
+            else:
+                # Reset queued timer when progressing beyond queued
+                queued_start_ts = None
+
             if run.status == "requires_action":
                 ra = run.required_action
                 try:
@@ -366,6 +442,14 @@ def adx_agent(query: str) -> dict:
                         func_name = getattr(func_obj, 'name', None) if func_obj else getattr(tc, 'name', None)
                         func_args_raw = getattr(func_obj, 'arguments', None) if func_obj else getattr(tc, 'arguments', None)
                     args_dict = _parse_args(func_args_raw)
+                    # Log the tool selection before execution
+                    log(f"TOOL SELECTED -> name={func_name} id={call_id} args={args_dict}")
+                    selected_tools.append({
+                        "tool_call_id": call_id,
+                        "name": func_name,
+                        "arguments": args_dict,
+                        "run_iteration": iteration,
+                    })
                     if func_name == "execute_adx_query":
                         adx_query = args_dict.get('query') or args_dict.get('Query')
                         if not adx_query or not isinstance(adx_query, str) or not adx_query.strip():
@@ -513,6 +597,7 @@ def adx_agent(query: str) -> dict:
         # Cleanup
         try:
             agents_client.delete_agent(agent.id)
+            agents_client.threads.delete(thread.id)
         except Exception:
             pass
 
@@ -523,9 +608,13 @@ def adx_agent(query: str) -> dict:
         "details": details,
         "messages": messages_list,
         "steps": steps_list,
+        "selected_tools": selected_tools,
         "token_usage": token_usage,
         "status": status,
         "query": query,
+        "run_retry_attempts": run_retry_attempt,
+        "queued_timeout_triggered": queued_timeout_triggered,
+        "queued_events": queued_events,
     }
 
 def _inject_css():
