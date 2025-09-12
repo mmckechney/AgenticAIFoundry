@@ -194,7 +194,8 @@ def adx_agent(query: str) -> dict:
         agent = agents_client.create_agent(
             model=os.environ["MODEL_DEPLOYMENT_NAME"],
             name="adx-mcp-agent",
-            instructions="""You are a secure and helpful agent specialized in generating and executing Azure Kusto queries for Azure Data Explorer (ADX) on the titanic table and summarizing results.
+            instructions="""HIGH PRIORITY: For any user request that involves data/rows/statistics/aggregation from the titanic table (or ADX data) you MUST generate a KQL query and call execute_adx_query(query) instead of answering from prior knowledge.
+            You are a secure and helpful agent specialized in generating and executing Azure Kusto queries for Azure Data Explorer (ADX) on the titanic table and summarizing results.
             TABLE SCHEMA
 
             Table: titanic
@@ -288,6 +289,7 @@ def adx_agent(query: str) -> dict:
         queued_events = []  # capture periodic queued diagnostics
 
         iteration = 0
+        prev_status = None  # for transition logging
         max_iterations = 50
         backoff_base = 0.8
         backoff_factor = 1.25
@@ -303,6 +305,15 @@ def adx_agent(query: str) -> dict:
                 log(f"Run fetch error (iteration {iteration}): {ex}; retrying after short delay")
                 time.sleep(1.2)
                 continue
+
+            # Status transition logging
+            if prev_status != run.status:
+                try:
+                    log(f"Status transition: {prev_status} -> {run.status}")
+                    log(f"Run snapshot: id={run.id} status={run.status} last_error={getattr(run,'last_error',None)} usage={getattr(run,'usage',None)}")
+                except Exception as sx:
+                    log(f"Snapshot logging error: {sx}")
+                prev_status = run.status
 
             now = time.time()
             # QUEUED handling / diagnostics
@@ -450,7 +461,7 @@ def adx_agent(query: str) -> dict:
                         "arguments": args_dict,
                         "run_iteration": iteration,
                     })
-                    if func_name == "execute_adx_query":
+                    if (func_name or '').lower() == "execute_adx_query":
                         adx_query = args_dict.get('query') or args_dict.get('Query')
                         if not adx_query or not isinstance(adx_query, str) or not adx_query.strip():
                             output = "ADX query required. Please provide a query string."
@@ -758,6 +769,16 @@ def ui_main():
                             st.code(dbg[-15000:], language='text')
                         else:
                             st.caption("No debug logs available.")
+                    # Queued diagnostics
+                    qev = latest.get('queued_events') or []
+                    if qev:
+                        with st.expander("Queued Diagnostics", expanded=False):
+                            st.caption(f"Total queued snapshots: {len(qev)}")
+                            # Show last 5 snapshots
+                            for ev in qev[-5:]:
+                                st.write(f"Attempt {ev['attempt']} | Elapsed {ev['elapsed_seconds']}s | Sleep {ev['sleep_interval']}s | Run {ev['run_id']} | PendingTool={ev.get('pending_tool')}")
+                            if latest.get('queued_timeout_triggered'):
+                                st.warning("Queued timeout triggered; run was cancelled and retried.")
             else:
                 st.caption("Details will appear here, including steps, tool calls, tool outputs, and full conversation.")
 
