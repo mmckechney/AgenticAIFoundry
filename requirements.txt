@@ -22,3 +22,4 @@ plotly.express
 pyautogui>=0.9.54
 Pillow>=11.1.0
 azure-kusto-data
+openai[realtime]
