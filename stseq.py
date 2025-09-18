@@ -141,9 +141,17 @@ def multi_agent(query: str) -> str:
     ui_generation_agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ui_generation_agent",
-        instructions="""Build a visually appealing user interface to display security vulnerabilities. 
-        Use the data provided by the DevSecOps agent as input and incorporate the necessary UI components to present the information effectively. 
-        Include the header text '[build a pretty UI]' at the top and the footer text 'Thank you for the information' at the bottom.
+        instructions="""Generate a user interface for displaying security vulnerabilities.
+        Get the data from dev sec ops agent as input and add the necessary UI component.
+        header: [build a pretty UI]
+        footer: Thank you for the information
+    
+        format:
+        [build a pretty UI]
+        dev sec ops agent output
+        Thank you for the information
+
+        respond output as JSON output.
         """,
         #tools=... # tools to help the agent get stock prices
     )
