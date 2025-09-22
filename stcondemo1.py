@@ -772,6 +772,107 @@ def connected_agent(query: str):
 
     return {"summary": returntxt, "token_usage": token_usage, "status": run.status}
 
+def parse_and_display_json_multi(json_input):
+    try:
+        # Check if input is already a dictionary
+        if isinstance(json_input, dict):
+            data = json_input
+        else:
+            # Assume input is a JSON string and parse it
+            data = json.loads(json_input)
+        
+        # Display Summary
+        print("=== Construction Management Services Summary ===")
+        summary_lines = data['summary'].split('\n')
+        for line in summary_lines:
+            if line.strip() and not line.startswith('Would you like'):
+                print(line.strip())
+        print()  # Add spacing
+        
+        # Display Token Usage
+        print("=== Token Usage ===")
+        token_usage = data['token_usage']
+        print(f"Prompt Tokens: {token_usage['prompt_tokens']}")
+        print(f"Completion Tokens: {token_usage['completion_tokens']}")
+        print(f"Total Tokens: {token_usage['total_tokens']}")
+        print()
+        
+        # Display Status
+        print("=== Status ===")
+        print(f"Run Status: {data['status'].capitalize()}")
+        
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+    except KeyError as e:
+        print(f"Missing key in JSON data: {e}")
+    except TypeError as e:
+        print(f"Type error: {e}")
+
+def parse_and_display_single_json(json_input):
+    try:
+        # Check if input is already a dictionary
+        if isinstance(json_input, dict):
+            data = json_input
+        else:
+            # Assume input is a JSON string and parse it
+            data = json.loads(json_input)
+
+        # Display Summary
+        print("=== Stock Summary ===")
+        print(data['summary'].strip())
+        print()
+
+        # Display Messages
+        print("=== Messages ===")
+        for msg in data['messages']:
+            role = str(msg['role']).split('.')[-1].capitalize()  # Extract role name
+            print(f"Role: {role}")
+            print(f"Content: {msg['content'].strip()}")
+            print()
+        
+        # Display Steps
+        print("=== Steps ===")
+        for step in data['steps']:
+            print(f"Step ID: {step['id']}")
+            print(f"Status: {str(step['status']).split('.')[-1].capitalize()}")
+            if step['tool_calls']:
+                print("Tool Calls:")
+                for tool_call in step['tool_calls']:
+                    print(f"  - Tool Call ID: {tool_call['id']}")
+                    print(f"    Type: {tool_call['type'].capitalize()}")
+                    if tool_call['output']:
+                        print("    Output:")
+                        # Format the output table for readability
+                        output_lines = tool_call['output'].split('\n')
+                        for line in output_lines:
+                            if line.strip():
+                                print(f"      {line.strip()}")
+            print()
+
+        # Display Token Usage
+        print("=== Token Usage ===")
+        token_usage = data['token_usage']
+        print(f"Prompt Tokens: {token_usage['prompt_tokens']}")
+        print(f"Completion Tokens: {token_usage['completion_tokens']}")
+        print(f"Total Tokens: {token_usage['total_tokens']}")
+        print()
+
+        # Display Query
+        print("=== Query ===")
+        print(f"Query: {data['query']}")
+        print()
+
+        # Display Status
+        print("=== Status ===")
+        print(f"Run Status: {str(data['status']).split('.')[-1].capitalize()}")
+
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+    except KeyError as e:
+        print(f"Missing key in JSON data: {e}")
+    except TypeError as e:
+        print(f"Type error: {e}")
+
 def main():
     with tracer.start_as_current_span("DemoAIAgent-tracing"):
         print("Starting...")
@@ -782,11 +883,12 @@ def main():
         starttime = datetime.now()
         # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
         exsitingagentrs = single_agent("get me stock info for Apple Inc.")
-        print(exsitingagentrs)
+        print('Final Output Answer: ', exsitingagentrs)
+        print(' Final formatted output: ', parse_and_display_single_json(exsitingagentrs))
         endtime = datetime.now()
         print(f"Delete agent example completed in {endtime - starttime} seconds")
 
-        print("Running connected agent - Multi Agent example...")
+        # print("Running connected agent - Multi Agent example...")
         # starttime = datetime.now()
         # # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
         # # connected_agent_result = connected_agent("What is the stock price of Microsoft")
@@ -794,6 +896,7 @@ def main():
         # # connected_agent_result = connected_agent("Summarize sustainability framework for learning factory from file uploaded?")
         # # connected_agent_result = connected_agent("What is Azure AI Foundry Agents?")
         # print('Final Output Answer: ', connected_agent_result)
+        # print(' Final formatted output: ' , parse_and_display_json_multi(connected_agent_result))
         # endtime = datetime.now()
         # print(f"Connected agent example completed in {endtime - starttime} seconds")
 
