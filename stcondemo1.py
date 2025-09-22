@@ -502,7 +502,9 @@ def single_agent(query: str) -> str:
 
         # Cleanup
         try:
+            print(" Clean up -------------------------------------")
             agents_client.delete_agent(agent.id)
+            agents_client.threads.delete(thread.id)
         except Exception:
             pass
 
@@ -879,26 +881,26 @@ def main():
 
         # fetch_stock_data("Apple Inc.")
 
-        print("Calling existing agent example...")
-        starttime = datetime.now()
-        # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
-        exsitingagentrs = single_agent("get me stock info for Apple Inc.")
-        print('Final Output Answer: ', exsitingagentrs)
-        print(' Final formatted output: ', parse_and_display_single_json(exsitingagentrs))
-        endtime = datetime.now()
-        print(f"Delete agent example completed in {endtime - starttime} seconds")
-
-        # print("Running connected agent - Multi Agent example...")
+        # print("Calling existing agent example...")
         # starttime = datetime.now()
-        # # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
-        # # connected_agent_result = connected_agent("What is the stock price of Microsoft")
-        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
-        # # connected_agent_result = connected_agent("Summarize sustainability framework for learning factory from file uploaded?")
-        # # connected_agent_result = connected_agent("What is Azure AI Foundry Agents?")
-        # print('Final Output Answer: ', connected_agent_result)
-        # print(' Final formatted output: ' , parse_and_display_json_multi(connected_agent_result))
+        # # exsitingagentrs = load_existing_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com with subject as construction manager")
+        # exsitingagentrs = single_agent("get me stock info for Apple Inc.")
+        # print('Final Output Answer: ', exsitingagentrs)
+        # print(' Final formatted output: ', parse_and_display_single_json(exsitingagentrs))
         # endtime = datetime.now()
-        # print(f"Connected agent example completed in {endtime - starttime} seconds")
+        # print(f"Delete agent example completed in {endtime - starttime} seconds")
+
+        print("Running connected agent - Multi Agent example...")
+        starttime = datetime.now()
+        # connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before?")
+        # connected_agent_result = connected_agent("What is the stock price of Microsoft")
+        connected_agent_result = connected_agent("Show me details on Construction management services experience we have done before and email Bala at babal@microsoft.com")
+        # connected_agent_result = connected_agent("Summarize sustainability framework for learning factory from file uploaded?")
+        # connected_agent_result = connected_agent("What is Azure AI Foundry Agents?")
+        print('Final Output Answer: ', connected_agent_result)
+        print(' Final formatted output: ' , parse_and_display_json_multi(connected_agent_result))
+        endtime = datetime.now()
+        print(f"Connected agent example completed in {endtime - starttime} seconds")
 
 if __name__ == "__main__":
     main()
