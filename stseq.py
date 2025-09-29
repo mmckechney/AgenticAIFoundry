@@ -196,7 +196,7 @@ def multi_agent(query: str) -> str:
     # run = project_client.agents.create_and_process_run(thread_id=thread.id, agent_id=agent.id)
     # print(f"Run finished with status: {run.status}")
     run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id,
-                                                        temperature=0.0)
+                                                        temperature=0.0, max_completion_tokens=2000)
     
     # Poll the run status until it is completed or requires action
     while run.status in ["queued", "in_progress", "requires_action"]:
