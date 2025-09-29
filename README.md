@@ -35,6 +35,20 @@ This repository demonstrates the following Azure AI Foundry capabilities:
 - **Security evaluators**: Protected material detection, indirect attack detection, code vulnerability assessment
 - **Performance metrics**: Response completeness, retrieval accuracy, groundedness pro evaluation
 
+### 🔐 Access Management System
+- **MCP Server Access Dashboard** (`stmcplist.py`): Comprehensive management of Model Context Protocol server access
+  - User access control and permissions
+  - Server lifecycle management
+  - Authentication configuration
+  - Expiration tracking and compliance
+- **Agents Access Dashboard** (`stagentlist.py`): Complete AI agent access and configuration management
+  - Multi-method authentication (API Key, OAuth2, Basic Auth, JWT)
+  - Agent parameter configuration and validation
+  - User access matrix management
+  - Business unit and purpose-based filtering
+- **Advanced Security Features**: Role-based access control, audit trails, and Azure AI integration
+- **📖 [Complete Documentation](./docs/access-management-documentation-index.md)**: Comprehensive documentation suite with architecture diagrams and quick reference guides
+
 ### 🛡️ Red Team Testing
 - **Automated red team scanning**: Multi-strategy attack simulation with advanced callback mechanisms
 - **Risk category coverage**: Violence, hate/unfairness, sexual content, self-harm
