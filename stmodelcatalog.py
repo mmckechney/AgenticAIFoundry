@@ -501,7 +501,7 @@ def modelcatalogmain():
             # Display model table with better formatting
             st.dataframe(
                 model_df, 
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=550,  # Increased height for better visibility
                 column_config={
