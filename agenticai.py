@@ -41,7 +41,8 @@ from azure.ai.evaluation import (
     RetrievalEvaluator,
     BleuScoreEvaluator, GleuScoreEvaluator, RougeScoreEvaluator, MeteorScoreEvaluator, RougeType,
     ProtectedMaterialEvaluator, IndirectAttackEvaluator, RetrievalEvaluator, GroundednessProEvaluator,
-    F1ScoreEvaluator
+    F1ScoreEvaluator,
+    AzureOpenAIPythonGrader
 )
 from pprint import pprint
 # specific to agentic workflows
@@ -64,6 +65,7 @@ from azure.ai.agents.models import MessageTextContent, ListSortOrder
 from azure.ai.agents.models import McpTool, RequiredMcpToolCall, SubmitToolApprovalAction, ToolApproval
 from azure.ai.evaluation import AzureOpenAILabelGrader, evaluate, AzureOpenAIStringCheckGrader, AzureOpenAITextSimilarityGrader, AzureOpenAIGrader
 from openai.types.graders import StringCheckGrader
+import traceback
 
 from dotenv import load_dotenv
 
@@ -211,76 +213,124 @@ def eval()-> str:
     )
     # Define an string check grader config directly using the OAI SDK
     # Evaluation criteria: Pass if query column contains "Northwind"
-    oai_string_check_grader = StringCheckGrader(
+    # oai_string_check_grader = StringCheckGrader(
+    #     input="{{item.query}}",
+    #     name="contains hello",
+    #     operation="like",
+    #     reference="Northwind",
+    #     type="string_check"
+    # )
+
+    # Evaluation criteria: Pass if the query column contains "What is"
+    string_grader = AzureOpenAIStringCheckGrader(
+        model_config=model_config,
         input="{{item.query}}",
-        name="contains hello",
-        operation="like",
-        reference="Northwind",
-        type="string_check"
+        name="starts with what is",
+        operation="like", # "eq" for equal, "ne" for not equal, "like" for contains, "ilike" for case-insensitive contains
+        reference="What is",
     )
     # Plug that into the general grader
     general_grader = AzureOpenAIGrader(
         model_config=model_config,
-        grader_config=oai_string_check_grader
+        grader_config=string_grader
     )
 
-    result = evaluate(
-        data="datarfp.jsonl", # provide your data here
-        evaluators={
-            "content_safety": content_safety_evaluator,
-            "coherence": coherence_evaluator,
-            "relevance": relevance_evaluator,
-            "groundedness": groundedness_evaluator,
-            "fluency": fluency_evaluator,
-        #    "similarity": similarity_evaluator,
-            "f1": f1_evaluator,
-            "bleu": bleu_evaluator,
-            "gleu": gleu_evaluator,
-            "meteor": meteor_evaluator,
-            "rouge": rouge_evaluator,
-            "indirect_attack": indirect_attack_eval,
-            "protected_material": protected_material_eval,
-            "hate_unfairness": hate_unfairness_eval,
-            "retrieval": retrieval_evaluator,
-            "groundnesspro": groundnesspro_evaluator,
-            "similarity": similarity_evaluator,
-            "label": label_grader,
-            "string": string_grader,
-            "simgrader": sim_grader,
-            "general": general_grader,
-        },        
-        evaluator_config={
-            "content_safety": {"query": "${data.query}", "response": "${data.response}"},
-            "coherence": {"response": "${data.response}", "query": "${data.query}"},
-            "relevance": {"response": "${data.response}", "context": "${data.context}", "query": "${data.query}"},
-            "groundedness": {
-                "response": "${data.response}",
-                "context": "${data.context}",
-                "query": "${data.query}",
-            },
-            "fluency": {"response": "${data.response}", "context": "${data.context}", "query": "${data.query}"},
-            "f1": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            "bleu": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            "gleu": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            "meteor": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            "rouge": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            "indirect_attack": {"query": "${data.query}", "response": "${data.response}"},
-            "protected_material": {"query": "${data.query}", "response": "${data.response}"},
-            "hate_unfairness": {"query": "${data.query}", "response": "${data.response}"},
-            "retrieval": {"query": "${data.query}", "context": "${data.context}"},
-            "groundnesspro": {"query": "${data.query}", "context" : "${data.context}", "response": "${data.response}"},
-            "similarity": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            #"label": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            #"general": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            #"custom": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-            # "simgrader": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
-        },
-        # Optionally provide your Azure AI Foundry project information to track your evaluation results in your project portal
-        azure_ai_project = os.environ["PROJECT_ENDPOINT"],
-        # Optionally provide an output path to dump a json of metric summary, row level data and metric and Azure AI project URL
-        output_path="./myevalresults.json"
+    python_similarity_grader = AzureOpenAIPythonGrader(
+        model_config=model_config,
+        name="custom_similarity",
+        image_tag="2025-05-08",
+        pass_threshold=0.3,
+        source="""
+        def grade(sample, item) -> float:
+        \"\"\"
+        Custom similarity grader using word overlap.
+        Note: All data is in the 'item' parameter.
+        \"\"\"
+        # Extract from item, not sample!
+        response = item.get("response", "") if isinstance(item, dict) else ""
+        ground_truth = item.get("ground_truth", "") if isinstance(item, dict) else ""
+        
+        # Simple word overlap similarity
+        response_words = set(response.lower().split())
+        truth_words = set(ground_truth.lower().split())
+        
+        if not truth_words:
+        return 0.0
+        
+        overlap = response_words.intersection(truth_words)
+        similarity = len(overlap) / len(truth_words)
+        
+        return min(1.0, similarity)
+    """,
     )
-    #returntxt = f"Completed Evaluation: {result.studio_url}"    
+
+     
+    # 
+    try:
+        print()
+        result = evaluate(
+            data="datarfp.jsonl", # provide your data here
+            evaluators={
+                "content_safety": content_safety_evaluator,
+                "coherence": coherence_evaluator,
+                "relevance": relevance_evaluator,
+                "groundedness": groundedness_evaluator,
+                "fluency": fluency_evaluator,
+            #    "similarity": similarity_evaluator,
+                "f1": f1_evaluator,
+                "bleu": bleu_evaluator,
+                "gleu": gleu_evaluator,
+                "meteor": meteor_evaluator,
+                "rouge": rouge_evaluator,
+                "indirect_attack": indirect_attack_eval,
+                "protected_material": protected_material_eval,
+                "hate_unfairness": hate_unfairness_eval,
+                "retrieval": retrieval_evaluator,
+                "groundnesspro": groundnesspro_evaluator,
+                "similarity": similarity_evaluator,
+                "label": label_grader,
+                "string": string_grader,
+                "sim_grader": sim_grader,
+                # "general": general_grader,
+                # "custom_similarity": python_similarity_grader,
+            },        
+            evaluator_config={
+                "content_safety": {"query": "${data.query}", "response": "${data.response}"},
+                "coherence": {"response": "${data.response}", "query": "${data.query}"},
+                "relevance": {"response": "${data.response}", "context": "${data.context}", "query": "${data.query}"},
+                "groundedness": {
+                    "response": "${data.response}",
+                    "context": "${data.context}",
+                    "query": "${data.query}",
+                },
+                "fluency": {"response": "${data.response}", "context": "${data.context}", "query": "${data.query}"},
+                "f1": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                "bleu": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                "gleu": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                "meteor": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                "rouge": {"response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                "indirect_attack": {"query": "${data.query}", "response": "${data.response}"},
+                "protected_material": {"query": "${data.query}", "response": "${data.response}"},
+                "hate_unfairness": {"query": "${data.query}", "response": "${data.response}"},
+                "retrieval": {"query": "${data.query}", "context": "${data.context}"},
+                "groundnesspro": {"query": "${data.query}", "context" : "${data.context}", "response": "${data.response}"},
+                "similarity": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                #"label": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                #"general": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                #"custom": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+                # "simgrader": {"query": "${data.query}", "response": "${data.response}", "ground_truth": "${data.ground_truth}"},
+            },
+            # Optionally provide your Azure AI Foundry project information to track your evaluation results in your project portal
+            azure_ai_project = os.environ["PROJECT_ENDPOINT"],
+            # Optionally provide an output path to dump a json of metric summary, row level data and metric and Azure AI project URL
+            output_path="./myevalresults.json"
+        )
+        #returntxt = f"Completed Evaluation: {result.studio_url}" 
+        print("Evalutions completed .....")
+    except Exception as e:
+        print('Exception: ', e)
+        traceback.print_exc()   # Full stack trace
+        pass  
     returntxt = f"Completed Evaluation\n"
     return returntxt
 
