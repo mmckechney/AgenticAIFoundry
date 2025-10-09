@@ -147,6 +147,12 @@ def get_analyzer_result(
         "Content-Type": "application/json",
     }
 
+    terminal_statuses = {"succeeded", "failed", "completed"}
+    in_progress_statuses = {"running", "notstarted", "queued", "pending"}
+
+    # Give the service a moment before the first poll to reduce immediate RUNNING results.
+    time.sleep(max(poll_interval, 0))
+
     for attempt in range(1, max_polls + 1):
         response = requests.get(
             url,
@@ -157,13 +163,34 @@ def get_analyzer_result(
         response.raise_for_status()
         payload = response.json()
 
-        status = (payload.get("status") or "").lower()
-        if status in {"succeeded", "failed", "completed"}:
+        # Some payloads surface status at the top level, others nest inside result/status
+        status = (
+            payload.get("status")
+            or payload.get("result", {}).get("status")
+            or ""
+        ).strip().lower()
+
+        if status in terminal_statuses:
             return payload
 
         if attempt == max_polls:
             break
-        time.sleep(poll_interval)
+
+        # Respect Retry-After header when provided, otherwise use poll_interval
+        retry_after = response.headers.get("Retry-After")
+        if retry_after:
+            try:
+                sleep_seconds = float(retry_after)
+            except ValueError:
+                sleep_seconds = poll_interval
+        else:
+            sleep_seconds = poll_interval
+
+        if status and status not in in_progress_statuses:
+            # Unknown status – continue polling but log minimal delay
+            sleep_seconds = max(1.0, sleep_seconds)
+
+        time.sleep(sleep_seconds)
 
     raise TimeoutError(
         f"Analyzer result {result_id} did not complete after {max_polls} polls ({poll_interval * max_polls:.1f} seconds)."
@@ -189,7 +216,7 @@ def main():
 
     file_url = st.text_input(
         "Document URL",
-        value="https://github.com/balakreshnan/AgenticAIFoundry/blob/main/pdfs/State%20of%20AI%20Report%20-%202025%20ONLINE.pdf",
+        value="https://github.com/Azure-Samples/azure-ai-content-understanding-python/raw/refs/heads/main/data/invoice.pdf", # "https://github.com/balakreshnan/AgenticAIFoundry/blob/main/pdfs/StateofAIReport-2025ONLINE.pdf",
         placeholder="https://example.com/sample.pdf",
     )
     run_button = st.button("Analyze Document", type="primary")
@@ -200,7 +227,7 @@ def main():
             return
 
         try:
-            with st.spinner("Submitting document for analysis..."):
+            with st.spinner("Submitting document for analysis...", show_time=True):
                 analyze_response = analyze_contunder(
                     file_url=file_url.strip(),
                     analyzer_id=analyzer_id.strip() or "prebuilt-documentAnalyzer",
@@ -210,7 +237,7 @@ def main():
             with st.expander("Raw Analyze Response", expanded=False):
                 st.json(analyze_response)
 
-            with st.spinner("Waiting for analyzer result..."):
+            with st.spinner("Waiting for analyzer result...", show_time=True):
                 result_payload = get_analyzer_result(
                     analyze_response=analyze_response,
                     analyzer_id=analyzer_id.strip() or None,
