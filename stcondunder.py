@@ -64,6 +64,9 @@ tracer = trace.get_tracer(__name__)
 def analyze_contunder():
     returntxt = ""
 
-    
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    analyzerId = "prebuilt-documentAnalyzer"
+    url = f"{endpoint}/contentunderstanding/analyzers/{analyzerId}:analyze?api-version=2025-05-01-preview"
+
 
     return returntxt
