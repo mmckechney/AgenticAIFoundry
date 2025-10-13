@@ -66,7 +66,8 @@ configure_azure_monitor(connection_string=connection_string) #enable telemetry c
 from opentelemetry import trace
 tracer = trace.get_tracer(__name__)
 
-imgfile = "img/layout-2.jpg"
+# imgfile = "img/layout-2.jpg"
+imgfile = "img/csifactoryengdraw1.jpg"
 
 st.set_page_config(page_title="AI Agents with Azure AI Foundry", page_icon=imgfile, layout="wide")
 
@@ -82,7 +83,8 @@ async def process_img_agent(query: str) -> str:
     client = AIProjectClient(endpoint=endpoint, credential=credential)
 
     # Read image and upload to agent files
-    image_path = "img/layout-2.jpg"
+    # image_path = "img/layout-2.jpg"
+    image_path = "img/csifactoryengdraw1.jpg"
     with open(image_path, "rb") as img_file:
         image_bytes = img_file.read()
 
@@ -109,7 +111,7 @@ async def process_img_agent(query: str) -> str:
     agent = await agents_client.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="ImageAnalysisAgent",
-        instructions="You are a civil engineering agent, Analyze this image for user query and provide detailed insights",
+        instructions="You are a civil/mechanical engineering agent, Analyze this image for user query and provide detailed insights",
     )
 
     print(f"Created agent, ID: {agent.id}")
@@ -210,17 +212,40 @@ def main():
 
     st.title("Engineering Drawings")
 
-    if prompt := st.chat_input(""):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").markdown(prompt)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # if prompt := st.chat_input(""):
+    #     st.session_state.messages.append({"role": "user", "content": prompt})
+    #     st.chat_message("user").markdown(prompt)
+    #     query = "can you extract how many bathrooms are there and their square footage for tiles?"
+    #     rs = asyncio.run(process_img_agent(query=prompt))
+    #     print(rs["summary"])
+    #     print(rs["token_usage"])
+    #     st.session_state.messages.append({"role": "assistant", "content": rs["summary"]})
+    #     st.session_state.messages.append({"role": "assistant", "content": rs["token_usage"]})
+
 
     with st.container(height=500):
-        st.markdown("Content")
+        # st.markdown("Content")
+        # st.markdown(st.session_state.messages)
+        # st.rerun()
+        if prompt := st.chat_input(""):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            st.chat_message("user").markdown(prompt)
+            query = "can you extract how many bathrooms are there and their square footage for tiles?"
+            rs = asyncio.run(process_img_agent(query=prompt))
+            print(rs["summary"])
+            print(rs["token_usage"])
+            st.session_state.messages.append({"role": "assistant", "content": rs["summary"]})
+            st.session_state.messages.append({"role": "assistant", "content": rs["token_usage"]})
+            st.markdown(rs["summary"])
+            st.markdown(rs["token_usage"])
 
-    query = "can you extract how many bathrooms are there and their square footage for tiles?"
-    rs = asyncio.run(process_img_agent(query=query))
-    print(rs["summary"])
-    print(rs["token_usage"])
+    # query = "can you extract how many bathrooms are there and their square footage for tiles?"
+    # rs = asyncio.run(process_img_agent(query=query))
+    # print(rs["summary"])
+    # print(rs["token_usage"])
 
 if __name__ == "__main__":
     main()
