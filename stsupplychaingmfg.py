@@ -68,16 +68,16 @@ tracer = trace.get_tracer(__name__)
 
 def collect_supply_chain_data():
     # Simulate data collection from multi-tier supply chain
-    return {
+    return json.dumps({
         "tier1": {"status": "active", "delay": 0},
         "tier2": {"status": "active", "delay": 2},
         "tier3": {"status": "delayed", "delay": 5}
-    }
+    })
 
 def predict_disruptions(data):
     # Simulate disruption prediction
     risk_score = sum(item["delay"] for item in data.values()) * 10
-    return {"risk_score": risk_score, "mitigation": "Increase buffer stock"}
+    return json.dumps({"risk_score": risk_score, "mitigation": "Increase buffer stock"})
 
 def simulate_sourcing_scenarios(data):
     # Simulate alternative sourcing scenarios
@@ -85,12 +85,12 @@ def simulate_sourcing_scenarios(data):
         {"scenario": "Switch to Tier1", "cost": 1000, "time": 3},
         {"scenario": "Switch to Tier2", "cost": 1500, "time": 5}
     ]
-    return scenarios
+    return json.dumps(scenarios)
 
 def optimize_inventory(data):
     # Simulate inventory optimization
     optimized_levels = {key: 100 + value["delay"] * 10 for key, value in data.items()}
-    return optimized_levels
+    return json.dumps(optimized_levels)
 
 def parse_agent_outputs(run_steps):
     """Parse agent outputs from run steps to extract individual agent responses."""
@@ -118,12 +118,17 @@ def supplychain_agent(query: str) -> str:
         credential=DefaultAzureCredential(),
         # api_version="latest",
     )
+    # Define user functions
+    user_functions = {collect_supply_chain_data}
+    # Initialize the FunctionTool with user-defined functions
+    functions = FunctionTool(functions=user_functions)
     supplychainmonitoragent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="supplychainmonitoragent",
         instructions="""Continuously collect and analyze data from various tiers of the supply chain. 
         Identify anomalies and report status updates.
         """,
+        #tools=functions.definitions,
         #tools=... # tools to help the agent get stock prices
     )
     supplychainmonitor_agent_name = "supplychainmonitoragent"
@@ -131,12 +136,16 @@ def supplychain_agent(query: str) -> str:
         id=supplychainmonitoragent.id, name=supplychainmonitor_agent_name, description="Monitors real-time data across the multi-tier supply chain."
     )
 
+    user_functions_disruption = {predict_disruptions}
+    # Initialize the FunctionTool with user-defined functions
+    functions = FunctionTool(functions=user_functions_disruption)
     disruptionpredictionagent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="disruptionpredictionagent",
         instructions="""Use historical and real-time data to forecast potential disruptions. 
         Provide risk scores and mitigation suggestions.
         """,
+        #tools=functions.definitions,
         #tools=... # tools to help the agent get stock prices
     )
     disruptionprediction_agent_name = "disruptionpredictionagent"
@@ -144,11 +153,15 @@ def supplychain_agent(query: str) -> str:
         id=disruptionpredictionagent.id, name=disruptionprediction_agent_name, description="Analyzes data to predict potential disruptions."
     )
 
+    user_functions_simulation = {simulate_sourcing_scenarios}
+    # Initialize the FunctionTool with user-defined functions
+    functions = FunctionTool(functions=user_functions_simulation)
     scenariosimulationagent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="scenariosimulationagent",
         instructions="""Generate and evaluate alternative sourcing scenarios based on current supply chain data and predicted disruptions.
         """,
+        #tools=functions.definitions,
         #tools=... # tools to help the agent get stock prices
     )
     scenariosimulation_agent_name = "scenariosimulationagent"
@@ -156,11 +169,15 @@ def supplychain_agent(query: str) -> str:
         id=scenariosimulationagent.id, name=scenariosimulation_agent_name, description="Simulates alternative sourcing scenarios."
     )
 
+    user_functions_optimize = {optimize_inventory}
+    # Initialize the FunctionTool with user-defined functions
+    functions = FunctionTool(functions=user_functions_optimize)
     inventoryoptimizationagent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
         name="inventoryoptimizationagent",
         instructions="""Analyze inventory levels across global facilities and recommend adjustments to maintain resilience and efficiency.
         """,
+        #tools=functions.definitions,
         #tools=... # tools to help the agent get stock prices
     )
     inventoryoptimization_agent_name = "inventoryoptimizationagent"
@@ -170,7 +187,7 @@ def supplychain_agent(query: str) -> str:
     # Orchestrate the connected agent with the main agent
     agent = project_client.agents.create_agent(
         model=os.environ["MODEL_DEPLOYMENT_NAME"],
-        name="PresalesAgent",
+        name="SupplyChainMFGAgent",
         instructions="""You are a Manufacturing Supply chain specialist and orchestrator. Use the provided tools to answer the user's questions comprehensively.
         Be positive and professional in your responses. Provide detailed and structured answers.
 
@@ -214,7 +231,8 @@ def supplychain_agent(query: str) -> str:
     # Create and process Agent run in thread with tools
     # run = project_client.agents.create_and_process_run(thread_id=thread.id, agent_id=agent.id)
     # print(f"Run finished with status: {run.status}")
-    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
+    run = project_client.agents.runs.create_and_process(thread_id=thread.id, agent_id=agent.id,
+                                                        temperature=0, parallel_tool_calls=False)
     # Poll the run status until it is completed or requires action
     while run.status in ["queued", "in_progress", "requires_action"]:
         time.sleep(1)
